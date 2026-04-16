@@ -664,15 +664,33 @@
       "mensagem": ""
     },
     {
-      "id": "cmd_1776377236549",
-      "acao": "atualizar_mercado_farma",
+      "id": "cmd_1776377328405",
+      "acao": "enviar_pedido_mf",
       "params": {
+        "cart_items": [
+          {
+            "Cliente": "A FARMACEUTICA",
+            "CNPJ": "07666799000107",
+            "Empresa": "A FARMACEUTICA",
+            "Razao social": "RE COMERCIO DE PRODUTOS FARMACEUTICOS E PERFUMARIA LTDA",
+            "Nome do comprador": "RONES",
+            "Tel do comprador": "63984074672",
+            "EAN": "7896004729640",
+            "Produto": "ROSUVASTATINA CALCICA CPR REV 10MG 3BLX10",
+            "Distribuidora": "Nazaria - TO",
+            "Preco": 5.49,
+            "Estoque": 2388,
+            "Mix": "PRIORITARIOS",
+            "Qtde": 200,
+            "Foco": false
+          }
+        ],
         "headless": true,
-        "cnpj": "36106802000128"
+        "cupom": ""
       },
       "status": "solicitado",
-      "criado_em": "16/04/2026 19:07:16",
-      "atualizado_em": "16/04/2026 19:07:16",
+      "criado_em": "16/04/2026 19:08:48",
+      "atualizado_em": "16/04/2026 19:08:48",
       "mensagem": "Solicitado pelo painel web.",
       "origem": "streamlit"
     }
