@@ -664,14 +664,15 @@
       "mensagem": ""
     },
     {
-      "id": "cmd_1776377174276",
-      "acao": "atualizar_bussola",
+      "id": "cmd_1776377236549",
+      "acao": "atualizar_mercado_farma",
       "params": {
-        "headless": true
+        "headless": true,
+        "cnpj": "36106802000128"
       },
       "status": "solicitado",
-      "criado_em": "16/04/2026 19:06:14",
-      "atualizado_em": "16/04/2026 19:06:14",
+      "criado_em": "16/04/2026 19:07:16",
+      "atualizado_em": "16/04/2026 19:07:16",
       "mensagem": "Solicitado pelo painel web.",
       "origem": "streamlit"
     }
