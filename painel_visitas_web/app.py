@@ -44,6 +44,7 @@ header[data-testid="stHeader"] {{background: transparent;}}
 footer {{visibility:hidden;}}
 .stApp {{background: #F6FAFC; color:{COR_TEXTO};}}
 .block-container {{padding-top: .7rem; padding-bottom: 1rem; max-width: 1500px;}}
+html, body, .stApp, .stApp * {{font-family:"Segoe UI", Arial, sans-serif !important;}}
 
 [data-testid="stDataFrame"] div[role="grid"] {{font-size: 12px !important;}}
 [data-testid="stDataEditor"] div[role="grid"] {{font-size: 12px !important;}}
@@ -54,8 +55,7 @@ footer {{visibility:hidden;}}
 .main ::-webkit-scrollbar-track, [data-testid="stSidebar"] ::-webkit-scrollbar-track {{background:#DCECF1; border-radius: 10px;}}
 [data-testid="stSidebar"] {{background: linear-gradient(180deg, #02161D 0%, #05303B 45%, #0B6C86 100%); border-right:none; min-width: 300px; max-width:300px;}}
 [data-testid="stSidebar"] * {{color: white;}}
-.sidebar-title {{font-size:1.8rem; font-weight:900; margin-bottom:.15rem;}}
-.sidebar-sub {{font-size:.92rem; color:#D6F4FA; line-height:1.45; margin-bottom:1rem;}}
+.sidebar-title {{font-size:1.85rem; font-weight:900; margin-bottom:.85rem;}}
 .sidebar-section {{font-size:.8rem; font-weight:900; text-transform:uppercase; letter-spacing:.06em; color:#D2F0F7; margin:1rem 0 .5rem 0;}}
 .stRadio > label, .stMultiSelect > label, .stSelectbox > label, .stDateInput > label {{font-weight:800 !important; color:#EAF9FD !important;}}
 [data-testid="stSidebar"] .stButton > button {{width:100%; min-height:48px; border-radius:14px !important; font-weight:900; border:1px solid rgba(255,255,255,.14) !important; background: rgba(255,255,255,.08) !important; color:#fff !important; margin:0 0 .5rem 0 !important;}}
@@ -74,9 +74,8 @@ footer {{visibility:hidden;}}
 .metric-help {{font-size:.78rem; color:#75879A; margin-top:4px;}}
 .page-title {{margin:.15rem 0 .9rem 0; color:{COR_TEXTO}; font-size:1.9rem; font-weight:900; text-align:center;}}
 
-.page-title, .section-title, .visit-name, .detail-title, .metric-label, .metric-value, .sidebar-title, .sidebar-section {{text-shadow:0 1px 0 rgba(255,255,255,.4), 0 2px 8px rgba(8,53,69,.10);}}
 div[data-testid="stDataFrame"] [role="row"] > div, div[data-testid="stDataEditor"] [role="row"] > div {{box-shadow: inset 0 -1px 0 rgba(8,53,69,.06);}}
-div[data-testid="stDataFrame"] [role="columnheader"] > div, div[data-testid="stDataEditor"] [role="columnheader"] > div {{font-weight:800 !important; text-shadow:0 1px 0 rgba(255,255,255,.45); box-shadow: inset 0 -2px 0 rgba(8,53,69,.10);}}
+div[data-testid="stDataFrame"] [role="columnheader"] > div, div[data-testid="stDataEditor"] [role="columnheader"] > div {{font-weight:800 !important; box-shadow: inset 0 -2px 0 rgba(8,53,69,.10);}}
 .section-title {{text-align:center; color:{COR_TEXTO}; font-size:1.2rem; font-weight:900; margin:.25rem 0 .8rem 0;}}
 .visit-card,.detail-card {{background:#fff; border:1px solid {COR_BORDA}; border-radius:20px; padding:16px; box-shadow:0 8px 18px rgba(15,23,42,.03); margin-bottom:12px;}}
 .visit-head {{display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;}}
@@ -107,7 +106,7 @@ div[data-baseweb="select"] > div {{background:#E7F2F8 !important; border:1px sol
   [data-testid="stSidebar"] {{margin-left:-100vw !important; min-width:0 !important; max-width:0 !important; width:0 !important; opacity:0; overflow:hidden; transition:all .25s ease;}}
   [data-testid="stSidebar"][aria-expanded="true"] {{margin-left:0 !important; min-width:88vw !important; max-width:88vw !important; width:88vw !important; opacity:1; overflow:auto; box-shadow:0 20px 40px rgba(0,0,0,.28);}}
   .block-container {{padding-left: .6rem !important; padding-right: .6rem !important;}}
-  .sidebar-title,.sidebar-sub,.sidebar-section {{display:block;}}
+  .sidebar-title,.sidebar-section {{display:block;}}
 }}
 
 .mini-alert-card {{background:#FFFFFF; border:1px solid #D8E8EE; border-radius:12px; padding:.7rem .9rem; margin:.2rem 0; box-shadow:0 2px 10px rgba(8,53,69,.05);}} 
@@ -124,7 +123,7 @@ st.markdown("""
 .notice-error {background:#FDECEC; color:#8A1C1C; border-color:#EDB4B4;}
 .status-mini-card, .base-mini-card, .run-mini-card {background:#FFFFFF; border:1px solid #D8E8EE; border-radius:16px; padding:.85rem 1rem; box-shadow:0 2px 10px rgba(8,53,69,.05); margin-bottom:.7rem;}
 .status-mini-title, .base-mini-title, .run-mini-title {font-size:.82rem; font-weight:900; color:#506B80; text-transform:uppercase; letter-spacing:.04em; margin-bottom:.2rem;}
-.status-mini-main, .base-mini-main {font-size:1rem; font-weight:900; color:#0B2E43;}
+.status-mini-main, .base-mini-main {font-size:1rem; font-weight:900; color:#0B2E43; line-height:1.25; word-break:break-word; overflow-wrap:anywhere;}
 .status-mini-sub, .base-mini-sub, .run-mini-sub {font-size:.84rem; color:#61758A; margin-top:.15rem;}
 .status-badge {display:inline-block; margin-top:.45rem; padding:.22rem .55rem; border-radius:999px; font-size:.74rem; font-weight:900;}
 .status-ok {background:#E8F7EF; color:#0D5E3A;}
@@ -252,8 +251,6 @@ if 'filtro_data_final' not in st.session_state:
 
 with st.sidebar:
     st.markdown('<div class="sidebar-title">🧭 Painel de Visitas</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sidebar-sub">Visão comercial, foco no mês, cliente, montagem e carrinho.</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sidebar-section">Navegação</div>', unsafe_allow_html=True)
     cart_n = len(st.session_state.get('cart_items', []))
     menu_items = ['Dashboard', 'Clientes', 'Montar pedido', f'Carrinho ({cart_n})', 'SIP', 'Importação']
     for item in menu_items:
@@ -358,5 +355,6 @@ elif page == 'SIP':
     _, _, clientes_g, foco_g, inventario_g, _, base_full_g, _, _, score_df_g, oportunidades_g, _ = _views_for('Todas')
     render_sip(score_df_g, clientes_g)
 else:
-    render_importacao(None, produtos_ref)
+    _, _, _, _, _, _, _, _, _, score_df_g, _, _ = _views_for('Todas')
+    render_importacao(score_df_g, produtos_ref)
 

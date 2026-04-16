@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+from html import escape
 
 import pandas as pd
 import streamlit as st
@@ -30,6 +31,18 @@ def _runs_df(runs: list[dict]) -> pd.DataFrame:
     df = pd.DataFrame(runs).copy()
     cols = [c for c in ["ID", "Status", "Resultado", "Titulo", "Criado em", "Atualizado em", "Link"] if c in df.columns]
     return df[cols] if cols else df
+
+
+def _base_card(label: str, value: str):
+    st.markdown(
+        f"""
+        <div class="base-mini-card">
+            <div class="base-mini-title">{escape(label)}</div>
+            <div class="base-mini-main">{escape(value or "-")}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFrame | None = None):
@@ -64,10 +77,14 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
 
     st.markdown("### Bases em uso")
     b1, b2, b3, b4 = st.columns(4)
-    b1.metric("Pedidos", PEDIDOS_FILE.name if PEDIDOS_FILE else "-")
-    b2.metric("Painel", CLIENTES_FILE.name if CLIENTES_FILE else "-")
-    b3.metric("Foco", "-" if FOCO_SEMANA_FILE is None else FOCO_SEMANA_FILE.name)
-    b4.metric("Estoque", INVENTARIO_FILE.name if INVENTARIO_FILE else "-")
+    with b1:
+        _base_card("Pedidos", PEDIDOS_FILE.name if PEDIDOS_FILE else "-")
+    with b2:
+        _base_card("Painel", CLIENTES_FILE.name if CLIENTES_FILE else "-")
+    with b3:
+        _base_card("Foco", "-" if FOCO_SEMANA_FILE is None else FOCO_SEMANA_FILE.name)
+    with b4:
+        _base_card("Estoque", INVENTARIO_FILE.name if INVENTARIO_FILE else "-")
 
     with st.expander("Credenciais e referencia", expanded=False):
         c1, c2 = st.columns(2)
