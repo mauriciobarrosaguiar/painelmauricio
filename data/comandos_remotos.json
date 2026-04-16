@@ -827,6 +827,19 @@
       "atualizado_em": "16/04/2026 20:02:29",
       "mensagem": "Solicitado pelo painel web.",
       "origem": "streamlit"
+    },
+    {
+      "id": "cmd_1776382071864",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "solicitado",
+      "criado_em": "16/04/2026 20:27:51",
+      "atualizado_em": "16/04/2026 20:27:51",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
     }
   ]
 }
