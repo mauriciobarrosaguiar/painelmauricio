@@ -1,0 +1,10 @@
+@echo off
+set "PROJECT_DIR=C:\Users\Mauricio\Documents\EMS\SISTEMAS E APP\painel_visitas_web"
+set "PYTHON_EXE=python"
+set "GIT_REMOTE=origin"
+set "GITHUB_BRANCH=main"
+set "BUSSOLA_USUARIO=m0043497"
+set "BUSSOLA_SENHA=Ems@ade2311"
+set "MERCADOFARMA_USUARIO=m0043497"
+set "MERCADOFARMA_SENHA=Ems@ade2311"
+set "LOGS_DIR=%PROJECT_DIR%\logs"

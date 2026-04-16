@@ -1,0 +1,656 @@
+{
+  "commands": [
+    {
+      "id": "cmd_1774928776847",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "31/03/2026 00:46:16",
+      "atualizado_em": "31/03/2026 00:46:16",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
+    },
+    {
+      "id": "cmd_1774928992706",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "31/03/2026 00:49:52",
+      "atualizado_em": "31/03/2026 00:49:52",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
+    },
+    {
+      "id": "cmd_1774929286589",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "31/03/2026 00:54:46",
+      "atualizado_em": "31/03/2026 00:54:46",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
+    },
+    {
+      "id": "cmd_1774930457333",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "31/03/2026 01:14:17",
+      "atualizado_em": "31/03/2026 01:14:17",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
+    },
+    {
+      "id": "cmd_1774930746056",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "31/03/2026 01:19:06",
+      "atualizado_em": "31/03/2026 01:19:06",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
+    },
+    {
+      "id": "cmd_1774932028208",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "31/03/2026 01:40:28",
+      "atualizado_em": "31/03/2026 01:40:28",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
+    },
+    {
+      "id": "cmd_1774933289456",
+      "acao": "atualizar_mercadofarma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "solicitado",
+      "criado_em": "31/03/2026 02:01:29",
+      "atualizado_em": "31/03/2026 02:01:29",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
+    },
+    {
+      "id": "cmd_1774936426043",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 02:53:46",
+      "atualizado_em": "31/03/2026 02:53:46",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774937021480",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 03:03:41",
+      "atualizado_em": "31/03/2026 03:03:41",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774937023275",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 03:03:43",
+      "atualizado_em": "31/03/2026 03:03:43",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774938145597",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 03:22:25",
+      "atualizado_em": "31/03/2026 03:22:25",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774939084820",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 03:38:04",
+      "atualizado_em": "31/03/2026 03:38:04",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774939281966",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 03:41:21",
+      "atualizado_em": "31/03/2026 03:41:21",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774940302706",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 03:58:22",
+      "atualizado_em": "31/03/2026 03:58:22",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774942205017",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 04:30:05",
+      "atualizado_em": "31/03/2026 04:30:05",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774943835452",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 04:57:15",
+      "atualizado_em": "31/03/2026 04:57:15",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774945008178",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 05:16:48",
+      "atualizado_em": "31/03/2026 05:16:48",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774954680817",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 07:58:00",
+      "atualizado_em": "31/03/2026 07:58:00",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774956674178",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 08:31:14",
+      "atualizado_em": "31/03/2026 08:31:14",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774959963478",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 09:26:03",
+      "atualizado_em": "31/03/2026 09:26:03",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774963809865",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 10:30:09",
+      "atualizado_em": "31/03/2026 10:30:09",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774964474683",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 10:41:14",
+      "atualizado_em": "31/03/2026 10:41:14",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774967826754",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 11:37:06",
+      "atualizado_em": "31/03/2026 11:37:06",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774968155581",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 11:42:35",
+      "atualizado_em": "31/03/2026 11:42:35",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774969211430",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 12:00:11",
+      "atualizado_em": "31/03/2026 12:00:11",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774969946933",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 12:12:26",
+      "atualizado_em": "31/03/2026 12:12:26",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774972710015",
+      "acao": "enviar_pedido_mf",
+      "params": {
+        "cart_items": [
+          {
+            "Cliente": "",
+            "CNPJ": "36022643000183",
+            "Empresa": "",
+            "Razao social": "FPB AURENY COMERCIO DE MEDICAMENTOS LTDA",
+            "Nome do comprador": "KELBSON",
+            "Tel do comprador": "63992016489",
+            "EAN": "7896004727233",
+            "Produto": "CICLOPIROX OLAMINA SOL TÓPICA 10 MG/ ML C/ 15 ML",
+            "Distribuidora": "Nazaria - TO",
+            "Preço": 7.99,
+            "Estoque": 210,
+            "Mix": "LINHA",
+            "Qtde": 20,
+            "Foco": false
+          }
+        ],
+        "headless": true,
+        "cupom": ""
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 12:58:30",
+      "atualizado_em": "31/03/2026 12:58:30",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774973382988",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 13:09:42",
+      "atualizado_em": "31/03/2026 13:09:42",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774984963852",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 16:22:43",
+      "atualizado_em": "31/03/2026 16:22:43",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774987808602",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 17:10:08",
+      "atualizado_em": "31/03/2026 17:10:08",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774994307309",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 18:58:27",
+      "atualizado_em": "31/03/2026 18:58:27",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1774998755415",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "31/03/2026 20:12:35",
+      "atualizado_em": "31/03/2026 20:12:35",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775132346853",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "pendente",
+      "criado_em": "02/04/2026 09:19:06",
+      "atualizado_em": "02/04/2026 09:19:06",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775139253461",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "02/04/2026 11:14:13",
+      "atualizado_em": "02/04/2026 11:14:13",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775146574244",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "02/04/2026 13:16:14",
+      "atualizado_em": "02/04/2026 13:16:14",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775149189355",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "02/04/2026 13:59:49",
+      "atualizado_em": "02/04/2026 13:59:49",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775154707117",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "02/04/2026 15:31:47",
+      "atualizado_em": "02/04/2026 15:31:47",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775164181024",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "pendente",
+      "criado_em": "02/04/2026 18:09:41",
+      "atualizado_em": "02/04/2026 18:09:41",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775183775885",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "02/04/2026 23:36:15",
+      "atualizado_em": "02/04/2026 23:36:15",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775213908944",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "03/04/2026 07:58:28",
+      "atualizado_em": "03/04/2026 07:58:28",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775490161479",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "06/04/2026 12:42:41",
+      "atualizado_em": "06/04/2026 12:42:41",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775494674353",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "pendente",
+      "criado_em": "06/04/2026 13:57:54",
+      "atualizado_em": "06/04/2026 13:57:54",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775557612484",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "07/04/2026 07:26:52",
+      "atualizado_em": "07/04/2026 07:26:52",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775588634451",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "07/04/2026 16:03:54",
+      "atualizado_em": "07/04/2026 16:03:54",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775675299336",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "08/04/2026 16:08:19",
+      "atualizado_em": "08/04/2026 16:08:19",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775676778151",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "08/04/2026 16:32:58",
+      "atualizado_em": "08/04/2026 16:32:58",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775745583701",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "09/04/2026 11:39:43",
+      "atualizado_em": "09/04/2026 11:39:43",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775754565532",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "09/04/2026 14:09:25",
+      "atualizado_em": "09/04/2026 14:09:25",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1775824645265",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "10/04/2026 09:37:25",
+      "atualizado_em": "10/04/2026 09:37:25",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1776051973189",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "13/04/2026 00:46:13",
+      "atualizado_em": "13/04/2026 00:46:13",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1776172890724",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "14/04/2026 10:21:30",
+      "atualizado_em": "14/04/2026 10:21:30",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1776174223089",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "pendente",
+      "criado_em": "14/04/2026 10:43:43",
+      "atualizado_em": "14/04/2026 10:43:43",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1776196669392",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "14/04/2026 16:57:49",
+      "atualizado_em": "14/04/2026 16:57:49",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1776200399311",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "14/04/2026 17:59:59",
+      "atualizado_em": "14/04/2026 17:59:59",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1776280227139",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "15/04/2026 16:10:27",
+      "atualizado_em": "15/04/2026 16:10:27",
+      "mensagem": ""
+    },
+    {
+      "id": "cmd_1776345861981",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "16/04/2026 10:24:21",
+      "atualizado_em": "16/04/2026 10:24:21",
+      "mensagem": ""
+    }
+  ]
+}

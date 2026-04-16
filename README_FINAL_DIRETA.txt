@@ -1,0 +1,1 @@
+Suba a pasta painel_visitas_web e o arquivo .github/workflows/automacao_web.yml. Esta versão mantém o layout antigo e usa execução direta via workflow, sem fila de comandos. Configure os Secrets do Streamlit e do GitHub conforme orientado.

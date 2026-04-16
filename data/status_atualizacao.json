@@ -1,0 +1,27 @@
+{
+  "bussola": {
+    "ultimo_sucesso": "16/04/2026 10:25:28",
+    "status": "ok",
+    "mensagem": "Bússola atualizado pelo GitHub Actions.",
+    "ultimo_comando_id": "cmd_1774932028208",
+    "atualizado_em": "16/04/2026 10:25:28"
+  },
+  "mercadofarma": {
+    "ultimo_sucesso": "08/04/2026 16:27:10",
+    "status": "ok",
+    "mensagem": "Mercado Farma atualizado pelo GitHub Actions.",
+    "ultimo_comando_id": "cmd_1774933289456",
+    "atualizado_em": "08/04/2026 16:27:10"
+  },
+  "comandos": {
+    "ultimo_sucesso": "",
+    "status": "nunca",
+    "mensagem": "",
+    "ultimo_resultado": ""
+  },
+  "github_actions": {
+    "status": "ok",
+    "mensagem": "Bússola atualizado pelo GitHub Actions.",
+    "atualizado_em": "16/04/2026 10:25:28"
+  }
+}

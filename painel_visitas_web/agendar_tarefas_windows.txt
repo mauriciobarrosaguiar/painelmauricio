@@ -1,0 +1,23 @@
+AGENDADOR DE TAREFAS DO WINDOWS
+
+1) Abra o Agendador de Tarefas
+2) Criar Tarefa
+
+BÚSSOLA
+- Nome: Atualizar Bussola
+- Programa: caminho do arquivo atualizar_bussola_oculto.vbs
+- Disparador: repetir a cada 2 horas
+
+MERCADO FARMA
+- Nome: Atualizar Mercado Farma
+- Programa: caminho do arquivo atualizar_mercadofarma_oculto.vbs
+- Disparador: 2 vezes por dia, por exemplo 08:30 e 14:30
+
+ROTINA COMPLETA
+- Se preferir um só fluxo, use:
+- rotina_atualizacao_completa_oculto.vbs
+
+Configurações recomendadas:
+- Executar com privilégios mais altos
+- Executar o mais rápido possível se perder um horário
+- Permitir execução sob demanda

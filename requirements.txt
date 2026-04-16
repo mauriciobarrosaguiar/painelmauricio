@@ -1,0 +1,7 @@
+streamlit>=1.43
+pandas>=2.2
+openpyxl>=3.1
+numpy>=1.26
+selenium>=4.28
+webdriver-manager>=4.0
+requests

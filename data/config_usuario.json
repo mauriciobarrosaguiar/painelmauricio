@@ -1,0 +1,29 @@
+{
+  "foco_semana_manual": [],
+  "foco_mes_manual": [],
+  "visible_dists": [
+    "Nazaria - MA - Imperatriz",
+    "Nazaria - TO",
+    "Panpharma - GO",
+    "Profarma - DF",
+    "Santa Cruz - GO",
+    "Total - TO"
+  ],
+  "addl_discount": {
+    "Nazaria - MA - Imperatriz": 0.0,
+    "Nazaria - TO": 0.0,
+    "Panpharma - GO": 0.0,
+    "Profarma - DF": 0.0,
+    "Santa Cruz - GO": 0.0,
+    "Total - TO": 0.0
+  },
+  "addl_discount_exclusions": {
+    "Nazaria - MA - Imperatriz": [],
+    "Nazaria - TO": [],
+    "Panpharma - GO": [],
+    "Profarma - DF": [],
+    "Santa Cruz - GO": [],
+    "Total - TO": []
+  },
+  "dist_pref": {}
+}
