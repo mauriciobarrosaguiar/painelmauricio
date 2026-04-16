@@ -9,7 +9,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 import pandas as pd
 from selenium import webdriver
@@ -28,6 +28,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
 from config import DATA_DIR
+from services.mercadofarma_inventory import (
+    build_not_found_row,
+    login_mercadofarma as mf_login_catalogo,
+    processar_ean_catalogo,
+    selecionar_cnpj_catalogo,
+)
 
 CRED_FILE = DATA_DIR / 'credenciais_integracao.json'
 CONFIG_INI_FILE = DATA_DIR / 'integracoes.ini'
@@ -49,6 +55,36 @@ def _log(msg: str):
     stamp = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
     with LOG_FILE.open('a', encoding='utf-8') as f:
         f.write(f'[{stamp}] {msg}\n')
+
+
+def _notify(
+    status_cb: Optional[Callable[..., None]] = None,
+    *,
+    status: str = 'executando',
+    mensagem: str = '',
+    etapa: str = '',
+    atual: int | None = None,
+    total: int | None = None,
+    erro: str = '',
+    resumo: dict | None = None,
+    nivel: str = 'info',
+):
+    if not callable(status_cb):
+        return
+    payload = {
+        'status': status,
+        'mensagem': mensagem,
+        'etapa': etapa,
+        'atual': atual,
+        'total': total,
+        'erro': erro,
+        'resumo': resumo or {},
+        'nivel': nivel,
+    }
+    try:
+        status_cb(**payload)
+    except TypeError:
+        status_cb(payload)
 
 
 
@@ -349,13 +385,20 @@ def _selecionar_csv_bussola(driver):
     raise TimeoutException(f'Não encontrei a opção CSV após várias tentativas. Último erro: {ultima_ex}')
 
 
-def run_bussola_download(login: str, senha: str, output_path: Path, headless: bool = False) -> Path:
+def run_bussola_download(
+    login: str,
+    senha: str,
+    output_path: Path,
+    headless: bool = False,
+    status_cb: Optional[Callable[..., None]] = None,
+) -> Path:
     if not login or not senha:
         raise ValueError('Informe login e senha do Bússola.')
 
     _log('Iniciando extração do Bússola via extrator de 90 dias.')
 
     try:
+        _notify(status_cb, mensagem='Preparando extracao do Bussola.', etapa='Preparacao', atual=1, total=5)
         try:
             from bussola_extrator import executar as executar_bussola
         except Exception:
@@ -367,6 +410,7 @@ def run_bussola_download(login: str, senha: str, output_path: Path, headless: bo
         download_dir.mkdir(parents=True, exist_ok=True)
 
         _cleanup_old_bussola_files(saida_dir, download_dir)
+        _notify(status_cb, mensagem='Ambiente limpo e pronto para iniciar.', etapa='Preparacao', atual=2, total=5)
 
         executar_bussola(
             usuario=login,
@@ -374,6 +418,7 @@ def run_bussola_download(login: str, senha: str, output_path: Path, headless: bo
             saida=str(saida_dir),
             downloads=str(download_dir),
             headless=headless,
+            log_fn=lambda msg: _notify(status_cb, mensagem=msg, etapa='Extracao', atual=3, total=5),
         )
 
         final_path = output_path if output_path.exists() else (saida_dir / 'Pedidos.xlsx')
@@ -383,13 +428,15 @@ def run_bussola_download(login: str, senha: str, output_path: Path, headless: bo
         _cleanup_old_bussola_files(saida_dir, download_dir)
 
         _log(f'Base Pedidos atualizada em: {final_path.name}')
+        _notify(status_cb, status='ok', mensagem=f'Bussola atualizado com sucesso: {final_path.name}', etapa='Concluido', atual=5, total=5, resumo={'arquivo': final_path.name})
         return final_path
     except Exception as e:
         _log(f'Falha na extração do Bússola: {e}')
+        _notify(status_cb, status='erro', mensagem='Falha na extracao do Bussola.', etapa='Falha', erro=str(e), nivel='error')
         raise
 
 
-COLUNAS_MEF = ['EAN', 'NOME DO PRODUTO', 'DISTRIBUIDORA', 'ESTOQUE', 'DESCONTO (%)', 'PF DIST. (R$)', 'PREÇO FINAL (R$)', 'SEM IMPOSTO (R$)', 'DATA']
+COLUNAS_MEF = ['EAN', 'NOME DO PRODUTO', 'DISTRIBUIDORA', 'ESTOQUE', 'DESCONTO (%)', 'PF DIST. (R$)', 'PF FABRICA (R$)', 'PREÇO FINAL (R$)', 'SEM IMPOSTO (R$)', 'DATA']
 
 
 def _extrair_valor_numerico(texto, tipo='valor'):
@@ -474,7 +521,15 @@ def _open_catalogo(driver: webdriver.Chrome, wait: WebDriverWait):
     wait.until(EC.presence_of_element_located((By.NAME, 'term')))
 
 
-def run_mercadofarma_inventory(login: str, senha: str, cnpj: str, produtos_df: pd.DataFrame, output_path: Path, headless: bool = False) -> Path:
+def run_mercadofarma_inventory(
+    login: str,
+    senha: str,
+    cnpj: str,
+    produtos_df: pd.DataFrame,
+    output_path: Path,
+    headless: bool = False,
+    status_cb: Optional[Callable[..., None]] = None,
+) -> Path:
     if not login or not senha:
         raise ValueError('Informe login e senha do Mercado Farma.')
     cnpj = _clean_cnpj(cnpj)
@@ -488,8 +543,9 @@ def run_mercadofarma_inventory(login: str, senha: str, cnpj: str, produtos_df: p
     download_dir = DATA_DIR / 'downloads_mercadofarma'
     _cleanup_download_dir(download_dir, {'.xlsx', '.xls', '.csv', '.crdownload', '.tmp', '.part'})
     driver = _make_driver(download_dir, headless=headless)
-    wait = WebDriverWait(driver, 30)
+    total_passos = len(eans) + 3
     _log(f'Iniciando extração do Mercado Farma com {len(eans)} EANs.')
+    _notify(status_cb, mensagem=f'Preparando consulta de {len(eans)} EANs.', etapa='Preparacao', atual=1, total=len(eans) + 3)
     try:
         driver.get('https://www.mercadofarma.com.br/')
         _log('Página inicial do Mercado Farma aberta.')
@@ -591,6 +647,9 @@ def run_mercadofarma_inventory(login: str, senha: str, cnpj: str, produtos_df: p
                 pass
         _log(f'Base de estoque/preço substituída por nova extração: {output_path.name}')
         return output_path
+    except Exception as e:
+        _notify(status_cb, status='erro', mensagem='Falha na extracao do Mercado Farma.', etapa='Falha', erro=str(e), nivel='error')
+        raise
     finally:
         try:
             driver.quit()
@@ -604,6 +663,84 @@ def _normalize_dist_mf(texto: str) -> str:
     s = s.replace('–', '-').replace('—', '-')
     s = re.sub(r'\s+', ' ', s)
     return s
+
+
+def run_mercadofarma_inventory(
+    login: str,
+    senha: str,
+    cnpj: str,
+    produtos_df: pd.DataFrame,
+    output_path: Path,
+    headless: bool = False,
+    status_cb: Optional[Callable[..., None]] = None,
+) -> Path:
+    if not login or not senha:
+        raise ValueError('Informe login e senha do Mercado Farma.')
+    cnpj = _clean_cnpj(cnpj)
+    if not cnpj:
+        raise ValueError('Informe um CNPJ para entrar no Mercado Farma.')
+
+    eans = _ean_list_from_produtos(produtos_df)
+    if not eans:
+        raise ValueError('Nenhum EAN encontrado na base de produtos.')
+
+    output_rows: list[dict] = []
+    download_dir = DATA_DIR / 'downloads_mercadofarma'
+    _cleanup_download_dir(download_dir, {'.xlsx', '.xls', '.csv', '.crdownload', '.tmp', '.part'})
+    driver = _make_driver(download_dir, headless=headless)
+    _log(f'Iniciando extraÃ§Ã£o do Mercado Farma com {len(eans)} EANs.')
+
+    try:
+        _notify(status_cb, mensagem=f'Preparando consulta de {len(eans)} EANs.', etapa='Preparacao', atual=1, total=len(eans) + 3, resumo={'ean_total': len(eans)})
+        mf_login_catalogo(
+            driver,
+            login,
+            senha,
+            log_fn=lambda msg: (_log(msg), _notify(status_cb, mensagem=msg, etapa='Login', atual=2, total=len(eans) + 3)),
+        )
+        selecionar_cnpj_catalogo(
+            driver,
+            cnpj,
+            log_fn=lambda msg: (_log(msg), _notify(status_cb, mensagem=msg, etapa='Selecao de CNPJ', atual=3, total=len(eans) + 3)),
+        )
+
+        for i, ean in enumerate(eans, start=1):
+            _log(f'Consultando EAN {i}/{len(eans)}: {ean}')
+            _notify(status_cb, mensagem=f'Consultando EAN {i}/{len(eans)}: {ean}', etapa='Extracao por EAN', atual=i + 3, total=len(eans) + 3, resumo={'ean_atual': ean, 'ean_total': len(eans)})
+            try:
+                output_rows.extend(processar_ean_catalogo(driver, ean))
+            except Exception as e:
+                _log(f'EAN {ean} nÃ£o encontrado ou sem oferta: {e}')
+                output_rows.append(build_not_found_row(ean))
+                _notify(status_cb, mensagem=f'EAN {ean} sem oferta ou com falha.', etapa='Extracao por EAN', atual=i + 3, total=len(eans) + 3, erro=str(e), nivel='warning')
+
+            if i % 10 == 0 and output_rows:
+                _write_inventory_excel(pd.DataFrame(output_rows, columns=COLUNAS_MEF), output_path)
+                _log(f'Parcial salva com {len(output_rows)} linhas.')
+                _notify(status_cb, mensagem=f'Parcial salva com {len(output_rows)} linhas.', etapa='Salvando parcial', atual=i + 3, total=len(eans) + 3)
+
+        df = pd.DataFrame(output_rows, columns=COLUNAS_MEF)
+        _write_inventory_excel(df, output_path)
+
+        alt_xlsm = output_path.with_suffix('.xlsm')
+        if alt_xlsm.exists():
+            try:
+                alt_xlsm.unlink()
+            except Exception:
+                pass
+
+        _log(f'Base de estoque/preÃ§o substituÃ­da por nova extraÃ§Ã£o: {output_path.name}')
+        _notify(status_cb, status='ok', mensagem=f'Mercado Farma atualizado com sucesso: {output_path.name}', etapa='Concluido', atual=len(eans) + 3, total=len(eans) + 3, resumo={'arquivo': output_path.name, 'linhas': len(df)})
+        return output_path
+    except Exception as e:
+        _log(f'Falha na extração do Mercado Farma: {e}')
+        _notify(status_cb, status='erro', mensagem='Falha na extracao do Mercado Farma.', etapa='Falha', erro=str(e), nivel='error')
+        raise
+    finally:
+        try:
+            driver.quit()
+        except Exception:
+            pass
 
 
 def _mercadofarma_login_and_select_client(driver: webdriver.Chrome, login: str, senha: str, cnpj: str):
@@ -931,7 +1068,13 @@ def _mf_finish_payment_and_send(driver: webdriver.Chrome):
     _log('Pedido enviado na etapa final de pagamento.')
     return True
 
-def clear_mercadofarma_mass_order(login: str, senha: str, cnpj: str, headless: bool = True):
+def clear_mercadofarma_mass_order(
+    login: str,
+    senha: str,
+    cnpj: str,
+    headless: bool = True,
+    status_cb: Optional[Callable[..., None]] = None,
+):
     if not login or not senha:
         raise ValueError('Informe login e senha do Mercado Farma.')
     cnpj = _clean_cnpj(cnpj)
@@ -940,12 +1083,19 @@ def clear_mercadofarma_mass_order(login: str, senha: str, cnpj: str, headless: b
     driver = _make_driver(DATA_DIR / 'downloads_mercadofarma_pedido', headless=headless)
     try:
         _log(f'Limpando seleção anterior no Mercado Farma - CNPJ {cnpj}')
+        _notify(status_cb, mensagem=f'Limpando selecao anterior para o CNPJ {cnpj}.', etapa='Limpeza', atual=1, total=3)
         _mercadofarma_login_and_select_client(driver, login, senha, cnpj)
+        _notify(status_cb, mensagem='Cliente autenticado no Mercado Farma.', etapa='Limpeza', atual=2, total=3)
         _mf_prepare_mass_order_screen(driver)
         cleaned = _mf_clear_previous_selection(driver)
         if not cleaned:
             _log('Nenhuma seleção antiga encontrada para limpar.')
+        _notify(status_cb, status='ok', mensagem='Limpeza do pedido Mercado Farma finalizada.', etapa='Concluido', atual=3, total=3, resumo={'cnpj': cnpj, 'limpo': bool(cleaned)})
         return cleaned
+    except Exception as e:
+        _log(f'Falha ao limpar pedido Mercado Farma - CNPJ {cnpj}: {e}')
+        _notify(status_cb, status='erro', mensagem=f'Falha ao limpar pedido do CNPJ {cnpj}.', etapa='Falha', atual=3, total=3, erro=str(e), nivel='error')
+        raise
     finally:
         try:
             driver.quit()
@@ -953,7 +1103,14 @@ def clear_mercadofarma_mass_order(login: str, senha: str, cnpj: str, headless: b
             pass
 
 
-def run_mercadofarma_mass_order(login: str, senha: str, cart_items: list[dict], headless: bool = True, cupom: str = ""):
+def run_mercadofarma_mass_order(
+    login: str,
+    senha: str,
+    cart_items: list[dict],
+    headless: bool = True,
+    cupom: str = "",
+    status_cb: Optional[Callable[..., None]] = None,
+):
     if not login or not senha:
         raise ValueError('Informe login e senha do Mercado Farma.')
     if not cart_items:
@@ -970,7 +1127,9 @@ def run_mercadofarma_mass_order(login: str, senha: str, cart_items: list[dict], 
         driver = _make_driver(DATA_DIR / 'downloads_mercadofarma_pedido', headless=headless)
         try:
             _log(f'Enviando carrinho para Mercado Farma - CNPJ {cnpj}')
+            _notify(status_cb, mensagem=f'Iniciando envio do pedido para o CNPJ {cnpj}.', etapa='Preparacao', atual=1, total=len(itens_cnpj) + 5, resumo={'cnpj': cnpj, 'itens': len(itens_cnpj)})
             _mercadofarma_login_and_select_client(driver, login, senha, cnpj)
+            _notify(status_cb, mensagem='Cliente autenticado no Mercado Farma.', etapa='Login', atual=2, total=len(itens_cnpj) + 5)
             _mf_prepare_mass_order_screen(driver)
             _mf_clear_previous_selection(driver)
 
@@ -980,12 +1139,14 @@ def run_mercadofarma_mass_order(login: str, senha: str, cart_items: list[dict], 
                 if d and d not in distribs_unicas:
                     distribs_unicas.append(d)
             _mf_select_distributors(driver, distribs_unicas)
+            _notify(status_cb, mensagem=f'{len(distribs_unicas)} distribuidora(s) selecionada(s).', etapa='Selecao de distribuidoras', atual=3, total=len(itens_cnpj) + 5, resumo={'distribuidoras': len(distribs_unicas)})
 
-            for item in itens_cnpj:
+            for posicao, item in enumerate(itens_cnpj, start=1):
                 ean = re.sub(r'\D','', str(item.get('EAN','')))
                 dist_desejada = str(item.get('Distribuidora','')).strip()
                 qtd = int(pd.to_numeric(item.get('Qtde',1), errors='coerce') or 1)
                 try:
+                    _notify(status_cb, mensagem=f'Enviando item {posicao}/{len(itens_cnpj)}: {ean} / {dist_desejada}', etapa='Montagem do pedido', atual=posicao + 3, total=len(itens_cnpj) + 5, resumo={'ean_atual': ean, 'distribuidora': dist_desejada})
                     _mf_search_product(driver, ean)
                     WebDriverWait(driver, 20).until(lambda d: len(_mf_visible_cards(d)) > 0)
                     cards = _mf_visible_cards(driver)
@@ -999,15 +1160,24 @@ def run_mercadofarma_mass_order(login: str, senha: str, cart_items: list[dict], 
                 except Exception as e:
                     relatorio.append({'cnpj': cnpj, 'ean': ean, 'distribuidora': dist_desejada, 'qtd': qtd, 'status': 'erro', 'erro': str(e)})
                     _log(f'Falha ao enviar item ao Mercado Farma: {ean} / {dist_desejada} / qtd {qtd} - {e}')
+                    _notify(status_cb, mensagem=f'Falha no item {ean} / {dist_desejada}.', etapa='Montagem do pedido', atual=posicao + 3, total=len(itens_cnpj) + 5, erro=str(e), nivel='warning')
             try:
                 _mf_apply_coupon_if_any(driver, cupom)
+                _notify(status_cb, mensagem='Pedido montado. Enviando para confirmacao final.', etapa='Confirmacao final', atual=len(itens_cnpj) + 4, total=len(itens_cnpj) + 5)
                 _mf_click_send_order(driver)
                 _mf_confirm_send_even_if_overstock(driver)
                 _mf_finish_payment_and_send(driver)
                 _log(f'Pedido finalizado no Mercado Farma - CNPJ {cnpj}')
+                _notify(status_cb, status='ok', mensagem=f'Pedido enviado ao Mercado Farma para o CNPJ {cnpj}.', etapa='Concluido', atual=len(itens_cnpj) + 5, total=len(itens_cnpj) + 5, resumo={'cnpj': cnpj, 'itens': len(itens_cnpj)})
             except Exception as e:
                 relatorio.append({'cnpj': cnpj, 'ean': '', 'distribuidora': '', 'qtd': 0, 'status': 'erro_envio', 'erro': str(e)})
                 _log(f'Falha ao finalizar pedido no Mercado Farma - CNPJ {cnpj}: {e}')
+                _notify(status_cb, status='erro', mensagem=f'Falha ao finalizar o pedido do CNPJ {cnpj}.', etapa='Falha', atual=len(itens_cnpj) + 5, total=len(itens_cnpj) + 5, erro=str(e), nivel='error')
+        except Exception as e:
+            relatorio.append({'cnpj': cnpj, 'ean': '', 'distribuidora': '', 'qtd': 0, 'status': 'erro_geral', 'erro': str(e)})
+            _log(f'Falha geral no envio ao Mercado Farma - CNPJ {cnpj}: {e}')
+            _notify(status_cb, status='erro', mensagem=f'Falha no envio do pedido para o CNPJ {cnpj}.', etapa='Falha', atual=len(itens_cnpj) + 5, total=len(itens_cnpj) + 5, erro=str(e), nivel='error')
+            raise
         finally:
             try:
                 driver.quit()

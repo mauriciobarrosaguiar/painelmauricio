@@ -27,6 +27,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
+from services.mercadofarma_inventory import (
+    build_not_found_row,
+    login_mercadofarma as shared_login_mercadofarma,
+    processar_ean_catalogo as shared_processar_ean_catalogo,
+    selecionar_cnpj_catalogo as shared_selecionar_cnpj_catalogo,
+)
+
 MF_URL = "https://www.mercadofarma.com.br/"
 CONFIG_FILE = "config.ini"
 DEFAULT_INPUT_NAME = "PRODUTOS COM EAN - POR LANCAMENTOS-PRIORITARIOS-LINHA.xlsx"
@@ -43,6 +50,7 @@ COLUNAS = [
     "ESTOQUE",
     "DESCONTO (%)",
     "PF DIST. (R$)",
+    "PF FABRICA (R$)",
     "PREÇO FINAL (R$)",
     "SEM IMPOSTO (R$)",
     "DATA",
@@ -678,6 +686,55 @@ def run_extraction(usuario: str, senha: str, cnpj: str, input_path: Path, output
             except Exception:
                 pass
 
+
+
+def run_extraction(usuario: str, senha: str, cnpj: str, input_path: Path, output_path: Path, debug_dir: Path, headless: bool) -> int:
+    eans = load_eans(input_path)
+    if not eans:
+        raise RuntimeError("Nenhum EAN valido foi encontrado no arquivo de entrada.")
+
+    log(f"Total de EANs para extrair: {len(eans)}")
+    log(f"Arquivo de entrada: {input_path}")
+    log(f"Arquivo de saida: {output_path}")
+    log(f"Usando credenciais salvas no sistema para o CNPJ: {cnpj}")
+
+    rows: List[dict] = []
+    driver: Optional[WebDriver] = None
+
+    try:
+        driver = build_driver(headless=headless)
+        shared_login_mercadofarma(driver, usuario, senha, log_fn=log)
+        shared_selecionar_cnpj_catalogo(driver, cnpj, log_fn=log)
+
+        for idx, ean in enumerate(eans, start=1):
+            log(f"[{idx}/{len(eans)}] Extraindo EAN {ean}...")
+            try:
+                rows.extend(shared_processar_ean_catalogo(driver, ean))
+            except Exception as exc:
+                save_debug(driver, debug_dir, f"ean_{ean}")
+                log(f"Falha ao extrair EAN {ean}: {exc}")
+                rows.append(build_not_found_row(ean))
+
+            if idx % FLUSH_BUFFER_EVERY == 0 and rows:
+                save_results(rows, output_path)
+                log(f"Parcial salva com {len(rows)} linhas.")
+
+        save_results(rows, output_path)
+        log(f"Extração concluída. Linhas salvas: {len(rows)}")
+        return 0
+    except Exception as exc:
+        if driver:
+            save_debug(driver, debug_dir, "falha_geral")
+        if rows:
+            save_results(rows, output_path)
+        log(f"Falha geral: {exc}")
+        return 1
+    finally:
+        if driver:
+            try:
+                driver.quit()
+            except Exception:
+                pass
 
 
 def parse_args() -> argparse.Namespace:

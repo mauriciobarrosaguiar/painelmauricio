@@ -110,11 +110,11 @@ def entrar_bussola(driver, usuario: str, senha: str):
 
     click_first(driver, [
         (By.XPATH, "//a[normalize-space()='Entrar']"),
-        (By.XPATH, "//a[contains(., 'Entrar')]]"),
+        (By.XPATH, "//a[contains(., 'Entrar')]"),
     ], desc="botão Entrar")
 
     click_first(driver, [
-        (By.XPATH, "//*[contains(@class,'kc-social-provider-name') and contains(., 'Active Directory')]]"),
+        (By.XPATH, "//*[contains(@class,'kc-social-provider-name') and contains(., 'Active Directory')]"),
         (By.XPATH, "//*[normalize-space()='Active Directory']"),
     ], timeout=40, desc="Active Directory")
 
@@ -156,7 +156,7 @@ def abrir_analise_com_periodo(driver):
 
     wait_visible(driver, [
         (By.XPATH, "//*[contains(., 'Análise de pedidos') ]"),
-        (By.XPATH, "//button[contains(., 'Exportar')]]"),
+        (By.XPATH, "//button[contains(., 'Exportar')]"),
         (By.XPATH, "//*[@data-slot='dropdown-menu-trigger' and contains(., 'Exportar') ]"),
     ], timeout=60, desc="tela Análise de pedidos")
 
@@ -166,8 +166,8 @@ def abrir_analise_com_periodo(driver):
 def abrir_menu_exportar(driver):
     log("Abrindo menu Exportar...")
     click_first(driver, [
-        (By.XPATH, "//button[contains(., 'Exportar')]]"),
-        (By.XPATH, "//*[@data-slot='dropdown-menu-trigger' and contains(., 'Exportar')]]"),
+        (By.XPATH, "//button[contains(., 'Exportar')]"),
+        (By.XPATH, "//*[@data-slot='dropdown-menu-trigger' and contains(., 'Exportar')]"),
     ], timeout=35, desc="Exportar")
 
     wait(driver, 20).until(

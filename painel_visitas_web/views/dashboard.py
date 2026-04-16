@@ -106,10 +106,11 @@ def _save_metas(data: dict):
 
 def _parse_br_datetime(value: str | None) -> str:
     if not value:
-        return 'â€”'
+        return '—'
     txt = str(value).strip()
     if not txt:
-        return 'â€”'
+        return '—'
+    # ISO with timezone
     try:
         dt = datetime.fromisoformat(txt.replace('Z', '+00:00'))
         if dt.tzinfo is None:
@@ -119,6 +120,7 @@ def _parse_br_datetime(value: str | None) -> str:
         return dt.strftime('%d/%m/%Y %H:%M:%S')
     except Exception:
         pass
+    # dd/mm/yyyy hh:mm:ss possibly saved from GitHub runner without timezone
     for fmt in ('%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M'):
         try:
             naive = datetime.strptime(txt, fmt)
@@ -168,13 +170,13 @@ def _build_period_sales(base_full: pd.DataFrame) -> tuple[dict[str, float], dict
 
 def _status_card_value(bloco: dict, fallback_file: Path | None = None) -> tuple[str, str]:
     dt_txt = bloco.get('ultimo_sucesso') or bloco.get('atualizado_em') or ''
-    status = bloco.get('status', 'â€”')
+    status = bloco.get('status', '—')
     if dt_txt:
         return _parse_br_datetime(dt_txt), status
     if fallback_file and fallback_file.exists():
         dt = datetime.fromtimestamp(fallback_file.stat().st_mtime, tz=TZ_BR)
         return dt.strftime('%d/%m/%Y %H:%M:%S'), status
-    return 'â€”', status
+    return '—', status
 
 
 def render_dashboard(score_df: pd.DataFrame, oportunidades: pd.DataFrame, foco: pd.DataFrame | None = None, inventario: pd.DataFrame | None = None, clientes_df: pd.DataFrame | None = None, base_full: pd.DataFrame | None = None, data_inicio=None, data_fim=None):
@@ -182,7 +184,7 @@ def render_dashboard(score_df: pd.DataFrame, oportunidades: pd.DataFrame, foco: 
     if data_inicio is not None and data_fim is not None:
         ini_txt = data_inicio.strftime('%d/%m/%Y') if hasattr(data_inicio, 'strftime') else str(data_inicio)
         fim_txt = data_fim.strftime('%d/%m/%Y') if hasattr(data_fim, 'strftime') else str(data_fim)
-        st.caption(f"PerÃ­odo aplicado: {ini_txt} atÃ© {fim_txt}")
+        st.caption(f"Período aplicado: {ini_txt} até {fim_txt}")
 
     base = score_df.copy() if score_df is not None else pd.DataFrame()
     if base.empty:
@@ -239,11 +241,11 @@ def render_dashboard(score_df: pd.DataFrame, oportunidades: pd.DataFrame, foco: 
         st.session_state.page = 'Carrinho'
         st.rerun()
 
-    with st.expander('Cadastrar metas do mÃªs', expanded=False):
+    with st.expander('Cadastrar metas do mês', expanded=False):
         c1, c2, c3, c4 = st.columns(4)
         meta_ol = c1.number_input('Meta OL sem combate', min_value=0.0, value=float(metas.get('meta_ol', 0.0)), step=100.0)
-        meta_prio = c2.number_input('Meta OL prioritÃ¡rios', min_value=0.0, value=float(metas.get('meta_prioritarios', 0.0)), step=100.0)
-        meta_lanc = c3.number_input('Meta OL lanÃ§amentos', min_value=0.0, value=float(metas.get('meta_lancamentos', 0.0)), step=100.0)
+        meta_prio = c2.number_input('Meta OL prioritários', min_value=0.0, value=float(metas.get('meta_prioritarios', 0.0)), step=100.0)
+        meta_lanc = c3.number_input('Meta OL lançamentos', min_value=0.0, value=float(metas.get('meta_lancamentos', 0.0)), step=100.0)
         meta_cli = c4.number_input('Meta clientes com venda', min_value=0, value=int(metas.get('meta_clientes', 0)), step=1)
         if st.button('Salvar metas'):
             _save_metas({'meta_ol': meta_ol, 'meta_prioritarios': meta_prio, 'meta_lancamentos': meta_lanc, 'meta_clientes': meta_cli})
@@ -252,23 +254,23 @@ def render_dashboard(score_df: pd.DataFrame, oportunidades: pd.DataFrame, foco: 
     bussola_dt, bussola_status = _status_card_value(status_auto.get('bussola', {}), DATA_DIR / 'Pedidos.xlsx')
     mf_dt, mf_status = _status_card_value(status_auto.get('mercadofarma', {}), None)
 
-    st.markdown('<div class="section-title">Ãšltimas atualizaÃ§Ãµes</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Últimas atualizações</div>', unsafe_allow_html=True)
     spacer_left, ua1, ua2, spacer_right = st.columns([0.6, 1, 1, 0.6])
     with ua1:
-        _metric_compact('BÃºssola', bussola_dt, bussola_status)
+        _metric_compact('Bússola', bussola_dt, bussola_status)
     with ua2:
         _metric_compact('Mercado Farma', mf_dt, mf_status)
 
-    st.markdown('<div class="section-title">Indicadores do perÃ­odo</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Indicadores do período</div>', unsafe_allow_html=True)
     cols = st.columns(4)
     with cols[0]:
-        _metric('OL sem combate', _money(total_ol), f"Combate: {_money(total_combate)} â€¢ Meta: {_pct(total_ol / metas.get('meta_ol',1)) if metas.get('meta_ol',0) else 'â€”'}")
+        _metric('OL sem combate', _money(total_ol), f"Combate: {_money(total_combate)} • Meta: {_pct(total_ol / metas.get('meta_ol',1)) if metas.get('meta_ol',0) else '—'}")
     with cols[1]:
-        _metric('OL PrioritÃ¡rios', _money(total_prio), f"{_pct(perc_prio)} do OL â€¢ Meta: {_pct(total_prio / metas.get('meta_prioritarios',1)) if metas.get('meta_prioritarios',0) else 'â€”'}")
+        _metric('OL Prioritários', _money(total_prio), f"{_pct(perc_prio)} do OL • Meta: {_pct(total_prio / metas.get('meta_prioritarios',1)) if metas.get('meta_prioritarios',0) else '—'}")
     with cols[2]:
-        _metric('OL LanÃ§amentos', _money(total_lanc), f"{_pct(perc_lanc)} do OL â€¢ Meta: {_pct(total_lanc / metas.get('meta_lancamentos',1)) if metas.get('meta_lancamentos',0) else 'â€”'}")
+        _metric('OL Lançamentos', _money(total_lanc), f"{_pct(perc_lanc)} do OL • Meta: {_pct(total_lanc / metas.get('meta_lancamentos',1)) if metas.get('meta_lancamentos',0) else '—'}")
     with cols[3]:
-        _metric('Clientes com venda no perÃ­odo', str(com_venda_periodo), f"Atingido vs meta: {_pct(com_venda_periodo / metas.get('meta_clientes',1)) if metas.get('meta_clientes',0) else 'â€”'} â€¢ Sem venda: {sem_venda_periodo}")
+        _metric('Clientes com venda no período', str(com_venda_periodo), f"Atingido vs meta: {_pct(com_venda_periodo / metas.get('meta_clientes',1)) if metas.get('meta_clientes',0) else '—'} • Sem venda: {sem_venda_periodo}")
 
     sip = selected_group()
     if sip:
@@ -289,10 +291,10 @@ def render_dashboard(score_df: pd.DataFrame, oportunidades: pd.DataFrame, foco: 
         cols2 = st.columns(4)
         teve_prio = pd.to_numeric(base.get('ol_prioritarios', 0), errors='coerce').fillna(0) > 0
         teve_lanc = pd.to_numeric(base.get('ol_lancamentos', 0), errors='coerce').fillna(0) > 0
-        with cols2[0]: _metric('Sem prioritÃ¡rio', str(int((~teve_prio).sum())), 'Clientes do filtro atual')
-        with cols2[1]: _metric('Sem lanÃ§amentos', str(int((~teve_lanc).sum())), 'Clientes do filtro atual')
+        with cols2[0]: _metric('Sem prioritário', str(int((~teve_prio).sum())), 'Clientes do filtro atual')
+        with cols2[1]: _metric('Sem lançamentos', str(int((~teve_lanc).sum())), 'Clientes do filtro atual')
         with cols2[2]: _metric('Grupos SIP', str(len(load_sip_groups())), 'Cadastre no menu SIP')
-        with cols2[3]: _metric('SIP selecionado', 'â€”', 'Nenhum grupo ativo')
+        with cols2[3]: _metric('SIP selecionado', '—', 'Nenhum grupo ativo')
 
     resumo_sip = build_sip_summary(base)
     if not resumo_sip.empty:
@@ -306,11 +308,11 @@ def render_dashboard(score_df: pd.DataFrame, oportunidades: pd.DataFrame, foco: 
         st.dataframe(sip_show[['SIP', 'CNPJs', 'Faturado', 'Meta', 'Atingimento', 'Falta regra', 'Pagamento']], use_container_width=True, hide_index=True)
 
     if not foco_cards.empty:
-        st.markdown('<div class="section-title">Produtos foco em evidÃªncia</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Produtos foco em evidência</div>', unsafe_allow_html=True)
         for _, row in foco_cards.iterrows():
             c1, c2 = st.columns([5, 1])
             with c1:
-                st.markdown(f"<div class='mini-alert-card'><div><b>{row.get('principio_ativo','')}</b></div><div style='font-size:.85rem;color:#5D7485'>EAN: {row.get('ean','')} â€¢ {row.get('distribuidora','')} â€¢ {_money(row.get('preco_sem_imposto',0))}</div></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='mini-alert-card'><div><b>{row.get('principio_ativo','')}</b></div><div style='font-size:.85rem;color:#5D7485'>EAN: {row.get('ean','')} • {row.get('distribuidora','')} • {_money(row.get('preco_sem_imposto',0))}</div></div>", unsafe_allow_html=True)
             with c2:
                 if st.button('Carrinho', key=f"dash_foco_{row.get('ean','')}", use_container_width=True):
                     st.session_state.preselected_products = st.session_state.get('preselected_products', {})
@@ -318,7 +320,7 @@ def render_dashboard(score_df: pd.DataFrame, oportunidades: pd.DataFrame, foco: 
                     st.session_state.page = 'Montar pedido'
                     st.rerun()
 
-    st.markdown('<div class="section-title">Top visitas do perÃ­odo</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Top visitas do período</div>', unsafe_allow_html=True)
     score_col = 'score_visita' if 'score_visita' in base.columns else None
     sort_cols = ['flag_sem_compra_periodo', 'venda_periodo', 'ol_sem_combate'] + ([score_col] if score_col else [])
     sort_asc = [False, True, True] + ([False] if score_col else [])
@@ -326,22 +328,22 @@ def render_dashboard(score_df: pd.DataFrame, oportunidades: pd.DataFrame, foco: 
     cols_vis = st.columns(2)
     for i, (_, row) in enumerate(top.iterrows()):
         with cols_vis[i % 2]:
-            comprou_foco = 'Sim' if bool(row.get('comprou_foco_semana', False)) else 'NÃ£o'
-            prioridade = 'Alta' if (not row['comprou_periodo'] or row.get('venda_periodo', 0) < 300) else ('MÃ©dia' if i < 4 else 'Monitorar')
+            comprou_foco = 'Sim' if bool(row.get('comprou_foco_semana', False)) else 'Não'
+            prioridade = 'Alta' if (not row['comprou_periodo'] or row.get('venda_periodo', 0) < 300) else ('Média' if i < 4 else 'Monitorar')
             st.markdown(
-                f"<div class='visit-card'><div class='visit-head'><div><div class='visit-name'>{row['nome_fantasia']}</div><div class='visit-sub'>CNPJ: {row['cnpj']} â€¢ {row.get('cidade','')}</div></div><div class='priority-badge'>{prioridade}</div></div>"
+                f"<div class='visit-card'><div class='visit-head'><div><div class='visit-name'>{row['nome_fantasia']}</div><div class='visit-sub'>CNPJ: {row['cnpj']} • {row.get('cidade','')}</div></div><div class='priority-badge'>{prioridade}</div></div>"
                 f"<div class='reason-box'>{row.get('motivo_principal', 'Visita priorizada pelo painel')}</div>"
-                f"<div class='visit-grid'><div><span>Venda no perÃ­odo</span><b>{'Sim' if row['comprou_periodo'] else 'NÃ£o'}</b></div><div><span>Produto da semana</span><b>{comprou_foco}</b></div>"
-                f"<div><span>OL sem combate</span><b>{_money(row.get('ol_sem_combate', 0))}</b></div><div><span>OL prioritÃ¡rios</span><b>{_money(row.get('ol_prioritarios', 0))}</b></div>"
-                f"<div><span>OL lanÃ§amentos</span><b>{_money(row.get('ol_lancamentos', 0))}</b></div><div><span>Resultado no perÃ­odo</span><b>{_money(row.get('venda_periodo', 0))}</b></div></div></div>",
+                f"<div class='visit-grid'><div><span>Venda no período</span><b>{'Sim' if row['comprou_periodo'] else 'Não'}</b></div><div><span>Produto da semana</span><b>{comprou_foco}</b></div>"
+                f"<div><span>OL sem combate</span><b>{_money(row.get('ol_sem_combate', 0))}</b></div><div><span>OL prioritários</span><b>{_money(row.get('ol_prioritarios', 0))}</b></div>"
+                f"<div><span>OL lançamentos</span><b>{_money(row.get('ol_lancamentos', 0))}</b></div><div><span>Resultado no período</span><b>{_money(row.get('venda_periodo', 0))}</b></div></div></div>",
                 unsafe_allow_html=True
             )
-            if st.button(f"Tirar pedido â€¢ {row['nome_fantasia']}", key=f"go_pedido_{row['cnpj']}", use_container_width=True):
+            if st.button(f"Tirar pedido • {row['nome_fantasia']}", key=f"go_pedido_{row['cnpj']}", use_container_width=True):
                 st.session_state.pedido_cliente_cnpj = row['cnpj']
                 st.session_state.page = 'Montar pedido'
                 st.rerun()
 
-    st.markdown('<div class="section-title">Clientes sem compra ou abaixo de R$ 300,00 no perÃ­odo</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Clientes sem compra ou abaixo de R$ 300,00 no período</div>', unsafe_allow_html=True)
 
     if 'comprou_periodo' not in base.columns:
         base['comprou_periodo'] = False
@@ -354,7 +356,7 @@ def render_dashboard(score_df: pd.DataFrame, oportunidades: pd.DataFrame, foco: 
     alertas = base[(~base['comprou_periodo']) | (base['venda_periodo'] < 300)].copy()
 
     if alertas.empty:
-        st.info('Nenhum cliente nessa condiÃ§Ã£o no perÃ­odo.')
+        st.info('Nenhum cliente nessa condição no período.')
     else:
         sem_compra = alertas[~alertas['comprou_periodo']].copy()
         if not sem_compra.empty:
@@ -363,7 +365,7 @@ def render_dashboard(score_df: pd.DataFrame, oportunidades: pd.DataFrame, foco: 
                 inf = info_map.get(_digits(row.get('cnpj', '')), {})
                 rows_exp.append({
                     'CNPJ': _digits(row.get('cnpj', '')),
-                    'ResponsÃ¡vel': inf.get('nome_contato', ''),
+                    'Responsável': inf.get('nome_contato', ''),
                     'Contato': inf.get('contato', ''),
                 })
             exp_df = pd.DataFrame(rows_exp).drop_duplicates()
@@ -380,7 +382,7 @@ def render_dashboard(score_df: pd.DataFrame, oportunidades: pd.DataFrame, foco: 
             nome_fantasia = row.get('nome_fantasia', '') or 'Cliente'
             cnpj_txt = row.get('cnpj', '')
             cidade_txt = row.get('cidade', '')
-            problema = 'Sem compras no perÃ­odo' if not bool(row.get('comprou_periodo', False)) else 'Compras abaixo de R$ 300,00 no perÃ­odo'
+            problema = 'Sem compras no período' if not bool(row.get('comprou_periodo', False)) else 'Compras abaixo de R$ 300,00 no período'
             nome = (inf.get('nome_contato') or nome_fantasia or 'cliente').strip()
             mensagem = f"Bom dia, {nome}. Vi aqui uma oportunidade no CNPJ {cnpj_txt}: {problema}. Posso te ajudar a montar um pedido agora?"
             wa = _wa_link(inf.get('contato', ''), mensagem)
@@ -388,7 +390,7 @@ def render_dashboard(score_df: pd.DataFrame, oportunidades: pd.DataFrame, foco: 
             c1, c2, c3 = st.columns([7, 1.2, 1.2])
             with c1:
                 st.markdown(
-                    f"<div class='mini-alert-card'><b>{nome_fantasia}</b> â€¢ CNPJ: {cnpj_txt} â€¢ {cidade_txt} â€¢ Resultado: {_money(row.get('venda_periodo', 0))}</div>",
+                    f"<div class='mini-alert-card'><b>{nome_fantasia}</b> • CNPJ: {cnpj_txt} • {cidade_txt} • Resultado: {_money(row.get('venda_periodo', 0))}</div>",
                     unsafe_allow_html=True,
                 )
             with c2:
