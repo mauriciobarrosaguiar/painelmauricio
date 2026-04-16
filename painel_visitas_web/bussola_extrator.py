@@ -18,10 +18,16 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 BUSSOLA_URL = "https://bussolaweb.bussola.mercadofarma.com.br/login"
 BUSSOLA_ANALISE_URL = "https://bussolaweb.bussola.mercadofarma.com.br/"
+LOG_CALLBACK = None
 
 
 def log(msg: str):
     print(f"[BUSSOLA] {msg}", flush=True)
+    if callable(LOG_CALLBACK):
+        try:
+            LOG_CALLBACK(msg)
+        except Exception:
+            pass
 
 
 def build_driver(download_dir: Path, headless: bool = False):
@@ -104,11 +110,11 @@ def entrar_bussola(driver, usuario: str, senha: str):
 
     click_first(driver, [
         (By.XPATH, "//a[normalize-space()='Entrar']"),
-        (By.XPATH, "//a[contains(., 'Entrar')]"),
+        (By.XPATH, "//a[contains(., 'Entrar')]]"),
     ], desc="botão Entrar")
 
     click_first(driver, [
-        (By.XPATH, "//*[contains(@class,'kc-social-provider-name') and contains(., 'Active Directory')]"),
+        (By.XPATH, "//*[contains(@class,'kc-social-provider-name') and contains(., 'Active Directory')]]"),
         (By.XPATH, "//*[normalize-space()='Active Directory']"),
     ], timeout=40, desc="Active Directory")
 
@@ -150,7 +156,7 @@ def abrir_analise_com_periodo(driver):
 
     wait_visible(driver, [
         (By.XPATH, "//*[contains(., 'Análise de pedidos') ]"),
-        (By.XPATH, "//button[contains(., 'Exportar')]"),
+        (By.XPATH, "//button[contains(., 'Exportar')]]"),
         (By.XPATH, "//*[@data-slot='dropdown-menu-trigger' and contains(., 'Exportar') ]"),
     ], timeout=60, desc="tela Análise de pedidos")
 
@@ -160,8 +166,8 @@ def abrir_analise_com_periodo(driver):
 def abrir_menu_exportar(driver):
     log("Abrindo menu Exportar...")
     click_first(driver, [
-        (By.XPATH, "//button[contains(., 'Exportar')]"),
-        (By.XPATH, "//*[@data-slot='dropdown-menu-trigger' and contains(., 'Exportar')]"),
+        (By.XPATH, "//button[contains(., 'Exportar')]]"),
+        (By.XPATH, "//*[@data-slot='dropdown-menu-trigger' and contains(., 'Exportar')]]"),
     ], timeout=35, desc="Exportar")
 
     wait(driver, 20).until(
@@ -240,9 +246,12 @@ def normalizar_csv(csv_path: Path, saida_dir: Path):
     return csv_dest, xlsx_dest
 
 
-def executar(usuario: str, senha: str, saida: str = "data", downloads: Optional[str] = None, headless: bool = False):
+def executar(usuario: str, senha: str, saida: str = "data", downloads: Optional[str] = None, headless: bool = False, log_fn=None):
+    global LOG_CALLBACK
     saida_dir = Path(saida)
     download_dir = Path(downloads) if downloads else (Path.cwd() / "downloads_bussola")
+    previous_callback = LOG_CALLBACK
+    LOG_CALLBACK = log_fn
 
     driver = build_driver(download_dir, headless=headless)
     try:
@@ -253,6 +262,7 @@ def executar(usuario: str, senha: str, saida: str = "data", downloads: Optional[
         normalizar_csv(arquivo, saida_dir)
         log("Extração concluída com sucesso.")
     finally:
+        LOG_CALLBACK = previous_callback
         try:
             driver.quit()
         except Exception:
