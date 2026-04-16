@@ -123,7 +123,7 @@ def clean_foco_semana(df: pd.DataFrame) -> pd.DataFrame:
 
 def clean_inventario(df: pd.DataFrame) -> pd.DataFrame:
     if df is None or df.empty:
-        return pd.DataFrame(columns=['ean', 'principio_ativo', 'mix_lancamentos', 'estoque', 'distribuidora', 'preco_sem_imposto', 'preco_com_imposto', 'data', 'desconto', 'pf_dist'])
+        return pd.DataFrame(columns=['ean', 'principio_ativo', 'mix_lancamentos', 'estoque', 'distribuidora', 'preco_sem_imposto', 'preco_com_imposto', 'data', 'desconto', 'pf_dist', 'pf_fabrica'])
     df = df.copy()
     if all(str(c).startswith('Unnamed') for c in df.columns):
         header = df.iloc[0].tolist()
@@ -144,6 +144,10 @@ def clean_inventario(df: pd.DataFrame) -> pd.DataFrame:
         'sem_imposto_r$': 'preco_sem_imposto',
         'pf_dist_r': 'pf_dist',
         'pf_dist_r$': 'pf_dist',
+        'pf_fabrica_r': 'pf_fabrica',
+        'pf_fabrica_r$': 'pf_fabrica',
+        'pf_fabrica': 'pf_fabrica',
+        'preco_fabrica': 'pf_fabrica',
         'desconto_percent': 'desconto',
         'desconto_percent_': 'desconto',
         'desconto_percentual': 'desconto',
@@ -152,9 +156,9 @@ def clean_inventario(df: pd.DataFrame) -> pd.DataFrame:
     for old, new in ren.items():
         if old in df.columns and new not in df.columns:
             df.rename(columns={old: new}, inplace=True)
-    for col in ['ean', 'principio_ativo', 'mix_lancamentos', 'estoque', 'distribuidora', 'preco_sem_imposto', 'preco_com_imposto', 'data', 'desconto', 'pf_dist']:
+    for col in ['ean', 'principio_ativo', 'mix_lancamentos', 'estoque', 'distribuidora', 'preco_sem_imposto', 'preco_com_imposto', 'data', 'desconto', 'pf_dist', 'pf_fabrica']:
         if col not in df.columns:
-            df[col] = '' if col not in {'estoque', 'preco_sem_imposto', 'preco_com_imposto', 'desconto', 'pf_dist'} else 0
+            df[col] = '' if col not in {'estoque', 'preco_sem_imposto', 'preco_com_imposto', 'desconto', 'pf_dist', 'pf_fabrica'} else 0
     df['ean'] = normalize_ean(df['ean'])
     df['principio_ativo'] = df['principio_ativo'].astype(str).str.strip()
     df['mix_lancamentos'] = df['mix_lancamentos'].astype(str).str.upper().str.strip().replace({'PRIORITÁRIOS':'PRIORITARIOS', 'LANÇAMENTO':'LANCAMENTOS', 'LANCAMENTO':'LANCAMENTOS', 'NAN': ''})
@@ -164,9 +168,10 @@ def clean_inventario(df: pd.DataFrame) -> pd.DataFrame:
     df['desconto'] = normalize_percent(df['desconto']).fillna(0)
     desconto_decimal = (df['desconto'] / 100).clip(lower=0, upper=0.9999)
     pf_lido = br_to_float(df['pf_dist']).fillna(0)
+    df['pf_fabrica'] = br_to_float(df['pf_fabrica']).fillna(0).round(2)
     base_sem = (df['preco_sem_imposto'] / (1 - desconto_decimal)).replace([pd.NA, pd.NaT], 0)
     base_com = (df['preco_com_imposto'] / (1 - desconto_decimal)).replace([pd.NA, pd.NaT], 0)
     pf_calc = base_sem.where(base_sem > 0, base_com)
     df['pf_dist'] = pf_lido.where(pf_lido > 0, pf_calc).fillna(0).round(2)
     df['data'] = pd.to_datetime(df['data'], errors='coerce', dayfirst=True)
-    return df[['ean', 'principio_ativo', 'mix_lancamentos', 'estoque', 'distribuidora', 'preco_sem_imposto', 'preco_com_imposto', 'data', 'desconto', 'pf_dist']]
+    return df[['ean', 'principio_ativo', 'mix_lancamentos', 'estoque', 'distribuidora', 'preco_sem_imposto', 'preco_com_imposto', 'data', 'desconto', 'pf_dist', 'pf_fabrica']]
