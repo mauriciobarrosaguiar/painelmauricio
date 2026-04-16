@@ -100,25 +100,10 @@
   },
   "mercadofarma": {
     "ultimo_sucesso": "08/04/2026 16:27:10",
-    "status": "solicitado",
-    "mensagem": "Comando enviado para a fila do painel.",
-    "ultimo_comando_id": "cmd_1776382071864",
-    "atualizado_em": "16/04/2026 20:27:53",
-    "etapa_atual": "Aguardando execucao",
-    "erro": "",
-    "resumo": {},
-    "eventos": [
-      {
-        "quando": "16/04/2026 20:27:53",
-        "texto": "Comando enviado para a fila do painel.",
-        "nivel": "info"
-      }
-    ],
-    "progresso": {
-      "atual": 0,
-      "total": 0,
-      "percentual": 0
-    }
+    "status": "ok",
+    "mensagem": "Mercado Farma atualizado pelo GitHub Actions.",
+    "ultimo_comando_id": "cmd_1774933289456",
+    "atualizado_em": "08/04/2026 16:27:10"
   },
   "comandos": {
     "ultimo_sucesso": "",
@@ -128,8 +113,8 @@
   },
   "github_actions": {
     "status": "solicitado",
-    "mensagem": "Comando enviado para a fila do painel.",
-    "atualizado_em": "16/04/2026 20:27:53",
+    "mensagem": "Workflow disparado com sucesso.",
+    "atualizado_em": "16/04/2026 20:27:54",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",
