@@ -16,12 +16,43 @@ except Exception:
     st = None
 
 from config import BASE_DIR, DATA_DIR
+from services.order_builder import save_generated_order
 
 TZ_BR = ZoneInfo("America/Sao_Paulo")
 REPO_ROOT = BASE_DIR.parent
 ROOT_DATA_DIR = REPO_ROOT / "data"
 ROOT_DATA_DIR.mkdir(exist_ok=True)
 WORKFLOW_FILE = "automacao_web.yml"
+ACTION_STATUS_KEYS = {
+    "atualizar_bussola": "bussola",
+    "atualizar_mercadofarma": "mercadofarma",
+    "atualizar_mercado_farma": "mercadofarma",
+    "limpar_pedido_mf": "comandos",
+    "enviar_pedido_mf": "comandos",
+}
+
+
+def _empty_progress() -> dict[str, int]:
+    return {"atual": 0, "total": 0, "percentual": 0}
+
+
+def _event(texto: str, nivel: str = "info") -> dict[str, str]:
+    return {"quando": now_str(), "texto": str(texto or "").strip(), "nivel": nivel}
+
+
+def _touch_status_block(bloco: dict | None = None) -> dict:
+    base = dict(bloco or {})
+    base.setdefault("ultimo_sucesso", "")
+    base.setdefault("status", "nunca")
+    base.setdefault("mensagem", "")
+    base.setdefault("atualizado_em", "")
+    base.setdefault("ultimo_comando_id", "")
+    base.setdefault("etapa_atual", "")
+    base.setdefault("erro", "")
+    base.setdefault("resumo", {})
+    base.setdefault("eventos", [])
+    base.setdefault("progresso", _empty_progress())
+    return base
 
 
 def _secret(name: str, default: str = "") -> str:
@@ -176,6 +207,29 @@ def now_str() -> str:
     return datetime.now(TZ_BR).strftime("%d/%m/%Y %H:%M:%S")
 
 
+def _update_status_for_command(acao: str, command_id: str, mensagem: str, status_text: str = "solicitado"):
+    chave = ACTION_STATUS_KEYS.get(acao)
+    if not chave:
+        return
+    status = load_status()
+    bloco = _touch_status_block(status.get(chave))
+    bloco["status"] = status_text
+    bloco["mensagem"] = mensagem
+    bloco["atualizado_em"] = now_str()
+    bloco["ultimo_comando_id"] = command_id
+    bloco["etapa_atual"] = "Aguardando execucao"
+    bloco["erro"] = ""
+    bloco["progresso"] = _empty_progress()
+    bloco["eventos"] = (bloco.get("eventos", []) + [_event(mensagem)])[-40:]
+    status[chave] = bloco
+    gh = _touch_status_block(status.get("github_actions"))
+    gh["status"] = status_text
+    gh["mensagem"] = mensagem
+    gh["atualizado_em"] = now_str()
+    status["github_actions"] = gh
+    save_status(status)
+
+
 def load_user_config() -> dict:
     return repo_load_json(
         "data/config_usuario.json",
@@ -199,10 +253,10 @@ def load_status() -> dict:
     return repo_load_json(
         "data/status_atualizacao.json",
         {
-            "bussola": {"ultimo_sucesso": "", "status": "nunca", "mensagem": ""},
-            "mercadofarma": {"ultimo_sucesso": "", "status": "nunca", "mensagem": ""},
-            "github_actions": {"status": "nunca", "mensagem": ""},
-            "comandos": {"ultimo_resultado": "", "status": "nunca"},
+            "bussola": _touch_status_block(),
+            "mercadofarma": _touch_status_block(),
+            "github_actions": _touch_status_block(),
+            "comandos": {**_touch_status_block(), "ultimo_resultado": ""},
         },
         prefer_remote=True,
     )
@@ -282,17 +336,46 @@ def _dispatch_workflow(inputs: dict[str, Any]) -> tuple[bool, str]:
 
 def enqueue_command(acao: str, params: dict | None = None):
     params = params or {}
+    if acao == "enviar_pedido_mf":
+        generated = save_generated_order(
+            params.get("cart_items", []),
+            cupom=str(params.get("cupom", "") or ""),
+            headless=bool(params.get("headless", True)),
+        )
+        params = dict(params)
+        params["cart_items"] = generated["payload"].get("cart_items", [])
+        repo_save_json("data/pedido_payload.json", generated["payload"], "Atualizar pedido gerado do painel")
+
     data = load_commands()
     cmds = data.get("commands", [])
     cmd_id = f"cmd_{int(datetime.now(TZ_BR).timestamp() * 1000)}"
-    registro = {"id": cmd_id, "acao": acao, "params": params, "status": "pendente", "criado_em": now_str(), "atualizado_em": now_str(), "mensagem": ""}
+    registro = {
+        "id": cmd_id,
+        "acao": acao,
+        "params": params,
+        "status": "solicitado",
+        "criado_em": now_str(),
+        "atualizado_em": now_str(),
+        "mensagem": "Solicitado pelo painel web.",
+        "origem": "streamlit",
+    }
     cmds.append(registro)
     data["commands"] = cmds[-100:]
     ok_save, msg_save = save_commands(data)
     workflow_inputs = {"command_id": cmd_id, "acao": acao, "headless": str(params.get("headless", True)).lower(), "cnpj": params.get("cnpj", ""), "cupom": params.get("cupom", "")}
     ok_dispatch, msg_dispatch = _dispatch_workflow(workflow_inputs)
+    _update_status_for_command(
+        acao,
+        cmd_id,
+        "Comando enviado para a fila do painel." if ok_dispatch else msg_dispatch,
+        status_text="solicitado" if ok_dispatch else "erro",
+    )
     status = load_status()
-    status["github_actions"] = {"status": "solicitado" if ok_dispatch else "erro", "mensagem": msg_dispatch, "atualizado_em": now_str()}
+    github = _touch_status_block(status.get("github_actions"))
+    github["status"] = "solicitado" if ok_dispatch else "erro"
+    github["mensagem"] = msg_dispatch
+    github["atualizado_em"] = now_str()
+    status["github_actions"] = github
     save_status(status)
     ok = ok_save and ok_dispatch
     msg = f"{msg_save} {msg_dispatch}".strip()
