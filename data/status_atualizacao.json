@@ -20,8 +20,8 @@
     "ultimo_resultado": ""
   },
   "github_actions": {
-    "status": "ok",
-    "mensagem": "Bússola atualizado pelo GitHub Actions.",
-    "atualizado_em": "16/04/2026 10:25:28"
+    "status": "erro",
+    "mensagem": "Falha ao iniciar workflow: 404 {'message': 'Not Found', 'documentation_url': 'https://docs.github.com/rest/actions/workflows#create-a-workflow-dispatch-event', 'status': '404'}",
+    "atualizado_em": "16/04/2026 15:02:30"
   }
 }
