@@ -651,6 +651,17 @@
       "criado_em": "16/04/2026 10:24:21",
       "atualizado_em": "16/04/2026 10:24:21",
       "mensagem": ""
+    },
+    {
+      "id": "cmd_1776362549418",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "pendente",
+      "criado_em": "16/04/2026 15:02:29",
+      "atualizado_em": "16/04/2026 15:02:29",
+      "mensagem": ""
     }
   ]
 }
