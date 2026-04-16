@@ -1,0 +1,124 @@
+name: Automação Web Painel EMS
+
+on:
+  workflow_dispatch:
+    inputs:
+      command_id:
+        description: ID opcional do comando
+        required: false
+        type: string
+      acao:
+        description: Tipo da automação
+        required: true
+        type: string
+      headless:
+        description: Executar invisível
+        required: false
+        type: string
+        default: "true"
+      cnpj:
+        description: CNPJ opcional para Mercado Farma
+        required: false
+        type: string
+      cupom:
+        description: Cupom opcional para pedido
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  automacao:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GITHUB_REPO_OWNER: ${{ github.repository_owner }}
+      GITHUB_REPO_NAME: ${{ github.event.repository.name }}
+      GITHUB_REPO_BRANCH: ${{ github.ref_name }}
+      GITHUB_TOKEN: ${{ secrets.GH_AUTOMATION_TOKEN }}
+      BUSSOLA_LOGIN: ${{ secrets.BUSSOLA_LOGIN }}
+      BUSSOLA_SENHA: ${{ secrets.BUSSOLA_SENHA }}
+      MERCADOFARMA_LOGIN: ${{ secrets.MERCADOFARMA_LOGIN }}
+      MERCADOFARMA_SENHA: ${{ secrets.MERCADOFARMA_SENHA }}
+      MERCADOFARMA_CNPJ: ${{ secrets.MERCADOFARMA_CNPJ }}
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_AUTOMATION_TOKEN }}
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Instalar dependências
+        working-directory: painel_visitas_web
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Executar automação
+        working-directory: painel_visitas_web
+        run: |
+          python github_action_runner.py \
+            --acao "${{ inputs.acao }}" \
+            --headless "${{ inputs.headless }}" \
+            --cnpj "${{ inputs.cnpj }}" \
+            --cupom "${{ inputs.cupom }}"
+
+      - name: Commit dos arquivos atualizados
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BRANCH="${{ github.ref_name }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add painel_visitas_web/data data
+
+          if git diff --cached --quiet; then
+            echo "Sem alterações para enviar."
+            exit 0
+          fi
+
+          git commit -m "Automação web: ${{ inputs.acao }}"
+
+          if ! git pull --rebase -X theirs origin "$BRANCH"; then
+            echo "Conflito no pull --rebase. Forçando resolução para arquivos automáticos..."
+
+            for f in \
+              data/status_atualizacao.json \
+              data/comandos_remotos.json \
+              painel_visitas_web/data/status_atualizacao.json \
+              painel_visitas_web/data/comandos_remotos.json \
+              data/Pedidos.xlsx \
+              data/Estoque_preco_distribuidora.xlsx \
+              painel_visitas_web/data/Pedidos.xlsx \
+              painel_visitas_web/data/Estoque_preco_distribuidora.xlsx
+            do
+              if git ls-files --unmerged -- "$f" | grep -q .; then
+                git checkout --theirs -- "$f" || true
+                git add "$f" || true
+              fi
+            done
+
+            if git diff --name-only --diff-filter=U | grep -q .; then
+              echo "Ainda existem conflitos após a tentativa automática:"
+              git diff --name-only --diff-filter=U
+              git rebase --abort || true
+              exit 1
+            fi
+
+            GIT_EDITOR=true git rebase --continue || true
+          fi
+
+          git push origin HEAD:$BRANCH
