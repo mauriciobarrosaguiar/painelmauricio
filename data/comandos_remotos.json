@@ -662,6 +662,18 @@
       "criado_em": "16/04/2026 15:03:15",
       "atualizado_em": "16/04/2026 15:03:15",
       "mensagem": ""
+    },
+    {
+      "id": "cmd_1776377174276",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "16/04/2026 19:06:14",
+      "atualizado_em": "16/04/2026 19:06:14",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
     }
   ]
 }
