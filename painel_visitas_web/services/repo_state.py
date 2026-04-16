@@ -16,7 +16,26 @@ except Exception:
     st = None
 
 from config import BASE_DIR, DATA_DIR
-from services.order_builder import save_generated_order
+
+try:
+    from services.order_builder import save_generated_order
+except Exception:
+    def save_generated_order(cart_items: list[dict] | None, cupom: str = "", headless: bool = True) -> dict:
+        payload = {
+            "gerado_em": datetime.now(TZ_BR).isoformat(),
+            "cupom": str(cupom or "").strip(),
+            "headless": bool(headless),
+            "cliente": {},
+            "resumo": {
+                "linhas": len(cart_items or []),
+                "produtos": len(cart_items or []),
+                "distribuidoras": len({str(item.get("Distribuidora", "")) for item in (cart_items or []) if item.get("Distribuidora")}),
+                "total_estimado": 0.0,
+            },
+            "por_distribuidora": [],
+            "cart_items": list(cart_items or []),
+        }
+        return {"payload": payload, "csv_bytes": b"", "txt_bytes": b""}
 
 TZ_BR = ZoneInfo("America/Sao_Paulo")
 REPO_ROOT = BASE_DIR.parent

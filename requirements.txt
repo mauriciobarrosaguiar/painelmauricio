@@ -5,3 +5,4 @@ numpy>=1.26
 selenium>=4.28
 webdriver-manager>=4.0
 requests
+XlsxWriter>=3.2

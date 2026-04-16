@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 import streamlit as st
 import pandas as pd
 from datetime import datetime, date, timedelta
@@ -33,7 +33,7 @@ def ultimo_dia_mes_atual() -> date:
         prox = hoje.replace(month=hoje.month + 1, day=1)
     return prox - timedelta(days=1)
 
-st.set_page_config(page_title='Painel de Visitas - Maurício', page_icon='💊', layout='wide', initial_sidebar_state='collapsed')
+st.set_page_config(page_title="Painel de Visitas - Mauricio", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown(f"""
 <style>
@@ -87,7 +87,7 @@ div[data-testid="stDataFrame"] [role="columnheader"] > div, div[data-testid="stD
 .visit-grid, .detail-grid {{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:12px;}}
 .visit-grid div, .detail-grid div {{background:#FBFDFF; border:1px solid #EDF2F7; border-radius:14px; padding:10px; text-align:center;}}
 .visit-grid span, .detail-grid span {{display:block; font-size:.78rem; color:#64748b; margin-bottom:4px;}}
-detail-grid {{grid-template-columns:repeat(3,minmax(0,1fr));}}
+.detail-grid {{grid-template-columns:repeat(3,minmax(0,1fr));}}
 div[data-testid="stDataFrame"] {{border-radius:18px; overflow:hidden; border:1px solid {COR_BORDA};}}
 div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {{border-radius:12px !important;}}
 .stButton > button, .stDownloadButton > button {{border-radius:12px !important; min-height:42px; font-weight:800; border:1px solid {COR_BORDA} !important; background:#EAF4F8 !important; color:#0A2533 !important;}}
@@ -359,3 +359,4 @@ elif page == 'SIP':
     render_sip(score_df_g, clientes_g)
 else:
     render_importacao(None, produtos_ref)
+
