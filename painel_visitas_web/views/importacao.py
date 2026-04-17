@@ -8,7 +8,15 @@ import streamlit as st
 
 from config import CLIENTES_FILE, DATA_DIR, FOCO_SEMANA_FILE, INVENTARIO_FILE, PEDIDOS_FILE
 from services.integrations import IntegracaoCreds, choose_low_production_cnpj, load_creds, read_last_logs, save_creds
-from services.repo_state import enqueue_command, load_recent_workflow_runs, load_status
+from services.order_builder import build_order_dataframe
+from services.repo_state import (
+    command_to_monitor_block,
+    enqueue_command,
+    load_commands,
+    load_latest_command,
+    load_recent_workflow_runs,
+    load_status,
+)
 from views.monitoring import render_monitor
 
 
@@ -33,6 +41,71 @@ def _runs_df(runs: list[dict]) -> pd.DataFrame:
     return df[cols] if cols else df
 
 
+def _money(value) -> str:
+    try:
+        return f"R$ {float(pd.to_numeric(value, errors='coerce') or 0):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    except Exception:
+        return "R$ 0,00"
+
+
+def _pedido_monitor_block(status: dict) -> dict:
+    latest = load_latest_command({"enviar_pedido_mf", "gerar_pedido_mercado_farma", "limpar_pedido_mf"})
+    latest_block = command_to_monitor_block(latest)
+    status_block = dict(status.get("comandos", {}) or {})
+    if latest_block:
+        merged = dict(status_block)
+        merged.update({k: v for k, v in latest_block.items() if v not in ("", None, [], {})})
+        return merged
+    return status_block
+
+
+def _pedido_history() -> list[dict]:
+    data = load_commands()
+    comandos = list(data.get("commands", []) or [])
+    permitidos = {"enviar_pedido_mf", "gerar_pedido_mercado_farma"}
+    return [cmd for cmd in reversed(comandos) if str(cmd.get("acao", "")).strip() in permitidos]
+
+
+def _pedido_summary_row(cmd: dict) -> dict:
+    params = dict(cmd.get("params") or {})
+    df = build_order_dataframe(list(params.get("cart_items") or []))
+    header = df.iloc[0].to_dict() if not df.empty else {}
+    distribs = sorted(df["Distribuidora"].astype(str).unique().tolist()) if not df.empty else []
+    return {
+        "Comando": str(cmd.get("id", ""))[-8:],
+        "Status": str(cmd.get("status", "") or "-"),
+        "Criado em": str(cmd.get("criado_em", "") or "-"),
+        "Atualizado em": str(cmd.get("atualizado_em", "") or "-"),
+        "Cliente": str(header.get("Cliente", "")),
+        "CNPJ": str(header.get("CNPJ", "")),
+        "Itens": int(df["Qtde"].sum()) if not df.empty else 0,
+        "Produtos": int(df["EAN"].nunique()) if not df.empty else 0,
+        "Distribuidoras": ", ".join(distribs[:3]) + (" ..." if len(distribs) > 3 else ""),
+        "Total": _money(df["Total"].sum()) if not df.empty else _money(0),
+    }
+
+
+def _pedido_dist_df(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return pd.DataFrame(columns=["Distribuidora", "Produtos", "Quantidade", "Total"])
+    resumo = (
+        df.groupby("Distribuidora", as_index=False)
+        .agg(Produtos=("EAN", "nunique"), Quantidade=("Qtde", "sum"), Total=("Total", "sum"))
+        .sort_values(["Total", "Distribuidora"], ascending=[False, True])
+    )
+    resumo["Total"] = resumo["Total"].map(_money)
+    return resumo
+
+
+def _pedido_items_df(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return pd.DataFrame(columns=["Produto", "EAN", "Distribuidora", "Qtde", "Preco", "Total"])
+    show = df[["Produto", "EAN", "Distribuidora", "Qtde", "Preco", "Total"]].copy()
+    show["Preco"] = show["Preco"].map(_money)
+    show["Total"] = show["Total"].map(_money)
+    return show
+
+
 def _base_card(label: str, value: str):
     st.markdown(
         f"""
@@ -55,11 +128,38 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
     cnpj_auto = choose_low_production_cnpj(score_df if score_df is not None else pd.DataFrame())
 
     st.markdown("### Execucoes")
-    t1, t2 = st.tabs(["Bussola", "Mercado Farma"])
+    t1, t2, t3 = st.tabs(["Bussola", "Mercado Farma", "Pedido Gerado"])
     with t1:
         render_monitor("Bussola", status.get("bussola", {}), key_prefix="monitor_bussola", empty_message="Nenhuma execucao recente do Bussola.")
     with t2:
         render_monitor("Mercado Farma", status.get("mercadofarma", {}), key_prefix="monitor_mercadofarma", empty_message="Nenhuma execucao recente do Mercado Farma.")
+    with t3:
+        render_monitor("Pedido Gerado", _pedido_monitor_block(status), key_prefix="monitor_pedido_gerado", empty_message="Nenhum pedido recente do Mercado Farma.")
+        pedidos = _pedido_history()
+        if not pedidos:
+            st.info("Nenhum pedido enviado ao Mercado Farma foi encontrado na fila do painel.")
+        else:
+            resumo_df = pd.DataFrame([_pedido_summary_row(cmd) for cmd in pedidos])
+            st.dataframe(resumo_df, use_container_width=True, hide_index=True)
+            st.markdown("### Lista de pedidos gerados")
+            for pos, cmd in enumerate(pedidos[:20], start=1):
+                params = dict(cmd.get("params") or {})
+                df = build_order_dataframe(list(params.get("cart_items") or []))
+                header = df.iloc[0].to_dict() if not df.empty else {}
+                titulo = f"Pedido {pos} | {str(cmd.get('status', '-') or '-').upper()} | {str(cmd.get('criado_em', '-') or '-')}"
+                with st.expander(titulo, expanded=pos == 1):
+                    top = st.columns(4)
+                    top[0].metric("Cliente", str(header.get("Cliente", "") or "-"))
+                    top[1].metric("CNPJ", str(header.get("CNPJ", "") or "-"))
+                    top[2].metric("Itens", str(int(df["Qtde"].sum())) if not df.empty else "0")
+                    top[3].metric("Total", _money(df["Total"].sum()) if not df.empty else _money(0))
+                    st.caption(f"Comando: {cmd.get('id', '-')} | Atualizado em: {cmd.get('atualizado_em', '-')}")
+                    if str(cmd.get("mensagem", "")).strip():
+                        st.caption(str(cmd.get("mensagem", "")))
+                    st.markdown("**Resumo por distribuidora**")
+                    st.dataframe(_pedido_dist_df(df), use_container_width=True, hide_index=True)
+                    st.markdown("**Itens do pedido**")
+                    st.dataframe(_pedido_items_df(df), use_container_width=True, hide_index=True)
 
     st.markdown("### Disparo das rotinas")
     a1, a2 = st.columns(2)

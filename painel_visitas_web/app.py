@@ -36,8 +36,16 @@ def ultimo_dia_mes_atual() -> date:
 
 st.set_page_config(page_title="Painel de Visitas - Mauricio", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
+st.markdown(
+    """
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
+    """,
+    unsafe_allow_html=True,
+)
+
 st.markdown(f"""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block');
 :root {{
   --ink:#14251C;
   --green:#0F3B2B;
@@ -59,7 +67,7 @@ footer {{visibility:hidden;}}
   color:{COR_TEXTO};
 }}
 .block-container {{padding-top: .7rem; padding-bottom: 1rem; max-width: 1500px;}}
-html, body, .stApp, .stApp * {{font-family:"Segoe UI", Arial, sans-serif !important;}}
+html, body, .stApp {{font-family:"Segoe UI", Arial, sans-serif !important;}}
 span.material-symbols-rounded,
 span.material-symbols-outlined,
 span.material-icons,
@@ -77,6 +85,9 @@ i.material-icons-round,
   white-space: nowrap !important;
   word-wrap: normal !important;
   direction: ltr !important;
+}}
+[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] {{
+  display:none !important;
 }}
 
 [data-testid="stDataFrame"] div[role="grid"] {{font-size: 12px !important;}}
