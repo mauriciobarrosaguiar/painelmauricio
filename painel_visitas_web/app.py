@@ -43,7 +43,7 @@ st.markdown(f"""
   --green:#0F3B2B;
   --leaf:#2D7A55;
   --cream:#F7F3E7;
-  --line:rgba(15,59,43,.13);
+  --line:rgba(15,59,43,.24);
   --gold:#D9A441;
 }}
 [data-testid="collapsedControl"] {{display:none !important;}}
@@ -60,11 +60,30 @@ footer {{visibility:hidden;}}
 }}
 .block-container {{padding-top: .7rem; padding-bottom: 1rem; max-width: 1500px;}}
 html, body, .stApp, .stApp * {{font-family:"Segoe UI", Arial, sans-serif !important;}}
+span.material-symbols-rounded,
+span.material-symbols-outlined,
+span.material-icons,
+i.material-icons,
+i.material-icons-round,
+[class^="material-symbols"],
+[class*=" material-symbols"] {{
+  font-family: "Material Symbols Rounded" !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  font-size: 1.1rem !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+  word-wrap: normal !important;
+  direction: ltr !important;
+}}
 
 [data-testid="stDataFrame"] div[role="grid"] {{font-size: 12px !important;}}
 [data-testid="stDataEditor"] div[role="grid"] {{font-size: 12px !important;}}
 [data-testid="stDataFrame"] [data-testid="StyledFullScreenButton"] {{display:none !important;}}
 [data-testid="stDataEditor"] [data-testid="StyledFullScreenButton"] {{display:none !important;}}
+[data-testid="stToolbar"] {{z-index: 10 !important;}}
 .main ::-webkit-scrollbar, [data-testid="stSidebar"] ::-webkit-scrollbar {{width: 22px; height: 22px;}}
 [data-testid="stSidebar"] ::-webkit-scrollbar-thumb {{background:#D9A441; border-radius: 10px; border: 3px solid rgba(255,255,255,.15);}}
 [data-testid="stSidebar"] ::-webkit-scrollbar-track {{background:rgba(255,255,255,.10); border-radius: 10px;}}
@@ -80,18 +99,19 @@ html, body, .stApp, .stApp * {{font-family:"Segoe UI", Arial, sans-serif !import
 .sidebar-title {{font-size:1.48rem; font-weight:900; margin-bottom:.65rem; line-height:1.18; letter-spacing:-.01em;}}
 .sidebar-section {{font-size:.78rem; font-weight:900; text-transform:uppercase; letter-spacing:.08em; color:#DCC17A; margin:1rem 0 .45rem 0;}}
 .stRadio > label, .stMultiSelect > label, .stSelectbox > label, .stDateInput > label {{font-weight:800 !important; color:#F2F8F3 !important;}}
-[data-testid="stSidebar"] .stButton > button {{width:100%; min-height:44px; border-radius:16px !important; font-weight:800; border:1px solid rgba(255,255,255,.14) !important; background: rgba(255,255,255,.06) !important; color:#fff !important; margin:0 0 .46rem 0 !important; box-shadow:none !important;}}
+[data-testid="stSidebar"] .stButton > button {{width:100%; min-height:44px; border-radius:16px !important; font-weight:800; border:1px solid rgba(255,255,255,.18) !important; background: rgba(255,255,255,.06) !important; color:#fff !important; margin:0 0 .46rem 0 !important; box-shadow:none !important;}}
 [data-testid="stSidebar"] .stButton > button[kind="primary"] {{background: linear-gradient(135deg, #0F3B2B 0%, #2D7A55 62%, #D9A441 100%) !important; box-shadow:0 12px 24px rgba(0,0,0,.16) !important; border-color:rgba(217,164,65,.35) !important;}}
 [data-testid="stSidebar"] .stButton > button p {{color:#fff !important; font-size:.96rem !important;}}
 [data-testid="stSidebar"] input, [data-testid="stSidebar"] textarea {{color:#163126 !important; background:#F7F3E7 !important;}}
-[data-testid="stSidebar"] [data-baseweb="select"] > div {{background:#F7F3E7 !important; color:#163126 !important; border:1px solid rgba(217,164,65,.35) !important;}}
+[data-testid="stSidebar"] [data-baseweb="select"] > div {{background:#F7F3E7 !important; color:#163126 !important; border:1px solid rgba(217,164,65,.42) !important;}}
 [data-testid="stSidebar"] .stMultiSelect div[data-baseweb="tag"] {{background:#F3E8C7 !important; border:1px solid rgba(217,164,65,.45) !important;}}
 [data-testid="stSidebar"] .stMultiSelect div[data-baseweb="tag"] span,
 [data-testid="stSidebar"] .stMultiSelect div[data-baseweb="tag"] svg {{color:#163126 !important; fill:#163126 !important;}}
 [data-testid="stSidebar"] .stMultiSelect div[data-baseweb="tag"] {{max-width:100%;}}
 [data-testid="stSidebar"] .stMultiSelect div[data-baseweb="tag"] span {{overflow-wrap:anywhere;}}
-[data-testid="stSidebar"] details {{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:.15rem .25rem;}}
+[data-testid="stSidebar"] details {{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.14); border-radius:16px; padding:.15rem .25rem;}}
 [data-testid="stSidebar"] details summary {{font-weight:800;}}
+.streamlit-expanderHeader {{font-weight:800 !important;}}
 .hero {{padding: 18px 22px; border-radius: 22px; background: linear-gradient(135deg, #0F3B2B 0%, #2D7A55 62%, #D9A441 100%); color: white; box-shadow: 0 18px 34px rgba(15,59,43,.12); margin-bottom: 14px;}}
 .hero h1 {{font-size: 1.95rem; margin:0 0 6px 0; text-align:center;}}
 .hero p {{margin:0; opacity:.96; text-align:center;}}
@@ -101,13 +121,13 @@ html, body, .stApp, .stApp * {{font-family:"Segoe UI", Arial, sans-serif !import
 .metric-value {{font-size:1.02rem; color:{COR_PRIMARIA}; font-weight:900; margin-top:4px; line-height:1.12;}}
 .metric-help {{font-size:.74rem; color:#75877B; margin-top:4px; line-height:1.25;}}
 .page-title {{margin:.15rem 0 .9rem 0; color:{COR_TEXTO}; font-size:1.8rem; font-weight:900; text-align:center;}}
-div[data-testid="stMetric"] {{background: rgba(255,255,255,.92); border:1px solid rgba(15,59,43,.12); border-radius:18px; padding:.72rem .82rem; box-shadow:0 10px 24px rgba(15,59,43,.05);}}
+div[data-testid="stMetric"] {{background: rgba(255,255,255,.92); border:1px solid rgba(15,59,43,.18); border-radius:18px; padding:.72rem .82rem; box-shadow:0 10px 24px rgba(15,59,43,.05);}}
 div[data-testid="stMetricLabel"] p {{font-size:.74rem !important; color:#627568 !important; font-weight:800 !important;}}
 div[data-testid="stMetricValue"] {{font-size:clamp(.96rem, 1.35vw, 1.34rem) !important; color:#0F3B2B !important; font-weight:900 !important; line-height:1.05 !important;}}
 div[data-testid="stMetricDelta"] {{font-size:.72rem !important;}}
 
-div[data-testid="stDataFrame"] [role="row"] > div, div[data-testid="stDataEditor"] [role="row"] > div {{box-shadow: inset 0 -1px 0 rgba(8,53,69,.06);}}
-div[data-testid="stDataFrame"] [role="columnheader"] > div, div[data-testid="stDataEditor"] [role="columnheader"] > div {{font-weight:800 !important; box-shadow: inset 0 -2px 0 rgba(8,53,69,.10);}}
+div[data-testid="stDataFrame"] [role="row"] > div, div[data-testid="stDataEditor"] [role="row"] > div {{box-shadow: inset 0 -1px 0 rgba(15,59,43,.12);}}
+div[data-testid="stDataFrame"] [role="columnheader"] > div, div[data-testid="stDataEditor"] [role="columnheader"] > div {{font-weight:800 !important; box-shadow: inset 0 -2px 0 rgba(15,59,43,.18);}}
 .section-title {{text-align:center; color:{COR_TEXTO}; font-size:1.12rem; font-weight:900; margin:.2rem 0 .72rem 0;}}
 .visit-card,.detail-card {{background:#fff; border:1px solid {COR_BORDA}; border-radius:20px; padding:15px; box-shadow:0 10px 22px rgba(15,59,43,.05); margin-bottom:12px;}}
 .visit-head {{display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;}}
@@ -116,7 +136,7 @@ div[data-testid="stDataFrame"] [role="columnheader"] > div, div[data-testid="stD
 .priority-badge {{background:linear-gradient(135deg, #EEF6EF 0%, #D9EEDC 100%); color:#1C6547; border-radius:14px; padding:7px 11px; font-weight:800;}}
 .reason-box {{margin-top:12px; padding:10px 12px; border-radius:14px; background:#F7FBF7; color:#334155; border:1px solid #E1EADF; text-align:center;}}
 .visit-grid, .detail-grid {{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:12px;}}
-.visit-grid div, .detail-grid div {{background:#FBFDF9; border:1px solid #E6EDE2; border-radius:14px; padding:10px; text-align:center;}}
+.visit-grid div, .detail-grid div {{background:#FBFDF9; border:1px solid #D7E2D8; border-radius:14px; padding:10px; text-align:center;}}
 .visit-grid span, .detail-grid span {{display:block; font-size:.74rem; color:#6B7D72; margin-bottom:4px;}}
 .detail-grid {{grid-template-columns:repeat(3,minmax(0,1fr));}}
 .filter-panel {{background:#ffffff; border:1px solid {COR_BORDA}; border-radius:18px; padding:14px 16px; box-shadow:0 8px 18px rgba(15,23,42,.03); margin-bottom:12px;}}
@@ -131,18 +151,18 @@ div[data-testid="stDataFrame"] [role="columnheader"] > div, div[data-testid="stD
 .hero-search {{padding:24px 26px; border-radius:28px; background:linear-gradient(135deg, #0D3B2A 0%, #1B6B4A 55%, #C9A63B 100%); color:#FFFFFF; box-shadow:0 18px 34px rgba(13,59,42,.18); margin-bottom:16px;}}
 .hero-search h1 {{margin:0 0 8px 0; font-size:2.1rem; line-height:1.05;}}
 .hero-search p {{margin:0; font-size:.96rem; opacity:.96;}}
-.compact-stat {{background:#FBFDF9; border:1px solid #E2EADF; border-radius:14px; padding:8px 10px; text-align:center; min-height:76px; display:flex; flex-direction:column; justify-content:center;}}
+.compact-stat {{background:#FBFDF9; border:1px solid #D0DED2; border-radius:14px; padding:8px 10px; text-align:center; min-height:76px; display:flex; flex-direction:column; justify-content:center;}}
 .compact-stat-label {{font-size:.72rem; color:#6A7A70; font-weight:800; margin-bottom:4px;}}
 .compact-stat-value {{font-size:.94rem; color:#0F3B2B; font-weight:900; line-height:1.1;}}
 div[data-testid="stDataFrame"] {{border-radius:18px; overflow:hidden; border:1px solid {COR_BORDA};}}
 div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {{border-radius:12px !important;}}
-.stButton > button, .stDownloadButton > button {{border-radius:12px !important; min-height:42px; font-weight:800; border:1px solid rgba(15,59,43,.12) !important; background:#F4F1E7 !important; color:#183126 !important;}}
+.stButton > button, .stDownloadButton > button {{border-radius:12px !important; min-height:42px; font-weight:800; border:1px solid rgba(15,59,43,.18) !important; background:#F4F1E7 !important; color:#183126 !important;}}
 ::-webkit-scrollbar {{width:22px; height:22px;}}
 ::-webkit-scrollbar-thumb {{background:#2D7A55; border-radius:12px; border:3px solid #F7F3E7;}}
 ::-webkit-scrollbar-track {{background:#F1EBDE;}}
-.stTextInput input, .stNumberInput input, .stTextArea textarea, .stDateInput input {{background:#F8F4E8 !important; color:#143224 !important; border:1px solid rgba(15,59,43,.22) !important;}}
-div[data-baseweb="select"] > div {{background:#F8F4E8 !important; border:1px solid rgba(15,59,43,.22) !important; color:#143224 !important;}}
-.stMultiSelect div[data-baseweb="select"] > div {{background:#F8F4E8 !important; border:1px solid rgba(15,59,43,.22) !important; color:#143224 !important;}}
+.stTextInput input, .stNumberInput input, .stTextArea textarea, .stDateInput input {{background:#F8F4E8 !important; color:#143224 !important; border:1px solid rgba(15,59,43,.28) !important;}}
+div[data-baseweb="select"] > div {{background:#F8F4E8 !important; border:1px solid rgba(15,59,43,.28) !important; color:#143224 !important;}}
+.stMultiSelect div[data-baseweb="select"] > div {{background:#F8F4E8 !important; border:1px solid rgba(15,59,43,.28) !important; color:#143224 !important;}}
 .stTextInput input::placeholder, .stTextArea textarea::placeholder {{color:#73806F !important; opacity:1;}}
 @media (max-width: 900px) {{ .visit-grid, .detail-grid {{grid-template-columns:1fr;}} }}
 @media (max-width: 900px) {{
@@ -167,7 +187,7 @@ st.markdown("""
 .notice-info {background:#EEF5F0; color:#174631; border-color:#BCD6C4;}
 .notice-warning {background:#FFF4D8; color:#6A4A00; border-color:#E8C66A;}
 .notice-error {background:#FDECEC; color:#8A1C1C; border-color:#EDB4B4;}
-.status-mini-card, .base-mini-card, .run-mini-card {background:#FFFFFF; border:1px solid #D8E2D9; border-radius:16px; padding:.85rem 1rem; box-shadow:0 2px 10px rgba(15,59,43,.05); margin-bottom:.7rem;}
+.status-mini-card, .base-mini-card, .run-mini-card {background:#FFFFFF; border:1px solid #B8C9BC; border-radius:16px; padding:.85rem 1rem; box-shadow:0 2px 10px rgba(15,59,43,.05); margin-bottom:.7rem;}
 .status-mini-title, .base-mini-title, .run-mini-title {font-size:.82rem; font-weight:900; color:#55725C; text-transform:uppercase; letter-spacing:.04em; margin-bottom:.2rem;}
 .status-mini-main, .base-mini-main {font-size:1rem; font-weight:900; color:#0F3B2B; line-height:1.25; word-break:break-word; overflow-wrap:anywhere;}
 .status-mini-sub, .base-mini-sub, .run-mini-sub {font-size:.84rem; color:#6C7C72; margin-top:.15rem;}
@@ -176,7 +196,7 @@ st.markdown("""
 .status-falha {background:#FDECEC; color:#8A1C1C;}
 .status-pendente {background:#FFF4D8; color:#6A4A00;}
 .status-neutro {background:#EEF5F0; color:#42614E;}
-[data-testid="stFileUploader"] {background:#FFFFFF; border:1px solid #D8E2D9; border-radius:18px; padding:.55rem .6rem; box-shadow:0 2px 10px rgba(15,59,43,.05);}
+[data-testid="stFileUploader"] {background:#FFFFFF; border:1px solid #B8C9BC; border-radius:18px; padding:.55rem .6rem; box-shadow:0 2px 10px rgba(15,59,43,.05);}
 [data-testid="stFileUploader"] section {background:#F9FBF6 !important; border:2px dashed #CDAA57 !important; border-radius:16px !important; padding:1rem !important;}
 [data-testid="stFileUploader"] section * {color:#143224 !important;}
 [data-testid="stFileUploader"] small {color:#5F7365 !important;}

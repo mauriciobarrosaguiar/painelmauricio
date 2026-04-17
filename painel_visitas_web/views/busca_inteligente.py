@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from io import BytesIO
 import re
 import unicodedata
 
@@ -101,6 +102,18 @@ def _prepare_catalog(inventario: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def _excel_bytes(df: pd.DataFrame, sheet_name: str = "ResultadoBusca") -> bytes:
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name=sheet_name[:31])
+        worksheet = writer.sheets[sheet_name[:31]]
+        for idx, column in enumerate(df.columns):
+            max_len = int(df[column].astype(str).str.len().fillna(0).max()) if not df.empty else 0
+            worksheet.set_column(idx, idx, max(len(str(column)) + 2, min(max_len + 2, 42)))
+    output.seek(0)
+    return output.getvalue()
+
+
 def buscar_produtos_inteligente(
     consulta: str,
     inventario: pd.DataFrame,
@@ -150,7 +163,7 @@ def render_busca_inteligente(score_df: pd.DataFrame, inventario: pd.DataFrame, c
         """
         <div class="hero-search">
             <h1>Busca Inteligente</h1>
-            <p>Encontre apresentacoes equivalentes por nome, abreviacao, EAN, substancia e dose usando a planilha extraida do Mercado Farma.</p>
+            <p>Pesquise somente dentro da planilha extraida do Mercado Farma e leve os itens encontrados para o pedido.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -183,6 +196,7 @@ def render_busca_inteligente(score_df: pd.DataFrame, inventario: pd.DataFrame, c
 
     selected_eans = set(st.session_state.get("preselected_products", {}).keys() if isinstance(st.session_state.get("preselected_products", {}), dict) else [])
     resumo = []
+    export_rows: list[dict[str, str]] = []
     novos_selecionados: dict[str, bool] = {}
 
     for idx, linha in enumerate(linhas):
@@ -194,6 +208,29 @@ def render_busca_inteligente(score_df: pd.DataFrame, inventario: pd.DataFrame, c
             mix_filtro=mix_label,
         )
         resumo.append({"Item pesquisado": linha, "Busca interpretada": interpretado or "-", "Encontrados": len(resultado)})
+        if resultado.empty:
+            export_rows.append(
+                {
+                    "PRODUTO PESQUISADO": linha,
+                    "EAN PRODUTO ENCONTRADO": "",
+                    "PRODUTO ENCONTRADO": "",
+                }
+            )
+        else:
+            export_base = (
+                resultado[["ean", "principio_ativo"]]
+                .astype(str)
+                .drop_duplicates()
+                .sort_values(["principio_ativo", "ean"])
+            )
+            for _, match in export_base.iterrows():
+                export_rows.append(
+                    {
+                        "PRODUTO PESQUISADO": linha,
+                        "EAN PRODUTO ENCONTRADO": str(match.get("ean", "")),
+                        "PRODUTO ENCONTRADO": str(match.get("principio_ativo", "")),
+                    }
+                )
         with st.expander(f"{linha} - {len(resultado)} resultado(s)", expanded=len(linhas) == 1):
             st.caption(f"Busca interpretada: {interpretado or linha}")
             if resultado.empty:
@@ -222,8 +259,22 @@ def render_busca_inteligente(score_df: pd.DataFrame, inventario: pd.DataFrame, c
                         if checked:
                             novos_selecionados[str(row.get("ean", ""))] = True
 
-    st.dataframe(pd.DataFrame(resumo), use_container_width=True, hide_index=True)
-    if st.button("Levar selecionados para Montar pedido", use_container_width=True):
+    resumo_df = pd.DataFrame(resumo)
+    st.dataframe(resumo_df, use_container_width=True, hide_index=True)
+
+    export_df = pd.DataFrame(
+        export_rows,
+        columns=["PRODUTO PESQUISADO", "EAN PRODUTO ENCONTRADO", "PRODUTO ENCONTRADO"],
+    )
+    action_cols = st.columns([1.15, 0.85])
+    action_cols[0].download_button(
+        "Baixar resultado da busca",
+        data=_excel_bytes(export_df if not export_df.empty else pd.DataFrame(columns=export_df.columns)),
+        file_name="resultado_busca_mercado_farma.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+    )
+    if action_cols[1].button("Levar selecionados para Montar pedido", use_container_width=True):
         if not novos_selecionados:
             st.warning("Selecione pelo menos um produto para continuar.")
         else:
