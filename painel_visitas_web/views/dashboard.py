@@ -60,20 +60,32 @@ def _metric_compact(label: str, value: str, help_text: str = ""):
     st.markdown(
         f"""
         <div style="
-            border:1px solid rgba(15, 23, 42, 0.08);
+            border:1px solid rgba(15, 59, 43, 0.12);
             border-radius:16px;
-            padding:10px 18px 9px 18px;
+            padding:10px 16px 9px 16px;
             background:#ffffff;
-            min-height:72px;
+            min-height:70px;
             display:flex;
             flex-direction:column;
             justify-content:center;
             text-align:center;
-            box-shadow:0 2px 8px rgba(15, 23, 42, 0.03);
+            box-shadow:0 4px 12px rgba(15, 59, 43, 0.04);
         ">
-            <div style="font-size:12px;font-weight:700;color:#5b6b82;margin-bottom:3px;line-height:1.15;">{label}</div>
-            <div style="font-size:16px;font-weight:800;color:#003b5c;line-height:1.1;margin-bottom:2px;">{value}</div>
-            <div style="font-size:11px;color:#7c8aa5;line-height:1.1;">{help_text}</div>
+            <div style="font-size:12px;font-weight:800;color:#5F7365;margin-bottom:3px;line-height:1.15;">{label}</div>
+            <div style="font-size:15px;font-weight:900;color:#0F3B2B;line-height:1.1;margin-bottom:2px;">{value}</div>
+            <div style="font-size:11px;color:#7A877E;line-height:1.1;">{help_text}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _compact_stat(label: str, value: str):
+    st.markdown(
+        f"""
+        <div class="compact-stat">
+            <div class="compact-stat-label">{label}</div>
+            <div class="compact-stat-value">{value}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -302,9 +314,12 @@ def render_dashboard(
                 else:
                     st.markdown(f"**Telefone:** {contato_tel or '-'}")
                 i3, i4, i5 = st.columns(3)
-                i3.metric("OL", _money(row.get("ol_sem_combate", 0)))
-                i4.metric("Prioritarios", _money(row.get("ol_prioritarios", 0)))
-                i5.metric("Lancamentos", _money(row.get("ol_lancamentos", 0)))
+                with i3:
+                    _compact_stat("OL", _money(row.get("ol_sem_combate", 0)))
+                with i4:
+                    _compact_stat("Prioritarios", _money(row.get("ol_prioritarios", 0)))
+                with i5:
+                    _compact_stat("Lancamentos", _money(row.get("ol_lancamentos", 0)))
                 st.caption(str(row.get("motivo_principal", "") or "Cliente com oportunidade no periodo."))
                 b1, b2 = st.columns(2)
                 if b1.button(f"Montar pedido {idx + 1}", key=f"dash_pedido_{row.get('cnpj', idx)}", use_container_width=True):

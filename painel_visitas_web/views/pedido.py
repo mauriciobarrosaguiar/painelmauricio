@@ -415,7 +415,7 @@ def render_pedido(
                 badge_class = "info" if row.get("preselect", False) else ("neutro" if str(row.get("mix_lancamentos", "LINHA")) == "LINHA" else "")
                 badge_text = "Selecionado na busca" if row.get("preselect", False) else str(row.get("mix_lancamentos", "LINHA") or "LINHA")
                 st.markdown(f"<span class='product-badge {badge_class}'>{badge_text}</span>", unsafe_allow_html=True)
-                st.markdown(f"#### {row.get('principio_ativo', '')}")
+                st.markdown(f"<div class='product-name'>{row.get('principio_ativo', '')}</div>", unsafe_allow_html=True)
                 st.caption(f"EAN: {ean}")
                 escolha_dist = st.selectbox("Distribuidora", opcoes, index=opcoes.index(default_dist), key=f"dist_{cnpj}_{ean}")
                 escolha_df = variantes[variantes["distribuidora"] == escolha_dist]

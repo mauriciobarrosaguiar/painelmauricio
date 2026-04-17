@@ -28,6 +28,16 @@ def _digits(value: str) -> str:
     return "".join(ch for ch in str(value or "") if ch.isdigit())
 
 
+def _metric_card(label: str, value: str, help_text: str = "") -> str:
+    return (
+        "<div class='metric-card metric-center'>"
+        f"<div class='metric-label'>{label}</div>"
+        f"<div class='metric-value'>{value}</div>"
+        f"<div class='metric-help'>{help_text}</div>"
+        "</div>"
+    )
+
+
 def load_sip_groups() -> list[dict]:
     if SIP_FILE.exists():
         try:
@@ -177,13 +187,20 @@ def render_sip(score_df: pd.DataFrame, clientes_df: pd.DataFrame):
     atingimento = (faturado / meta_mes) if meta_mes else 0.0
     falta_regra = max(0.0, (meta_mes * (pagamento_min / 100.0)) - faturado) if meta_mes else 0.0
 
-    m1, m2, m3, m4, m5, m6 = st.columns(6)
-    m1.metric("CNPJs", str(len(group.get("cnpjs", []))))
-    m2.metric("Meta", _money(meta_mes))
-    m3.metric("Faturado", _money(faturado))
-    m4.metric("OL prioritarios", _money(faturado_prio))
-    m5.metric("OL lancamentos", _money(faturado_lanc))
-    m6.metric("Falta regra", _money(falta_regra))
+    row_top = st.columns(3)
+    row_bottom = st.columns(3)
+    with row_top[0]:
+        st.markdown(_metric_card("CNPJs", str(len(group.get("cnpjs", [])))), unsafe_allow_html=True)
+    with row_top[1]:
+        st.markdown(_metric_card("Meta", _money(meta_mes)), unsafe_allow_html=True)
+    with row_top[2]:
+        st.markdown(_metric_card("Faturado", _money(faturado)), unsafe_allow_html=True)
+    with row_bottom[0]:
+        st.markdown(_metric_card("OL prioritarios", _money(faturado_prio)), unsafe_allow_html=True)
+    with row_bottom[1]:
+        st.markdown(_metric_card("OL lancamentos", _money(faturado_lanc)), unsafe_allow_html=True)
+    with row_bottom[2]:
+        st.markdown(_metric_card("Falta regra", _money(falta_regra)), unsafe_allow_html=True)
     st.caption(f"Atingimento: {_pct(atingimento)} | Pagamento a partir de {pagamento_min:.0f}%")
 
     if not base.empty:
