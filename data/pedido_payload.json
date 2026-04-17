@@ -1,5 +1,5 @@
 {
-  "gerado_em": "2026-04-16T20:02:28.968280-03:00",
+  "gerado_em": "2026-04-17T08:50:40.483202-03:00",
   "cupom": "",
   "headless": true,
   "cliente": {
@@ -14,14 +14,14 @@
     "linhas": 1,
     "produtos": 1,
     "distribuidoras": 1,
-    "total_estimado": 237.3
+    "total_estimado": 395.5
   },
   "por_distribuidora": [
     {
       "Distribuidora": "Nazaria - TO",
       "Produtos": 1,
-      "Unidades": 30,
-      "Total": 237.3
+      "Unidades": 50,
+      "Total": 395.5
     }
   ],
   "cart_items": [
@@ -36,9 +36,9 @@
       "Produto": "ROSUVASTATINA CALCICA CPR REV 20MG 3BLX10",
       "Distribuidora": "Nazaria - TO",
       "Preco": 7.91,
-      "Estoque": 152,
+      "Estoque": 142,
       "Mix": "PRIORITARIOS",
-      "Qtde": 30,
+      "Qtde": 50,
       "Foco": false
     }
   ]
