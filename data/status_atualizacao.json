@@ -319,30 +319,13 @@
   },
   "comandos": {
     "ultimo_sucesso": "",
-    "status": "solicitado",
-    "mensagem": "Comando enviado para a fila do painel.",
-    "ultimo_resultado": "",
-    "atualizado_em": "17/04/2026 08:50:43",
-    "ultimo_comando_id": "cmd_1776426641246",
-    "etapa_atual": "Aguardando execucao",
-    "erro": "",
-    "resumo": {},
-    "eventos": [
-      {
-        "quando": "17/04/2026 08:50:43",
-        "texto": "Comando enviado para a fila do painel.",
-        "nivel": "info"
-      }
-    ],
-    "progresso": {
-      "atual": 0,
-      "total": 0,
-      "percentual": 0
-    }
+    "status": "nunca",
+    "mensagem": "",
+    "ultimo_resultado": ""
   },
   "github_actions": {
     "status": "solicitado",
-    "mensagem": "Comando enviado para a fila do painel.",
+    "mensagem": "Workflow disparado com sucesso.",
     "atualizado_em": "17/04/2026 08:50:43",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
