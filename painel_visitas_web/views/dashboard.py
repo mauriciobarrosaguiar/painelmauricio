@@ -180,6 +180,21 @@ def _status_resume(block: dict) -> str:
     return text if len(text) <= 100 else text[:97] + "..."
 
 
+def _visit_reason(row: pd.Series) -> str:
+    venda = float(pd.to_numeric(row.get("venda_periodo", 0), errors="coerce") or 0)
+    dias = int(pd.to_numeric(row.get("dias_sem_compra", 0), errors="coerce") or 0)
+    motivos: list[str] = []
+    if venda <= 0:
+        motivos.append("sem compra no periodo")
+    elif venda < 300:
+        motivos.append(f"abaixo de R$ 300 no periodo ({_money(venda)})")
+    else:
+        motivos.append(f"compra no periodo: {_money(venda)}")
+    if dias > 0:
+        motivos.append(f"{dias} dias sem compra")
+    return " | ".join(motivos)
+
+
 def render_dashboard(
     score_df: pd.DataFrame,
     oportunidades: pd.DataFrame,
@@ -291,45 +306,107 @@ def render_dashboard(
     with row2[2]:
         _metric("Sem venda", str(clientes_sem_venda), "Clientes sem faturamento no periodo")
 
-    st.markdown('<div class="section-title">Top clientes visitados</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Clientes para visitar</div>', unsafe_allow_html=True)
     top = base.copy()
-    if "score_visita" in top.columns:
-        top = top.sort_values(["score_visita", "ol_sem_combate", "total_faturado"], ascending=[False, False, False])
+    top["venda_periodo"] = pd.to_numeric(top.get("venda_periodo", 0), errors="coerce").fillna(0.0)
+    top["ol_sem_combate"] = pd.to_numeric(top.get("ol_sem_combate", 0), errors="coerce").fillna(0.0)
+    top["score_visita"] = pd.to_numeric(top.get("score_visita", 0), errors="coerce").fillna(0.0)
+    top["dias_sem_compra"] = pd.to_numeric(top.get("dias_sem_compra", 0), errors="coerce").fillna(0.0)
+    top["percentual_compras_periodo"] = (top["venda_periodo"] / faturado_periodo) if faturado_periodo > 0 else 0.0
+    top["flag_sem_compra_periodo"] = top["venda_periodo"] <= 0
+    top["flag_abaixo_300_periodo"] = top["venda_periodo"] < 300
+
+    filtro_cols = st.columns([1.2, 1.0, 1.2, 0.6])
+    visao = filtro_cols[0].selectbox(
+        "Perfil",
+        [
+            "Sem compra ou abaixo de R$ 300",
+            "Somente sem compra",
+            "Somente abaixo de R$ 300",
+            "Com compra no periodo",
+            "Todos",
+        ],
+        key="dash_visita_perfil",
+    )
+    cidades_top = ["Todas"] + sorted(top["cidade"].dropna().astype(str).unique().tolist())
+    cidade_top = filtro_cols[1].selectbox("Cidade", cidades_top, key="dash_visita_cidade")
+    ordenar = filtro_cols[2].selectbox(
+        "Ordenar por",
+        [
+            "Maior necessidade de visita",
+            "Maior OL",
+            "Menor compra no periodo",
+            "Maior compra no periodo",
+            "Maior percentual das compras",
+        ],
+        key="dash_visita_ordem",
+    )
+    limite_cards = int(filtro_cols[3].selectbox("Cards", [4, 6, 8, 10], index=1, key="dash_visita_limite"))
+
+    if visao == "Sem compra ou abaixo de R$ 300":
+        top = top[top["flag_abaixo_300_periodo"]].copy()
+    elif visao == "Somente sem compra":
+        top = top[top["flag_sem_compra_periodo"]].copy()
+    elif visao == "Somente abaixo de R$ 300":
+        top = top[(~top["flag_sem_compra_periodo"]) & (top["flag_abaixo_300_periodo"])].copy()
+    elif visao == "Com compra no periodo":
+        top = top[top["venda_periodo"] > 0].copy()
+
+    if cidade_top != "Todas":
+        top = top[top["cidade"].astype(str) == cidade_top].copy()
+
+    if ordenar == "Maior necessidade de visita":
+        top = top.sort_values(
+            ["flag_sem_compra_periodo", "flag_abaixo_300_periodo", "score_visita", "ol_sem_combate", "dias_sem_compra", "venda_periodo"],
+            ascending=[False, False, False, False, False, True],
+        )
+    elif ordenar == "Maior OL":
+        top = top.sort_values(["ol_sem_combate", "score_visita", "venda_periodo"], ascending=[False, False, True])
+    elif ordenar == "Menor compra no periodo":
+        top = top.sort_values(["venda_periodo", "score_visita", "ol_sem_combate"], ascending=[True, False, False])
+    elif ordenar == "Maior compra no periodo":
+        top = top.sort_values(["venda_periodo", "score_visita", "ol_sem_combate"], ascending=[False, False, False])
     else:
-        top = top.sort_values(["ol_sem_combate", "total_faturado"], ascending=[False, False])
-    top = top.head(6)
-    cols = st.columns(2)
-    for idx, (_, row) in enumerate(top.iterrows()):
-        contato_nome = str(row.get("nome_contato", "") or row.get("nome_contato_cad", "") or "Sem comprador")
-        contato_tel = str(row.get("contato", "") or row.get("contato_cad", "") or row.get("telefone_limpo", "") or row.get("telefone_limpo_cad", "") or "")
-        mensagem = f"Ola, {contato_nome}. Estou acompanhando o cliente {row.get('nome_fantasia', '')} e posso ajudar no pedido."
-        wa = _wa_link(contato_tel, mensagem)
-        with cols[idx % 2]:
-            with st.container(border=True):
-                st.markdown(f"**{row.get('nome_fantasia', '')}**")
-                st.caption(f"CNPJ: {row.get('cnpj', '')} | {row.get('cidade', '')}")
-                st.markdown(f"**Comprador:** {contato_nome}")
-                if wa:
-                    st.markdown(f"**Telefone:** [{contato_tel}]({wa})")
-                else:
-                    st.markdown(f"**Telefone:** {contato_tel or '-'}")
-                i3, i4, i5 = st.columns(3)
-                with i3:
-                    _compact_stat("OL", _money(row.get("ol_sem_combate", 0)))
-                with i4:
-                    _compact_stat("Prioritarios", _money(row.get("ol_prioritarios", 0)))
-                with i5:
-                    _compact_stat("Lancamentos", _money(row.get("ol_lancamentos", 0)))
-                st.caption(str(row.get("motivo_principal", "") or "Cliente com oportunidade no periodo."))
-                b1, b2 = st.columns(2)
-                if b1.button(f"Montar pedido {idx + 1}", key=f"dash_pedido_{row.get('cnpj', idx)}", use_container_width=True):
-                    st.session_state.pedido_cliente_cnpj = row.get("cnpj", "")
-                    st.session_state.page = "Montar pedido"
-                    st.rerun()
-                if wa:
-                    b2.link_button("WhatsApp", wa, use_container_width=True)
-                else:
-                    b2.button("WhatsApp", key=f"dash_wa_{idx}", disabled=True, use_container_width=True)
+        top = top.sort_values(["percentual_compras_periodo", "venda_periodo", "score_visita"], ascending=[False, False, False])
+
+    top = top.head(limite_cards)
+    st.caption(f"{len(top)} cliente(s) na visao atual.")
+    if top.empty:
+        st.info("Nenhum cliente encontrado com os filtros selecionados.")
+    else:
+        cols = st.columns(2)
+        for idx, (_, row) in enumerate(top.iterrows()):
+            contato_nome = str(row.get("nome_contato", "") or row.get("nome_contato_cad", "") or "Sem comprador")
+            contato_tel = str(row.get("contato", "") or row.get("contato_cad", "") or row.get("telefone_limpo", "") or row.get("telefone_limpo_cad", "") or "")
+            mensagem = f"Ola, {contato_nome}. Estou acompanhando o cliente {row.get('nome_fantasia', '')} e posso ajudar no pedido."
+            wa = _wa_link(contato_tel, mensagem)
+            with cols[idx % 2]:
+                with st.container(border=True):
+                    st.markdown(f"**{row.get('nome_fantasia', '')}**")
+                    st.caption(f"CNPJ: {row.get('cnpj', '')} | {row.get('cidade', '')}")
+                    st.markdown(f"**Comprador:** {contato_nome}")
+                    if wa:
+                        st.markdown(f"**Telefone:** [{contato_tel}]({wa})")
+                    else:
+                        st.markdown(f"**Telefone:** {contato_tel or '-'}")
+                    st.caption(f"Compra no periodo: {_money(row.get('venda_periodo', 0))} | Participacao: {_pct(row.get('percentual_compras_periodo', 0))}")
+                    i3, i4, i5 = st.columns(3)
+                    with i3:
+                        _compact_stat("OL", _money(row.get("ol_sem_combate", 0)))
+                    with i4:
+                        _compact_stat("Prioritarios", _money(row.get("ol_prioritarios", 0)))
+                    with i5:
+                        _compact_stat("Lancamentos", _money(row.get("ol_lancamentos", 0)))
+                    st.caption(_visit_reason(row))
+                    b1, b2 = st.columns(2)
+                    if b1.button(f"Montar pedido {idx + 1}", key=f"dash_pedido_{row.get('cnpj', idx)}", use_container_width=True):
+                        st.session_state.pedido_cliente_cnpj = row.get("cnpj", "")
+                        st.session_state.page = "Montar pedido"
+                        st.rerun()
+                    if wa:
+                        b2.link_button("WhatsApp", wa, use_container_width=True)
+                    else:
+                        b2.button("WhatsApp", key=f"dash_wa_{idx}", disabled=True, use_container_width=True)
 
     with st.expander("Cadastrar metas do mes", expanded=False):
         m1, m2, m3, m4 = st.columns(4)
