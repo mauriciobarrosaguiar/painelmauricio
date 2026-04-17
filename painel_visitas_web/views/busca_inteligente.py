@@ -12,6 +12,8 @@ ABREVIACOES_BUSCA = {
     "hct": "hidroclorotiazida",
     "hctz": "hidroclorotiazida",
     "hidro": "hidroclorotiazida",
+    "ocylin": "amoxicilina",
+    "ocilin": "amoxicilina",
     "olme": "olmesartana",
     "olmes": "olmesartana",
     "anlo": "anlodipino",
@@ -44,7 +46,42 @@ FRASES_BUSCA = {
     "5 mil": "5000",
 }
 
-TERMOS_FRACOS = {"mg", "g", "ml", "cp", "cpr", "caps", "caixa", "frasco", "adulto", "pediatrico"}
+TERMOS_DESCARTADOS = {"mg", "g", "ml", "mcg", "ui", "u", "kg", "l"}
+TERMOS_SECUNDARIOS = {
+    "cp",
+    "cpr",
+    "cprs",
+    "comp",
+    "comprimido",
+    "comprimidos",
+    "revestido",
+    "revestidos",
+    "caps",
+    "capsula",
+    "capsulas",
+    "caixa",
+    "frasco",
+    "adulto",
+    "pediatrico",
+    "pediatrica",
+    "xarope",
+    "gotas",
+    "oral",
+    "solucao",
+    "susp",
+    "suspensao",
+    "inj",
+    "injetavel",
+    "amp",
+    "ampola",
+    "env",
+    "display",
+    "bl",
+    "blt",
+    "lib",
+    "lenta",
+    "im",
+}
 
 
 def _strip_accents(value: object) -> str:
@@ -70,18 +107,18 @@ def expandir_consulta_produto(consulta: str) -> tuple[list[str], str]:
     texto = substituir_frases_busca(consulta)
     termos: list[str] = []
     for token in texto.split():
-        if token in TERMOS_FRACOS:
+        if token in TERMOS_DESCARTADOS:
             continue
         expansao = ABREVIACOES_BUSCA.get(token, token)
         for termo in normalizar_busca(expansao).split():
-            if termo and termo not in TERMOS_FRACOS and termo not in termos:
+            if termo and termo not in TERMOS_DESCARTADOS and termo not in termos:
                 termos.append(termo)
     return termos, " ".join(termos)
 
 
 def _prepare_catalog(inventario: pd.DataFrame) -> pd.DataFrame:
     if inventario is None or inventario.empty:
-        return pd.DataFrame(columns=["ean", "principio_ativo", "distribuidora", "mix_lancamentos", "preco_sem_imposto", "estoque", "texto_busca"])
+        return pd.DataFrame(columns=["ean", "principio_ativo", "distribuidora", "mix_lancamentos", "preco_sem_imposto", "estoque", "texto_busca", "nome_tokens"])
     df = inventario.copy()
     df["ean"] = df["ean"].astype(str)
     df["principio_ativo"] = df["principio_ativo"].astype(str)
@@ -90,16 +127,33 @@ def _prepare_catalog(inventario: pd.DataFrame) -> pd.DataFrame:
     df["preco_sem_imposto"] = pd.to_numeric(df.get("preco_sem_imposto", 0), errors="coerce").fillna(0)
     df["estoque"] = pd.to_numeric(df.get("estoque", 0), errors="coerce").fillna(0)
     df["desconto"] = pd.to_numeric(df.get("desconto", 0), errors="coerce").fillna(0)
-    df["texto_busca"] = (
-        df["principio_ativo"].map(normalizar_busca)
-        + " "
-        + df["distribuidora"].map(normalizar_busca)
-        + " "
-        + df["mix_lancamentos"].map(normalizar_busca)
-        + " "
-        + df["ean"].astype(str)
-    )
+    df["texto_busca"] = df["principio_ativo"].map(normalizar_busca)
+    df["nome_tokens"] = df["texto_busca"].str.split()
     return df
+
+
+def _token_match(query_token: str, product_token: str) -> bool:
+    if not query_token or not product_token:
+        return False
+    if query_token.isdigit():
+        return product_token == query_token
+    if product_token == query_token:
+        return True
+    if len(query_token) >= 4 and product_token.startswith(query_token):
+        return True
+    if len(query_token) >= 6 and query_token in product_token:
+        return True
+    return False
+
+
+def _count_token_hits(product_tokens: list[str], query_tokens: list[str]) -> int:
+    if not query_tokens:
+        return 0
+    total = 0
+    for token in query_tokens:
+        if any(_token_match(token, product_token) for product_token in product_tokens):
+            total += 1
+    return total
 
 
 def _excel_bytes(df: pd.DataFrame, sheet_name: str = "ResultadoBusca") -> bytes:
@@ -191,28 +245,52 @@ def buscar_produtos_inteligente(
     if catalogo.empty:
         return pd.DataFrame(), consulta_expandida
 
-    digits_query = "".join(ch for ch in consulta if ch.isdigit())
-    catalogo["hits"] = 0
-    for termo in termos:
-        catalogo["hits"] = catalogo["hits"] + catalogo["texto_busca"].str.contains(re.escape(termo), na=False).astype(int)
+    core_tokens = [token for token in termos if not token.isdigit() and token not in TERMOS_SECUNDARIOS]
+    secondary_tokens = [token for token in termos if token in TERMOS_SECUNDARIOS]
+    numeric_tokens = [token for token in termos if token.isdigit()]
+    digits_query = "".join(ch for ch in normalizar_busca(consulta) if ch.isdigit())
+    ean_query = digits_query if len(digits_query) >= 8 and len(consulta.strip().split()) == 1 else ""
 
-    minimo_hits = 1 if len(termos) == 1 else min(2, len(termos))
-    candidatos = catalogo[catalogo["hits"] >= minimo_hits].copy()
-    if candidatos.empty and digits_query:
-        candidatos = catalogo[catalogo["ean"].astype(str).str.contains(digits_query, na=False)].copy()
-    if candidatos.empty:
-        candidatos = catalogo[catalogo["hits"] > 0].copy()
+    candidatos = catalogo.copy()
+    candidatos["core_hits"] = candidatos["nome_tokens"].apply(lambda tokens: _count_token_hits(tokens, core_tokens))
+    candidatos["secondary_hits"] = candidatos["nome_tokens"].apply(lambda tokens: _count_token_hits(tokens, secondary_tokens))
+    candidatos["numeric_hits"] = candidatos["nome_tokens"].apply(lambda tokens: _count_token_hits(tokens, numeric_tokens))
+    candidatos["hits"] = candidatos["core_hits"] + candidatos["secondary_hits"] + candidatos["numeric_hits"]
+
+    if ean_query:
+        candidatos = candidatos[candidatos["ean"].astype(str).str.startswith(ean_query)].copy()
+    elif core_tokens:
+        candidatos = candidatos[candidatos["core_hits"] > 0].copy()
+        if candidatos.empty:
+            return pd.DataFrame(), consulta_expandida
+        max_core_hits = int(candidatos["core_hits"].max())
+        candidatos = candidatos[candidatos["core_hits"] == max_core_hits].copy()
+        if numeric_tokens and int(candidatos["numeric_hits"].max()) > 0:
+            candidatos = candidatos[candidatos["numeric_hits"] == int(candidatos["numeric_hits"].max())].copy()
+        if secondary_tokens and int(candidatos["secondary_hits"].max()) > 0:
+            candidatos = candidatos[candidatos["secondary_hits"] == int(candidatos["secondary_hits"].max())].copy()
+    elif numeric_tokens:
+        candidatos = candidatos[candidatos["numeric_hits"] > 0].copy()
+    else:
+        return pd.DataFrame(), consulta_expandida
+
     if candidatos.empty:
         return pd.DataFrame(), consulta_expandida
 
-    candidatos["score"] = candidatos["hits"] * 15
-    candidatos["score"] += candidatos["texto_busca"].str.startswith(consulta_expandida).astype(int) * 10
-    if digits_query:
-        candidatos["score"] += candidatos["ean"].astype(str).eq(digits_query).astype(int) * 50
-        candidatos["score"] += candidatos["ean"].astype(str).str.startswith(digits_query).astype(int) * 15
+    candidatos["score"] = candidatos["core_hits"] * 100
+    candidatos["score"] += candidatos["numeric_hits"] * 25
+    candidatos["score"] += candidatos["secondary_hits"] * 8
+    candidatos["score"] += candidatos["texto_busca"].str.startswith(consulta_expandida).astype(int) * 14
+    candidatos["score"] += candidatos["texto_busca"].str.contains(rf"\b{re.escape(consulta_expandida)}\b", na=False).astype(int) * 10
+    if ean_query:
+        candidatos["score"] += candidatos["ean"].astype(str).eq(ean_query).astype(int) * 120
+        candidatos["score"] += candidatos["ean"].astype(str).str.startswith(ean_query).astype(int) * 30
     candidatos["score"] += (candidatos["estoque"] > 0).astype(int) * 4
 
-    candidatos = candidatos.sort_values(["score", "estoque", "preco_sem_imposto", "principio_ativo"], ascending=[False, False, True, True])
+    candidatos = candidatos.sort_values(
+        ["score", "core_hits", "numeric_hits", "secondary_hits", "estoque", "preco_sem_imposto", "principio_ativo"],
+        ascending=[False, False, False, False, False, True, True],
+    )
     if limite and limite > 0:
         candidatos = candidatos.head(limite)
     return candidatos.reset_index(drop=True), consulta_expandida
