@@ -1243,6 +1243,18 @@
       "resumo": {
         "arquivo": "Pedidos.xlsx"
       }
+    },
+    {
+      "id": "cmd_1776448627458",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "17/04/2026 14:57:07",
+      "atualizado_em": "17/04/2026 14:57:07",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
     }
   ]
 }
