@@ -49,6 +49,15 @@ ACTION_STATUS_KEYS = {
     "limpar_pedido_mf": "comandos",
     "enviar_pedido_mf": "comandos",
 }
+ACTION_ALIASES = {
+    "atualizar_bussola": "atualizar_bussola",
+    "atualizar_mercadofarma": "atualizar_mercadofarma",
+    "atualizar_mercado_farma": "atualizar_mercadofarma",
+    "limpar_pedido_mf": "limpar_pedido_mf",
+    "clear_pedido_mf": "limpar_pedido_mf",
+    "enviar_pedido_mf": "enviar_pedido_mf",
+    "gerar_pedido_mercado_farma": "enviar_pedido_mf",
+}
 
 
 def _empty_progress() -> dict[str, int]:
@@ -57,6 +66,11 @@ def _empty_progress() -> dict[str, int]:
 
 def _event(texto: str, nivel: str = "info") -> dict[str, str]:
     return {"quando": now_str(), "texto": str(texto or "").strip(), "nivel": nivel}
+
+
+def _canon(acao: str | None) -> str:
+    raw = str(acao or "").strip()
+    return ACTION_ALIASES.get(raw, raw)
 
 
 def _touch_status_block(bloco: dict | None = None) -> dict:
@@ -291,6 +305,38 @@ def load_commands() -> dict:
 
 def save_commands(cmds: dict):
     return repo_save_json("data/comandos_remotos.json", cmds, "Atualizar fila de comandos do painel")
+
+
+def load_latest_command(actions: list[str] | tuple[str, ...] | set[str] | None = None) -> dict | None:
+    data = load_commands()
+    commands = list(data.get("commands", []) or [])
+    allowed = {_canon(action) for action in actions} if actions else None
+    for command in reversed(commands):
+        action = _canon(command.get("acao"))
+        if allowed is None or action in allowed:
+            return command
+    return None
+
+
+def command_to_monitor_block(command: dict | None) -> dict:
+    if not command:
+        return {}
+    progress = dict(command.get("progresso") or {})
+    return {
+        "status": str(command.get("status", "") or ""),
+        "mensagem": str(command.get("mensagem", "") or ""),
+        "atualizado_em": str(command.get("atualizado_em", "") or command.get("criado_em", "") or ""),
+        "ultimo_comando_id": str(command.get("id", "") or ""),
+        "etapa_atual": str(command.get("etapa_atual", "") or ""),
+        "erro": str(command.get("erro", "") or ""),
+        "resumo": dict(command.get("resumo") or {}),
+        "eventos": list(command.get("eventos") or []),
+        "progresso": {
+            "atual": int(progress.get("atual") or 0),
+            "total": int(progress.get("total") or 0),
+            "percentual": int(progress.get("percentual") or 0),
+        },
+    }
 
 
 def _format_dt(iso_value: str | None) -> str:

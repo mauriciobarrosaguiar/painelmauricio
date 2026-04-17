@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from services.order_builder import build_order_dataframe, build_order_exports, build_order_payload, save_generated_order
-from services.repo_state import enqueue_command, load_status
+from services.repo_state import command_to_monitor_block, enqueue_command, load_latest_command, load_status
 from views.monitoring import render_monitor
 
 MINIMOS = {
@@ -74,6 +74,19 @@ def _pedidos_minimos(df: pd.DataFrame) -> tuple[bool, list[dict]]:
             }
         )
     return can_send, rows
+
+
+def _monitor_block() -> dict:
+    latest = load_latest_command({"enviar_pedido_mf", "limpar_pedido_mf"})
+    latest_block = command_to_monitor_block(latest)
+    status_block = dict(load_status().get("comandos", {}) or {})
+    if latest_block:
+        merged = dict(status_block)
+        merged.update({k: v for k, v in latest_block.items() if v not in ("", None, [], {})})
+        if not merged.get("ultimo_comando_id"):
+            merged["ultimo_comando_id"] = latest_block.get("ultimo_comando_id", "")
+        return merged
+    return status_block
 
 
 def render_cart(inventario: pd.DataFrame | None = None, foco: pd.DataFrame | None = None):
@@ -177,7 +190,6 @@ def render_cart(inventario: pd.DataFrame | None = None, foco: pd.DataFrame | Non
     st.markdown('<div class="section-title">Minimo por distribuidora</div>', unsafe_allow_html=True)
     st.dataframe(pd.DataFrame(minimum_rows), use_container_width=True, hide_index=True)
 
-    status = load_status()
     headless = st.toggle("Enviar invisivel", value=True)
     cupom = st.text_input("Cupom de desconto (opcional)", value=st.session_state.get("mf_cupom", ""))
     st.session_state["mf_cupom"] = cupom
@@ -196,14 +208,19 @@ def render_cart(inventario: pd.DataFrame | None = None, foco: pd.DataFrame | Non
     a3.download_button("Baixar CSV", data=exports["csv_bytes"], file_name="pedido_gerado.csv", mime="text/csv", use_container_width=True)
     a4.download_button("Baixar TXT", data=exports["txt_bytes"], file_name="pedido_gerado.txt", mime="text/plain", use_container_width=True)
     if a5.button("Limpar pedido MF", use_container_width=True, disabled=not bool(cnpj_envio)):
-        _, ok, msg = enqueue_command("limpar_pedido_mf", {"cnpj": cnpj_envio, "headless": headless})
+        cmd_id, ok, msg = enqueue_command("limpar_pedido_mf", {"cnpj": cnpj_envio, "headless": headless})
+        st.session_state["cart_last_command_id"] = cmd_id
         (st.success if ok else st.error)(msg)
 
     confirm_send = st.checkbox("Confirmo o envio do pedido ao Mercado Farma", value=False)
     if st.button("Enviar pedido para Mercado Farma", use_container_width=True, disabled=(not can_send) or (not confirm_send)):
         save_generated_order(updated, cupom=cupom, headless=headless)
-        _, ok, msg = enqueue_command("enviar_pedido_mf", {"cart_items": updated, "headless": headless, "cupom": cupom})
+        cmd_id, ok, msg = enqueue_command("enviar_pedido_mf", {"cart_items": updated, "headless": headless, "cupom": cupom})
+        st.session_state["cart_last_command_id"] = cmd_id
         (st.success if ok else st.error)(msg)
 
     st.markdown("### Acompanhamento do envio")
-    render_monitor("Mercado Farma", status.get("comandos", {}), key_prefix="cart_monitor", empty_message="Nenhum envio recente.")
+    refresh = st.button("Atualizar acompanhamento", use_container_width=True, key="cart_monitor_refresh")
+    if refresh:
+        st.rerun()
+    render_monitor("Mercado Farma", _monitor_block(), key_prefix="cart_monitor", empty_message="Nenhum envio recente.")

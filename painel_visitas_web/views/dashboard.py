@@ -3,13 +3,14 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 import pandas as pd
 import streamlit as st
 
 from config import DATA_DIR
-from services.repo_state import load_status
+from services.repo_state import command_to_monitor_block, load_latest_command, load_status
 
 TZ_BR = ZoneInfo("America/Sao_Paulo")
 META_FILE = DATA_DIR / "metas_dashboard.json"
@@ -31,6 +32,15 @@ def _pct(value) -> str:
         return f"{float(value) * 100:.1f}%".replace(".", ",")
     except Exception:
         return "0,0%"
+
+
+def _wa_link(phone: str, msg: str = "") -> str:
+    digits = _digits(phone)
+    if not digits:
+        return ""
+    if not digits.startswith("55"):
+        digits = "55" + digits
+    return f"https://wa.me/{digits}?text={quote(msg)}"
 
 
 def _metric(label: str, value: str, help_text: str = ""):
@@ -101,8 +111,7 @@ def _parse_br_datetime(value: str | None) -> str:
     for fmt in ("%d/%m/%Y %H:%M:%S", "%d/%m/%Y %H:%M"):
         try:
             naive = datetime.strptime(text, fmt)
-            local_dt = naive.replace(tzinfo=TZ_BR)
-            return local_dt.strftime("%d/%m/%Y %H:%M:%S")
+            return naive.replace(tzinfo=TZ_BR).strftime("%d/%m/%Y %H:%M:%S")
         except Exception:
             pass
     return text
@@ -186,6 +195,13 @@ def render_dashboard(
     base["venda_periodo"] = base["cnpj_norm"].map(venda_periodo).fillna(0.0)
     base["comprou_periodo"] = base["cnpj_norm"].map(comprou_periodo).fillna(False)
 
+    if clientes_df is not None and not clientes_df.empty:
+        cols_merge = [col for col in ["cnpj", "nome_contato", "contato", "telefone_limpo"] if col in clientes_df.columns]
+        if cols_merge:
+            contato_ref = clientes_df[cols_merge].drop_duplicates("cnpj").copy()
+            contato_ref["cnpj"] = contato_ref["cnpj"].astype(str).map(_digits)
+            base = base.merge(contato_ref, left_on="cnpj_norm", right_on="cnpj", how="left", suffixes=("", "_cad"))
+
     total_ol = float(pd.to_numeric(base.get("ol_sem_combate", 0), errors="coerce").fillna(0).sum())
     total_combate = float(pd.to_numeric(base.get("ol_combate", 0), errors="coerce").fillna(0).sum())
     total_prio = float(pd.to_numeric(base.get("ol_prioritarios", 0), errors="coerce").fillna(0).sum())
@@ -198,10 +214,12 @@ def render_dashboard(
     perc_lanc = (total_lanc / total_ol) if total_ol else 0.0
     metas = _load_metas()
     status_auto = load_status()
+    latest_send = command_to_monitor_block(load_latest_command({"enviar_pedido_mf", "limpar_pedido_mf"}))
 
     bussola_dt, bussola_status = _status_card_value(status_auto.get("bussola", {}), DATA_DIR / "Pedidos.xlsx")
     mercado_dt, mercado_status = _status_card_value(status_auto.get("mercadofarma", {}), DATA_DIR / "Estoque_preco_distribuidora.xlsx")
-    pedido_dt, pedido_status = _status_card_value(status_auto.get("comandos", {}), None)
+    pedido_source = latest_send or status_auto.get("comandos", {})
+    pedido_dt, pedido_status = _status_card_value(pedido_source, None)
 
     st.markdown('<div class="section-title">Ultimas atualizacoes</div>', unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
@@ -213,13 +231,13 @@ def render_dashboard(
         st.caption(_status_resume(status_auto.get("mercadofarma", {})))
     with c3:
         _metric_compact("Pedido MF", pedido_dt, pedido_status)
-        st.caption(_status_resume(status_auto.get("comandos", {})))
+        st.caption(_status_resume(pedido_source))
 
     erros = []
     for nome, bloco in (
         ("Bussola", status_auto.get("bussola", {})),
         ("Mercado Farma", status_auto.get("mercadofarma", {})),
-        ("Pedido MF", status_auto.get("comandos", {})),
+        ("Pedido MF", pedido_source),
     ):
         if str(bloco.get("status", "")).lower() in {"erro", "falha"}:
             erros.append(f"{nome}: {_status_resume(bloco)}")
@@ -260,6 +278,43 @@ def render_dashboard(
         _metric("Clientes com OL", str(clientes_com_ol), "Clientes com oportunidade no periodo")
     with row2[2]:
         _metric("Sem venda", str(clientes_sem_venda), "Clientes sem faturamento no periodo")
+
+    st.markdown('<div class="section-title">Top clientes visitados</div>', unsafe_allow_html=True)
+    top = base.copy()
+    if "score_visita" in top.columns:
+        top = top.sort_values(["score_visita", "ol_sem_combate", "total_faturado"], ascending=[False, False, False])
+    else:
+        top = top.sort_values(["ol_sem_combate", "total_faturado"], ascending=[False, False])
+    top = top.head(6)
+    cols = st.columns(2)
+    for idx, (_, row) in enumerate(top.iterrows()):
+        contato_nome = str(row.get("nome_contato", "") or row.get("nome_contato_cad", "") or "Sem comprador")
+        contato_tel = str(row.get("contato", "") or row.get("contato_cad", "") or row.get("telefone_limpo", "") or row.get("telefone_limpo_cad", "") or "")
+        mensagem = f"Ola, {contato_nome}. Estou acompanhando o cliente {row.get('nome_fantasia', '')} e posso ajudar no pedido."
+        wa = _wa_link(contato_tel, mensagem)
+        with cols[idx % 2]:
+            with st.container(border=True):
+                st.markdown(f"**{row.get('nome_fantasia', '')}**")
+                st.caption(f"CNPJ: {row.get('cnpj', '')} | {row.get('cidade', '')}")
+                st.markdown(f"**Comprador:** {contato_nome}")
+                if wa:
+                    st.markdown(f"**Telefone:** [{contato_tel}]({wa})")
+                else:
+                    st.markdown(f"**Telefone:** {contato_tel or '-'}")
+                i3, i4, i5 = st.columns(3)
+                i3.metric("OL", _money(row.get("ol_sem_combate", 0)))
+                i4.metric("Prioritarios", _money(row.get("ol_prioritarios", 0)))
+                i5.metric("Lancamentos", _money(row.get("ol_lancamentos", 0)))
+                st.caption(str(row.get("motivo_principal", "") or "Cliente com oportunidade no periodo."))
+                b1, b2 = st.columns(2)
+                if b1.button(f"Montar pedido {idx + 1}", key=f"dash_pedido_{row.get('cnpj', idx)}", use_container_width=True):
+                    st.session_state.pedido_cliente_cnpj = row.get("cnpj", "")
+                    st.session_state.page = "Montar pedido"
+                    st.rerun()
+                if wa:
+                    b2.link_button("WhatsApp", wa, use_container_width=True)
+                else:
+                    b2.button("WhatsApp", key=f"dash_wa_{idx}", disabled=True, use_container_width=True)
 
     with st.expander("Cadastrar metas do mes", expanded=False):
         m1, m2, m3, m4 = st.columns(4)

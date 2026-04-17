@@ -11,6 +11,7 @@ from views.dashboard import render_dashboard
 from views.clientes import render_clientes
 from views.importacao import render_importacao
 from views.pedido import render_pedido
+from views.busca_inteligente import render_busca_inteligente
 from views.cart import render_cart
 from views.sip import render_sip
 from config import COR_BORDA, COR_PRIMARIA, COR_TEXTO
@@ -87,6 +88,17 @@ div[data-testid="stDataFrame"] [role="columnheader"] > div, div[data-testid="stD
 .visit-grid div, .detail-grid div {{background:#FBFDFF; border:1px solid #EDF2F7; border-radius:14px; padding:10px; text-align:center;}}
 .visit-grid span, .detail-grid span {{display:block; font-size:.78rem; color:#64748b; margin-bottom:4px;}}
 .detail-grid {{grid-template-columns:repeat(3,minmax(0,1fr));}}
+.filter-panel {{background:#ffffff; border:1px solid {COR_BORDA}; border-radius:18px; padding:14px 16px; box-shadow:0 8px 18px rgba(15,23,42,.03); margin-bottom:12px;}}
+.product-card {{background:#ffffff; border:1px solid {COR_BORDA}; border-radius:20px; padding:16px; box-shadow:0 8px 18px rgba(15,23,42,.03); margin-bottom:14px;}}
+.product-card h4 {{margin:0 0 8px 0; color:#0B2E43; font-size:1rem; line-height:1.35;}}
+.product-card small {{color:#63758A;}}
+.product-badge {{display:inline-block; padding:4px 10px; border-radius:999px; font-size:.72rem; font-weight:900; letter-spacing:.03em; background:#E8F7EF; color:#0D5E3A; margin-bottom:10px;}}
+.product-badge.neutro {{background:#EDF4F7; color:#41596B;}}
+.product-badge.info {{background:#EAF4FB; color:#123E63;}}
+.inventory-pill {{display:inline-block; padding:6px 10px; border-radius:12px; background:#F3F8FB; color:#335266; font-size:.78rem; font-weight:700; margin:4px 6px 0 0;}}
+.hero-search {{padding:24px 26px; border-radius:28px; background:linear-gradient(135deg, #0D3B2A 0%, #1B6B4A 55%, #C9A63B 100%); color:#FFFFFF; box-shadow:0 18px 34px rgba(13,59,42,.18); margin-bottom:16px;}}
+.hero-search h1 {{margin:0 0 8px 0; font-size:2.4rem; line-height:1.05;}}
+.hero-search p {{margin:0; font-size:1.02rem; opacity:.96;}}
 div[data-testid="stDataFrame"] {{border-radius:18px; overflow:hidden; border:1px solid {COR_BORDA};}}
 div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {{border-radius:12px !important;}}
 .stButton > button, .stDownloadButton > button {{border-radius:12px !important; min-height:42px; font-weight:800; border:1px solid {COR_BORDA} !important; background:#EAF4F8 !important; color:#0A2533 !important;}}
@@ -252,7 +264,7 @@ if 'filtro_data_final' not in st.session_state:
 with st.sidebar:
     st.markdown('<div class="sidebar-title">🧭 Painel de Visitas</div>', unsafe_allow_html=True)
     cart_n = len(st.session_state.get('cart_items', []))
-    menu_items = ['Dashboard', 'Clientes', 'Montar pedido', f'Carrinho ({cart_n})', 'SIP', 'Importação']
+    menu_items = ['Dashboard', 'Clientes', 'Montar pedido', 'Pedido Inteligente', f'Carrinho ({cart_n})', 'SIP', 'Importação']
     for item in menu_items:
         page_name = 'Carrinho' if item.startswith('Carrinho') else item
         is_active = st.session_state.page == page_name
@@ -260,40 +272,48 @@ with st.sidebar:
             st.session_state.page = page_name
             st.rerun()
     st.markdown('---')
-    st.markdown('<div class="sidebar-section">Filtros</div>', unsafe_allow_html=True)
+    with st.expander('Filtros do painel', expanded=False):
+        cidades = sorted(clientes_ref['cidade'].dropna().unique().tolist())
+        cidade_global = st.selectbox('Cidade em atuacao', ['Todas'] + cidades)
+
+        data_inicio = st.date_input('Data inicial', format='DD/MM/YYYY', key='filtro_data_inicial')
+        data_fim = st.date_input('Data final', format='DD/MM/YYYY', key='filtro_data_final')
+        if data_inicio > data_fim:
+            st.error('A data inicial nao pode ser maior que a data final.')
+            st.stop()
+
+        foco_manual = st.multiselect('Produtos foco da semana', sorted(produtos_ref['principio_ativo'].dropna().unique().tolist()), default=st.session_state.get('foco_semana_manual', []), placeholder='Escolha a opcao')
+        foco_mes_manual = st.multiselect('Produtos foco do mes', sorted(produtos_ref['principio_ativo'].dropna().unique().tolist()), default=st.session_state.get('foco_mes_manual', []), placeholder='Escolha a opcao')
+        st.session_state.foco_mes_manual = foco_mes_manual
+        st.session_state.foco_semana_manual = foco_manual
+        dist_options = sorted(inventario_ref['distribuidora'].dropna().astype(str).unique().tolist()) if not inventario_ref.empty else []
+        default_visiveis = st.session_state.visible_dists or dist_options
+        visiveis = st.multiselect('Distribuidoras visiveis no painel', dist_options, default=default_visiveis, placeholder='Todos')
+        st.session_state.visible_dists = visiveis
+        add_map = {}
+        exc_map = {}
+        for dist in visiveis:
+            add_map[dist] = st.number_input(f'{dist} (%)', min_value=0.0, max_value=100.0, value=float(st.session_state.addl_discount.get(dist, 0.0)), step=0.5, key=f'add_{dist}')
+            opts_exc = []
+            if not inventario_ref.empty:
+                aux = inventario_ref[inventario_ref['distribuidora'].astype(str) == dist][['ean','principio_ativo']].drop_duplicates().sort_values('principio_ativo')
+                opts_exc = [f"{r['ean']} - {r['principio_ativo']}" for _, r in aux.iterrows()]
+            sel_exc = st.multiselect(f'Aplicar em todos os produtos exceto...', opts_exc, default=st.session_state.addl_discount_exclusions.get(dist, []), key=f'exc_{dist}', placeholder='Escolha as opcoes')
+            exc_map[dist] = sel_exc
+        st.session_state.addl_discount = add_map
+        st.session_state.addl_discount_exclusions = exc_map
+        hoje = agora_br().weekday()
+        semana_ativa = hoje in [1, 2, 3]
+        st.caption(f'Foco automatico ativo: {"Sim" if semana_ativa else "Nao"}.')
+
+if 'cidade_global' not in locals():
     cidades = sorted(clientes_ref['cidade'].dropna().unique().tolist())
-    cidade_global = st.selectbox('Cidade em atuação', ['Todas'] + cidades)
-
-    data_inicio = st.date_input('Data inicial', format='DD/MM/YYYY', key='filtro_data_inicial')
-    data_fim = st.date_input('Data final', format='DD/MM/YYYY', key='filtro_data_final')
-    if data_inicio > data_fim:
-        st.error('A data inicial não pode ser maior que a data final.')
-        st.stop()
-
-    foco_manual = st.multiselect('Produtos foco da semana', sorted(produtos_ref['principio_ativo'].dropna().unique().tolist()), default=st.session_state.get('foco_semana_manual', []), placeholder='Escolha a opção')
-    foco_mes_manual = st.multiselect('Produtos foco do mês', sorted(produtos_ref['principio_ativo'].dropna().unique().tolist()), default=st.session_state.get('foco_mes_manual', []), placeholder='Escolha a opção')
-    st.session_state.foco_mes_manual = foco_mes_manual
-    st.session_state.foco_semana_manual = foco_manual
-    dist_options = sorted(inventario_ref['distribuidora'].dropna().astype(str).unique().tolist()) if not inventario_ref.empty else []
-    default_visiveis = st.session_state.visible_dists or dist_options
-    visiveis = st.multiselect('Distribuidoras visíveis no painel', dist_options, default=default_visiveis, placeholder='Todos')
-    st.session_state.visible_dists = visiveis
-    st.markdown('<div class="sidebar-section">Adicional de desconto</div>', unsafe_allow_html=True)
-    add_map = {}
-    exc_map = {}
-    for dist in visiveis:
-        add_map[dist] = st.number_input(f'{dist} (%)', min_value=0.0, max_value=100.0, value=float(st.session_state.addl_discount.get(dist, 0.0)), step=0.5, key=f'add_{dist}')
-        opts_exc = []
-        if not inventario_ref.empty:
-            aux = inventario_ref[inventario_ref['distribuidora'].astype(str) == dist][['ean','principio_ativo']].drop_duplicates().sort_values('principio_ativo')
-            opts_exc = [f"{r['ean']} — {r['principio_ativo']}" for _, r in aux.iterrows()]
-        sel_exc = st.multiselect(f'Aplicar em todos os produtos exceto...', opts_exc, default=st.session_state.addl_discount_exclusions.get(dist, []), key=f'exc_{dist}', placeholder='Escolha as opções')
-        exc_map[dist] = sel_exc
-    st.session_state.addl_discount = add_map
-    st.session_state.addl_discount_exclusions = exc_map
-    hoje = agora_br().weekday()
-    semana_ativa = hoje in [1, 2, 3]
-    st.caption(f'Foco automático ativo: {"Sim" if semana_ativa else "Não"}. O período abre no mês atual.')
+    cidade_global = 'Todas'
+    data_inicio = st.session_state.filtro_data_inicial
+    data_fim = st.session_state.filtro_data_final
+    foco_manual = st.session_state.get('foco_semana_manual', [])
+    foco_mes_manual = st.session_state.get('foco_mes_manual', [])
+    semana_ativa = agora_br().weekday() in [1, 2, 3]
 
 preferencias_key = tuple(sorted((k, '|'.join(v) if isinstance(v, list) else str(v)) for k, v in st.session_state.dist_pref.items()))
 descontos_key = tuple(sorted((k, float(v)) for k, v in st.session_state.addl_discount.items()))
@@ -348,6 +368,9 @@ elif page == 'Clientes':
 elif page == 'Montar pedido':
     pedidos, produtos, clientes, foco, inventario, base, base_full, resumo, gap, score_df, oportunidades, cancelados = _views_for(cidade_global)
     render_pedido(score_df, oportunidades, inventario, cidade_global, base_full=base_full, produtos=produtos, foco=foco, clientes_df=clientes)
+elif page == 'Pedido Inteligente':
+    pedidos, produtos, clientes, foco, inventario, base, base_full, resumo, gap, score_df, oportunidades, cancelados = _views_for(cidade_global)
+    render_busca_inteligente(score_df, inventario, clientes_df=clientes)
 elif page == 'Carrinho':
     _, _, clientes_g, foco_g, inventario_g, _, base_full_g, _, _, score_df_g, oportunidades_g, _ = _views_for('Todas')
     render_cart(inventario_g, foco=foco_g)

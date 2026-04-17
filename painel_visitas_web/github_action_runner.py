@@ -311,15 +311,23 @@ def _resolve_from_command_id(command_id: str) -> tuple[str, dict]:
     raise ValueError(f"Comando nao encontrado: {command_id}")
 
 
-def execute_direct(acao: str, headless: bool = True, cnpj: str = "", cupom: str = "", command_id: str | None = None):
+def execute_direct(
+    acao: str,
+    headless: bool = True,
+    cnpj: str = "",
+    cupom: str = "",
+    command_id: str | None = None,
+    command_params: dict | None = None,
+):
     acao = _canon(acao)
     chave = _status_key(acao)
+    command_params = dict(command_params or {})
     creds = load_creds()
     bussola_login = os.getenv("BUSSOLA_LOGIN") or creds.bussola_login
     bussola_senha = os.getenv("BUSSOLA_SENHA") or creds.bussola_senha
     mf_login = os.getenv("MERCADOFARMA_LOGIN") or creds.mercado_login
     mf_senha = os.getenv("MERCADOFARMA_SENHA") or creds.mercado_senha
-    mf_cnpj = cnpj or os.getenv("MERCADOFARMA_CNPJ") or creds.mercado_cnpj
+    mf_cnpj = cnpj or str(command_params.get("cnpj", "") or "") or os.getenv("MERCADOFARMA_CNPJ") or creds.mercado_cnpj
 
     success_path: Path | None = None
     final_result = {
@@ -354,7 +362,9 @@ def execute_direct(acao: str, headless: bool = True, cnpj: str = "", cupom: str 
         return True, final_result
 
     if acao == "enviar_pedido_mf":
-        cart_items = _load_pedido_payload()
+        cart_items = list(command_params.get("cart_items") or [])
+        if not cart_items:
+            cart_items = _load_pedido_payload()
         if not cart_items:
             raise ValueError("Nenhum item encontrado em data/pedido_payload.json")
         callback = _status_callback(chave, command_id, ultimo_resultado=final_result, success_path=None)
@@ -376,23 +386,29 @@ def main():
     args = parser.parse_args()
 
     command_id = args.command_id or ""
+    resolved_params: dict = {}
+    resolved_action = ""
 
     try:
-        if command_id and not args.acao:
-            acao, params = _resolve_from_command_id(command_id)
-            headless = _bool(params.get("headless", True))
-            cnpj = str(params.get("cnpj", "") or "")
-            cupom = str(params.get("cupom", "") or "")
-        else:
-            acao = _canon(args.acao)
-            headless = _bool(args.headless)
-            cnpj = args.cnpj
-            cupom = args.cupom
+        if command_id:
+            resolved_action, resolved_params = _resolve_from_command_id(command_id)
 
-        ok, msg = execute_direct(acao, headless=headless, cnpj=cnpj, cupom=cupom, command_id=command_id or None)
+        acao = _canon(args.acao or resolved_action)
+        headless = _bool(resolved_params.get("headless", args.headless))
+        cnpj = str(resolved_params.get("cnpj", "") or args.cnpj or "")
+        cupom = str(resolved_params.get("cupom", "") or args.cupom or "")
+
+        ok, msg = execute_direct(
+            acao,
+            headless=headless,
+            cnpj=cnpj,
+            cupom=cupom,
+            command_id=command_id or None,
+            command_params=resolved_params,
+        )
         print(json.dumps({"ok": ok, "mensagem": msg}, ensure_ascii=False))
     except Exception as exc:
-        chave = _status_key(args.acao or "comandos")
+        chave = _status_key(args.acao or resolved_action or "comandos")
         callback = _status_callback(chave, command_id or None)
         callback(status="erro", mensagem=str(exc), etapa="Falha", erro=str(exc), nivel="error")
         raise
