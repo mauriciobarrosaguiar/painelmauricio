@@ -12,8 +12,6 @@ ABREVIACOES_BUSCA = {
     "hct": "hidroclorotiazida",
     "hctz": "hidroclorotiazida",
     "hidro": "hidroclorotiazida",
-    "ocylin": "amoxicilina",
-    "ocilin": "amoxicilina",
     "olme": "olmesartana",
     "olmes": "olmesartana",
     "anlo": "anlodipino",
@@ -24,8 +22,6 @@ ABREVIACOES_BUSCA = {
     "rosu": "rosuvastatina",
     "ator": "atorvastatina",
     "aas": "acido acetilsalicilico",
-    "vit": "colecalciferol",
-    "dnova": "colecalciferol",
     "carboiste": "carbocisteina",
     "bromozepam": "bromazepam",
     "loratadino": "loratadina",
@@ -263,8 +259,12 @@ def buscar_produtos_inteligente(
         candidatos = candidatos[candidatos["core_hits"] > 0].copy()
         if candidatos.empty:
             return pd.DataFrame(), consulta_expandida
-        max_core_hits = int(candidatos["core_hits"].max())
-        candidatos = candidatos[candidatos["core_hits"] == max_core_hits].copy()
+        required_core_hits = len(core_tokens)
+        candidatos_full = candidatos[candidatos["core_hits"] == required_core_hits].copy()
+        if not candidatos_full.empty:
+            candidatos = candidatos_full
+        else:
+            return pd.DataFrame(), consulta_expandida
         if numeric_tokens and int(candidatos["numeric_hits"].max()) > 0:
             candidatos = candidatos[candidatos["numeric_hits"] == int(candidatos["numeric_hits"].max())].copy()
         if secondary_tokens and int(candidatos["secondary_hits"].max()) > 0:
