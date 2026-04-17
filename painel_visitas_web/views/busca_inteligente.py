@@ -114,11 +114,69 @@ def _excel_bytes(df: pd.DataFrame, sheet_name: str = "ResultadoBusca") -> bytes:
     return output.getvalue()
 
 
+def _money(value: object) -> str:
+    try:
+        return f"R$ {float(pd.to_numeric(value, errors='coerce') or 0):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    except Exception:
+        return "R$ 0,00"
+
+
+def _top_distribuidores(resultado: pd.DataFrame) -> list[tuple[str, float]]:
+    if resultado is None or resultado.empty:
+        return []
+    base = resultado.copy()
+    base["preco_sem_imposto"] = pd.to_numeric(base.get("preco_sem_imposto", 0), errors="coerce").fillna(0.0)
+    base["estoque"] = pd.to_numeric(base.get("estoque", 0), errors="coerce").fillna(0.0)
+    base["distribuidora"] = base.get("distribuidora", "").astype(str)
+    base = (
+        base.sort_values(["preco_sem_imposto", "estoque", "distribuidora"], ascending=[True, False, True])
+        .drop_duplicates(subset=["distribuidora"], keep="first")
+    )
+    return [(str(row["distribuidora"]), float(row["preco_sem_imposto"])) for _, row in base.head(3).iterrows()]
+
+
+def _build_export_rows(item_pesquisado: str, resultado: pd.DataFrame) -> list[dict[str, str]]:
+    if resultado is None or resultado.empty:
+        return [
+            {
+                "Produto pesquisado": item_pesquisado,
+                "EAN encontrado": "",
+                "Produto encontrado": "",
+                "Preco melhor oferta": "",
+                "Distribuidora melhor oferta": "",
+                "Preco 2a oferta": "",
+                "Distribuidora 2a oferta": "",
+                "Preco 3a oferta": "",
+                "Distribuidora 3a oferta": "",
+            }
+        ]
+
+    linhas_exportacao: list[dict[str, str]] = []
+    base = resultado.copy()
+    base["ean"] = base.get("ean", "").astype(str)
+    base["principio_ativo"] = base.get("principio_ativo", "").astype(str)
+    for (_, _), grupo in base.groupby(["ean", "principio_ativo"], dropna=False, sort=True):
+        topo = _top_distribuidores(grupo)
+        row = {
+            "Produto pesquisado": item_pesquisado,
+            "EAN encontrado": str(grupo["ean"].iloc[0]),
+            "Produto encontrado": str(grupo["principio_ativo"].iloc[0]),
+            "Preco melhor oferta": _money(topo[0][1]) if len(topo) >= 1 else "",
+            "Distribuidora melhor oferta": topo[0][0] if len(topo) >= 1 else "",
+            "Preco 2a oferta": _money(topo[1][1]) if len(topo) >= 2 else "",
+            "Distribuidora 2a oferta": topo[1][0] if len(topo) >= 2 else "",
+            "Preco 3a oferta": _money(topo[2][1]) if len(topo) >= 3 else "",
+            "Distribuidora 3a oferta": topo[2][0] if len(topo) >= 3 else "",
+        }
+        linhas_exportacao.append(row)
+    return linhas_exportacao
+
+
 def buscar_produtos_inteligente(
     consulta: str,
     inventario: pd.DataFrame,
     limite: int = 20,
-    distribuidora_filtro: str = "",
+    distribuidoras_filtro: list[str] | None = None,
     mix_filtro: str = "Todos",
 ) -> tuple[pd.DataFrame, str]:
     catalogo = _prepare_catalog(inventario)
@@ -126,8 +184,8 @@ def buscar_produtos_inteligente(
     if catalogo.empty or not termos:
         return pd.DataFrame(), consulta_expandida
 
-    if distribuidora_filtro:
-        catalogo = catalogo[catalogo["distribuidora"].astype(str) == distribuidora_filtro].copy()
+    if distribuidoras_filtro:
+        catalogo = catalogo[catalogo["distribuidora"].astype(str).isin([str(item) for item in distribuidoras_filtro])].copy()
     if mix_filtro != "Todos":
         catalogo = catalogo[catalogo["mix_lancamentos"].astype(str) == mix_filtro].copy()
     if catalogo.empty:
@@ -155,7 +213,9 @@ def buscar_produtos_inteligente(
     candidatos["score"] += (candidatos["estoque"] > 0).astype(int) * 4
 
     candidatos = candidatos.sort_values(["score", "estoque", "preco_sem_imposto", "principio_ativo"], ascending=[False, False, True, True])
-    return candidatos.head(limite).reset_index(drop=True), consulta_expandida
+    if limite and limite > 0:
+        candidatos = candidatos.head(limite)
+    return candidatos.reset_index(drop=True), consulta_expandida
 
 
 def render_busca_inteligente(score_df: pd.DataFrame, inventario: pd.DataFrame, clientes_df: pd.DataFrame | None = None) -> None:
@@ -173,20 +233,40 @@ def render_busca_inteligente(score_df: pd.DataFrame, inventario: pd.DataFrame, c
         st.info("A extracao do Mercado Farma ainda nao esta disponivel para pesquisa.")
         return
 
-    col1, col2 = st.columns([1.45, 0.45])
+    col1, col2 = st.columns([1.35, 0.65])
     consulta = col1.text_area(
         "Cole um ou varios produtos, um por linha",
         placeholder="Ex.:\nHCT\nOlmesartana 40/25\nRosuvastatina 20mg",
         height=180,
     )
-    distribs = ["Todas"] + sorted(inventario["distribuidora"].dropna().astype(str).unique().tolist())
-    dist_label = col2.selectbox("Distribuidora", distribs)
     mix_label = col2.selectbox("Tipo de produto", ["Todos", "PRIORITARIOS", "LANCAMENTOS", "LINHA", "COMBATE"])
     limite = int(col2.number_input("Resultados por item", min_value=1, max_value=50, value=12, step=1))
+    distribs = sorted(inventario["distribuidora"].dropna().astype(str).unique().tolist())
+    st.session_state.setdefault("smart_dist_all", True)
+    st.session_state.setdefault("smart_dist_all_prev", st.session_state["smart_dist_all"])
+    with col2:
+        st.markdown("**Distribuidoras**")
+        marcar_todas = st.checkbox("Marcar todas", value=st.session_state.get("smart_dist_all", True), key="smart_dist_all")
+        if marcar_todas != st.session_state.get("smart_dist_all_prev", True):
+            for dist in distribs:
+                key = f"smart_dist_{normalizar_busca(dist).replace(' ', '_')}"
+                st.session_state[key] = marcar_todas
+            st.session_state["smart_dist_all_prev"] = marcar_todas
+        selected_distribs: list[str] = []
+        checkbox_cols = st.columns(2)
+        for idx, dist in enumerate(distribs):
+            key = f"smart_dist_{normalizar_busca(dist).replace(' ', '_')}"
+            default_value = st.session_state.get(key, marcar_todas)
+            checked = checkbox_cols[idx % 2].checkbox(dist, value=default_value, key=key)
+            if checked:
+                selected_distribs.append(dist)
 
     st.caption("Atalhos reconhecidos: HCT = hidroclorotiazida; Olmesartana 40/25 busca olmesartana + hidroclorotiazida 40 mg + 25 mg.")
     if not consulta.strip():
         st.info("Cole a lista ou digite um produto para pesquisar.")
+        return
+    if not selected_distribs:
+        st.warning("Marque pelo menos uma distribuidora para pesquisar.")
         return
 
     linhas = [linha.strip() for linha in consulta.splitlines() if linha.strip()]
@@ -200,38 +280,17 @@ def render_busca_inteligente(score_df: pd.DataFrame, inventario: pd.DataFrame, c
     novos_selecionados: dict[str, bool] = {}
 
     for idx, linha in enumerate(linhas):
-        resultado, interpretado = buscar_produtos_inteligente(
+        resultado_export, interpretado = buscar_produtos_inteligente(
             linha,
             inventario,
-            limite=limite,
-            distribuidora_filtro="" if dist_label == "Todas" else dist_label,
+            limite=0,
+            distribuidoras_filtro=selected_distribs,
             mix_filtro=mix_label,
         )
-        resumo.append({"Item pesquisado": linha, "Busca interpretada": interpretado or "-", "Encontrados": len(resultado)})
-        if resultado.empty:
-            export_rows.append(
-                {
-                    "PRODUTO PESQUISADO": linha,
-                    "EAN PRODUTO ENCONTRADO": "",
-                    "PRODUTO ENCONTRADO": "",
-                }
-            )
-        else:
-            export_base = (
-                resultado[["ean", "principio_ativo"]]
-                .astype(str)
-                .drop_duplicates()
-                .sort_values(["principio_ativo", "ean"])
-            )
-            for _, match in export_base.iterrows():
-                export_rows.append(
-                    {
-                        "PRODUTO PESQUISADO": linha,
-                        "EAN PRODUTO ENCONTRADO": str(match.get("ean", "")),
-                        "PRODUTO ENCONTRADO": str(match.get("principio_ativo", "")),
-                    }
-                )
-        with st.expander(f"{linha} - {len(resultado)} resultado(s)", expanded=len(linhas) == 1):
+        resultado = resultado_export.head(limite).reset_index(drop=True)
+        resumo.append({"Item pesquisado": linha, "Busca interpretada": interpretado or "-", "Encontrados": len(resultado_export)})
+        export_rows.extend(_build_export_rows(linha, resultado_export))
+        with st.expander(f"{linha} - {len(resultado_export)} resultado(s)", expanded=len(linhas) == 1):
             st.caption(f"Busca interpretada: {interpretado or linha}")
             if resultado.empty:
                 st.warning("Nenhum produto encontrado para essa linha.")
@@ -249,7 +308,7 @@ def render_busca_inteligente(score_df: pd.DataFrame, inventario: pd.DataFrame, c
                             unsafe_allow_html=True,
                         )
                         m1, m2 = st.columns(2)
-                        m1.metric("Sem imposto", f"R$ {float(pd.to_numeric(row.get('preco_sem_imposto', 0), errors='coerce') or 0):,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+                        m1.metric("Sem imposto", _money(row.get("preco_sem_imposto", 0)))
                         m2.metric("Estoque", str(int(pd.to_numeric(row.get("estoque", 0), errors="coerce") or 0)))
                         checked = st.checkbox(
                             "Levar para Montar pedido",
@@ -264,7 +323,17 @@ def render_busca_inteligente(score_df: pd.DataFrame, inventario: pd.DataFrame, c
 
     export_df = pd.DataFrame(
         export_rows,
-        columns=["PRODUTO PESQUISADO", "EAN PRODUTO ENCONTRADO", "PRODUTO ENCONTRADO"],
+        columns=[
+            "Produto pesquisado",
+            "EAN encontrado",
+            "Produto encontrado",
+            "Preco melhor oferta",
+            "Distribuidora melhor oferta",
+            "Preco 2a oferta",
+            "Distribuidora 2a oferta",
+            "Preco 3a oferta",
+            "Distribuidora 3a oferta",
+        ],
     )
     action_cols = st.columns([1.15, 0.85])
     action_cols[0].download_button(
