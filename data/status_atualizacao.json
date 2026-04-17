@@ -318,15 +318,75 @@
     }
   },
   "comandos": {
-    "ultimo_sucesso": "",
-    "status": "nunca",
-    "mensagem": "",
-    "ultimo_resultado": ""
+    "ultimo_sucesso": "17/04/2026 08:52:14",
+    "status": "ok",
+    "mensagem": "Pedido enviado ao Mercado Farma.",
+    "ultimo_resultado": "Pedido enviado ao Mercado Farma.",
+    "atualizado_em": "17/04/2026 08:52:14",
+    "ultimo_comando_id": "cmd_1776426641246",
+    "etapa_atual": "Concluido",
+    "erro": "",
+    "resumo": {
+      "itens": 1,
+      "cnpj": "36106802000128"
+    },
+    "eventos": [
+      {
+        "quando": "17/04/2026 08:51:15",
+        "texto": "Workflow iniciado.",
+        "nivel": "info"
+      },
+      {
+        "quando": "17/04/2026 08:51:15",
+        "texto": "Pedido carregado com 1 item(ns).",
+        "nivel": "info"
+      },
+      {
+        "quando": "17/04/2026 08:51:16",
+        "texto": "Iniciando envio do pedido para o CNPJ 07666799000107.",
+        "nivel": "info"
+      },
+      {
+        "quando": "17/04/2026 08:51:32",
+        "texto": "Cliente autenticado no Mercado Farma.",
+        "nivel": "info"
+      },
+      {
+        "quando": "17/04/2026 08:51:56",
+        "texto": "1 distribuidora(s) selecionada(s).",
+        "nivel": "info"
+      },
+      {
+        "quando": "17/04/2026 08:51:56",
+        "texto": "Enviando item 1/1: 7896004728858 / Nazaria - TO",
+        "nivel": "info"
+      },
+      {
+        "quando": "17/04/2026 08:52:02",
+        "texto": "Pedido montado. Enviando para confirmacao final.",
+        "nivel": "info"
+      },
+      {
+        "quando": "17/04/2026 08:52:14",
+        "texto": "Pedido enviado ao Mercado Farma para o CNPJ 07666799000107.",
+        "nivel": "info"
+      },
+      {
+        "quando": "17/04/2026 08:52:14",
+        "texto": "Pedido enviado ao Mercado Farma.",
+        "nivel": "info"
+      }
+    ],
+    "progresso": {
+      "atual": 6,
+      "total": 6,
+      "percentual": 100
+    }
   },
   "github_actions": {
-    "status": "solicitado",
-    "mensagem": "Workflow disparado com sucesso.",
-    "atualizado_em": "17/04/2026 08:50:43",
+    "status": "ok",
+    "mensagem": "Pedido enviado ao Mercado Farma.",
+    "atualizado_em": "17/04/2026 08:52:14",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",

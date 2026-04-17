@@ -1054,106 +1054,91 @@
       "erro": "Message: \n"
     },
     {
-      "id": "cmd_1776426402587",
-      "acao": "atualizar_bussola",
+      "id": "cmd_1776426641246",
+      "acao": "enviar_pedido_mf",
       "params": {
-        "headless": true
+        "cart_items": [
+          {
+            "Cliente": "A FARMACEUTICA",
+            "CNPJ": "07666799000107",
+            "Empresa": "A FARMACEUTICA",
+            "Razao social": "RE COMERCIO DE PRODUTOS FARMACEUTICOS E PERFUMARIA LTDA",
+            "Nome do comprador": "RONES",
+            "Tel do comprador": "63984074672",
+            "EAN": "7896004728858",
+            "Produto": "ROSUVASTATINA CALCICA CPR REV 20MG 3BLX10",
+            "Distribuidora": "Nazaria - TO",
+            "Preco": 7.91,
+            "Estoque": 142,
+            "Mix": "PRIORITARIOS",
+            "Qtde": 50,
+            "Foco": false
+          }
+        ],
+        "headless": true,
+        "cupom": ""
       },
       "status": "ok",
-      "criado_em": "17/04/2026 08:46:42",
-      "atualizado_em": "17/04/2026 08:48:02",
-      "mensagem": "Bussola atualizado.",
+      "criado_em": "17/04/2026 08:50:41",
+      "atualizado_em": "17/04/2026 08:52:14",
+      "mensagem": "Pedido enviado ao Mercado Farma.",
       "origem": "streamlit",
       "etapa_atual": "Concluido",
       "eventos": [
         {
-          "quando": "17/04/2026 08:47:40",
+          "quando": "17/04/2026 08:51:15",
           "texto": "Workflow iniciado.",
           "nivel": "info"
         },
         {
-          "quando": "17/04/2026 08:47:40",
-          "texto": "Iniciando coleta do Bussola.",
+          "quando": "17/04/2026 08:51:15",
+          "texto": "Pedido carregado com 1 item(ns).",
           "nivel": "info"
         },
         {
-          "quando": "17/04/2026 08:47:40",
-          "texto": "Preparando extracao do Bussola.",
+          "quando": "17/04/2026 08:51:16",
+          "texto": "Iniciando envio do pedido para o CNPJ 07666799000107.",
           "nivel": "info"
         },
         {
-          "quando": "17/04/2026 08:47:40",
-          "texto": "Ambiente limpo e pronto para iniciar.",
+          "quando": "17/04/2026 08:51:32",
+          "texto": "Cliente autenticado no Mercado Farma.",
           "nivel": "info"
         },
         {
-          "quando": "17/04/2026 08:47:46",
-          "texto": "Abrindo login do Bússola...",
+          "quando": "17/04/2026 08:51:56",
+          "texto": "1 distribuidora(s) selecionada(s).",
           "nivel": "info"
         },
         {
-          "quando": "17/04/2026 08:47:49",
-          "texto": "Login concluído.",
+          "quando": "17/04/2026 08:51:56",
+          "texto": "Enviando item 1/1: 7896004728858 / Nazaria - TO",
           "nivel": "info"
         },
         {
-          "quando": "17/04/2026 08:47:49",
-          "texto": "Abrindo análise direto com período: 18/01/2026 até 17/04/2026",
+          "quando": "17/04/2026 08:52:02",
+          "texto": "Pedido montado. Enviando para confirmacao final.",
           "nivel": "info"
         },
         {
-          "quando": "17/04/2026 08:47:52",
-          "texto": "Selecionando CSV...",
+          "quando": "17/04/2026 08:52:14",
+          "texto": "Pedido enviado ao Mercado Farma para o CNPJ 07666799000107.",
           "nivel": "info"
         },
         {
-          "quando": "17/04/2026 08:47:52",
-          "texto": "Abrindo menu Exportar...",
-          "nivel": "info"
-        },
-        {
-          "quando": "17/04/2026 08:47:59",
-          "texto": "Aguardando download terminar...",
-          "nivel": "info"
-        },
-        {
-          "quando": "17/04/2026 08:48:00",
-          "texto": "Lendo arquivo baixado: Pedidos_2026-04-17T11-47-58.csv",
-          "nivel": "info"
-        },
-        {
-          "quando": "17/04/2026 08:48:02",
-          "texto": "CSV salvo em: /home/runner/work/painelmauricio/painelmauricio/painel_visitas_web/data/Pedidos_bussola.csv",
-          "nivel": "info"
-        },
-        {
-          "quando": "17/04/2026 08:48:02",
-          "texto": "XLSX salvo em: /home/runner/work/painelmauricio/painelmauricio/painel_visitas_web/data/Pedidos.xlsx",
-          "nivel": "info"
-        },
-        {
-          "quando": "17/04/2026 08:48:02",
-          "texto": "Extração concluída com sucesso.",
-          "nivel": "info"
-        },
-        {
-          "quando": "17/04/2026 08:48:02",
-          "texto": "Bussola atualizado com sucesso: Pedidos.xlsx",
-          "nivel": "info"
-        },
-        {
-          "quando": "17/04/2026 08:48:02",
-          "texto": "Bussola atualizado.",
+          "quando": "17/04/2026 08:52:14",
+          "texto": "Pedido enviado ao Mercado Farma.",
           "nivel": "info"
         }
       ],
       "progresso": {
-        "atual": 5,
-        "total": 5,
+        "atual": 6,
+        "total": 6,
         "percentual": 100
       },
       "resumo": {
-        "arquivo": "Pedidos.xlsx"
+        "itens": 1,
+        "cnpj": "36106802000128"
       }
     }
   ]
