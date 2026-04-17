@@ -1052,6 +1052,18 @@
         "arquivo": "Estoque_preco_distribuidora.xlsx"
       },
       "erro": "Message: \n"
+    },
+    {
+      "id": "cmd_1776426402587",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "17/04/2026 08:46:42",
+      "atualizado_em": "17/04/2026 08:46:42",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
     }
   ]
 }
