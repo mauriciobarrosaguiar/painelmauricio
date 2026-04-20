@@ -220,16 +220,21 @@
   },
   "mercadofarma": {
     "ultimo_sucesso": "16/04/2026 20:53:15",
-    "status": "solicitado",
-    "mensagem": "Comando enviado para a fila do painel.",
-    "ultimo_comando_id": "cmd_1776691486787",
-    "atualizado_em": "20/04/2026 10:24:49",
-    "etapa_atual": "Aguardando execucao",
+    "status": "ok",
+    "mensagem": "Mercado Farma atualizado.",
+    "ultimo_comando_id": "cmd_1776382071864",
+    "atualizado_em": "16/04/2026 20:53:15",
+    "etapa_atual": "Concluido",
     "erro": "",
     "resumo": {
       "arquivo": "Estoque_preco_distribuidora.xlsx"
     },
     "eventos": [
+      {
+        "quando": "16/04/2026 20:51:36",
+        "texto": "Consultando EAN 384/418: 7896004787336",
+        "nivel": "info"
+      },
       {
         "quando": "16/04/2026 20:51:39",
         "texto": "Consultando EAN 385/418: 7896004787343",
@@ -424,17 +429,12 @@
         "quando": "16/04/2026 20:53:15",
         "texto": "Mercado Farma atualizado.",
         "nivel": "info"
-      },
-      {
-        "quando": "20/04/2026 10:24:49",
-        "texto": "Comando enviado para a fila do painel.",
-        "nivel": "info"
       }
     ],
     "progresso": {
-      "atual": 0,
-      "total": 0,
-      "percentual": 0
+      "atual": 4,
+      "total": 4,
+      "percentual": 100
     }
   },
   "comandos": {
@@ -505,8 +505,8 @@
   },
   "github_actions": {
     "status": "solicitado",
-    "mensagem": "Comando enviado para a fila do painel.",
-    "atualizado_em": "20/04/2026 10:24:49",
+    "mensagem": "Workflow disparado com sucesso.",
+    "atualizado_em": "20/04/2026 10:24:50",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",
