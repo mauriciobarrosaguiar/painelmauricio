@@ -2189,6 +2189,18 @@
       "resumo": {
         "arquivo": "Pedidos.xlsx"
       }
+    },
+    {
+      "id": "cmd_1776959386599",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "23/04/2026 12:49:46",
+      "atualizado_em": "23/04/2026 12:49:46",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
     }
   ]
 }
