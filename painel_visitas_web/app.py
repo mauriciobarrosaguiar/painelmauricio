@@ -145,9 +145,9 @@ div[data-testid="stDataFrame"] [role="columnheader"] > div, div[data-testid="stD
 .visit-card,.detail-card {{background:#fff; border:1px solid {COR_BORDA}; border-radius:20px; padding:15px; box-shadow:0 10px 22px rgba(15,59,43,.05); margin-bottom:12px;}}
 .visit-head {{display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;}}
 .visit-name,.detail-title {{font-size:1rem; font-weight:900; color:#0F3B2B; text-align:center;}}
-.visit-sub,.detail-sub {{font-size:.84rem; color:#67786D; margin-top:4px; text-align:center;}}
+.visit-sub,.detail-sub {{font-size:.84rem; color:#55695E; margin-top:4px; text-align:center;}}
 .priority-badge {{background:linear-gradient(135deg, #EEF6EF 0%, #D9EEDC 100%); color:#1C6547; border-radius:14px; padding:7px 11px; font-weight:800;}}
-.reason-box {{margin-top:12px; padding:10px 12px; border-radius:14px; background:#F7FBF7; color:#334155; border:1px solid #E1EADF; text-align:center;}}
+.reason-box {{margin-top:12px; padding:10px 12px; border-radius:14px; background:#F7FBF7; color:#21362B; border:1px solid #D6E2D8; text-align:center;}}
 .visit-grid, .detail-grid {{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:12px;}}
 .visit-grid div, .detail-grid div {{background:#FBFDF9; border:1px solid #D7E2D8; border-radius:14px; padding:10px; text-align:center;}}
 .visit-grid span, .detail-grid span {{display:block; font-size:.74rem; color:#6B7D72; margin-bottom:4px;}}
@@ -156,11 +156,11 @@ div[data-testid="stDataFrame"] [role="columnheader"] > div, div[data-testid="stD
 .product-card {{background:#ffffff; border:1px solid {COR_BORDA}; border-radius:20px; padding:15px; box-shadow:0 10px 22px rgba(15,59,43,.05); margin-bottom:14px;}}
 .product-card h4 {{margin:0 0 8px 0; color:#0F3B2B; font-size:.94rem; line-height:1.3;}}
 .product-name {{margin:0 0 8px 0; color:#0F3B2B; font-size:.92rem; font-weight:900; line-height:1.25; min-height:50px;}}
-.product-card small {{color:#63758A;}}
+.product-card small {{color:#4A6156; font-weight:700;}}
 .product-badge {{display:inline-block; padding:4px 10px; border-radius:999px; font-size:.68rem; font-weight:900; letter-spacing:.03em; background:#E8F4EA; color:#1B6547; margin-bottom:10px;}}
 .product-badge.neutro {{background:#F2EFE5; color:#625A3A;}}
 .product-badge.info {{background:#F3E8C7; color:#7D5A12;}}
-.inventory-pill {{display:inline-block; padding:5px 9px; border-radius:12px; background:#F7F7EF; color:#335266; font-size:.72rem; font-weight:700; margin:4px 6px 0 0;}}
+.inventory-pill {{display:inline-block; padding:5px 9px; border-radius:12px; background:#F4F0E3; color:#173326; border:1px solid rgba(15,59,43,.18); font-size:.74rem; font-weight:800; margin:4px 6px 0 0;}}
 .hero-search {{padding:24px 26px; border-radius:28px; background:linear-gradient(135deg, #0D3B2A 0%, #1B6B4A 55%, #C9A63B 100%); color:#FFFFFF; box-shadow:0 18px 34px rgba(13,59,42,.18); margin-bottom:16px;}}
 .hero-search h1 {{margin:0 0 8px 0; font-size:2.1rem; line-height:1.05;}}
 .hero-search p {{margin:0; font-size:.96rem; opacity:.96;}}
@@ -177,6 +177,14 @@ div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {{border-radiu
 div[data-baseweb="select"] > div {{background:#F8F4E8 !important; border:1px solid rgba(15,59,43,.28) !important; color:#143224 !important;}}
 .stMultiSelect div[data-baseweb="select"] > div {{background:#F8F4E8 !important; border:1px solid rgba(15,59,43,.28) !important; color:#143224 !important;}}
 .stTextInput input::placeholder, .stTextArea textarea::placeholder {{color:#73806F !important; opacity:1;}}
+[data-testid="stCaptionContainer"],
+[data-testid="stCaptionContainer"] p,
+[data-testid="stCaptionContainer"] span,
+.stCaption,
+small {{
+  color:#4F665B !important;
+  opacity:1 !important;
+}}
 @media (max-width: 900px) {{ .visit-grid, .detail-grid {{grid-template-columns:1fr;}} }}
 @media (max-width: 900px) {{
   [data-testid="collapsedControl"] {{display:flex !important; position:fixed; left:8px; top:64px; z-index:1003; background:#2D7A55; border-radius:12px; padding:8px; box-shadow:0 8px 18px rgba(0,0,0,.22);}}
@@ -184,7 +192,14 @@ div[data-baseweb="select"] > div {{background:#F8F4E8 !important; border:1px sol
   [data-testid="stSidebar"][aria-expanded="true"] {{margin-left:0 !important; min-width:88vw !important; max-width:88vw !important; width:88vw !important; opacity:1; overflow:auto; box-shadow:0 20px 40px rgba(0,0,0,.28);}}
   .block-container {{padding-left: .6rem !important; padding-right: .6rem !important;}}
   .sidebar-title,.sidebar-section {{display:block;}}
-  .product-name {{min-height:auto; font-size:.92rem;}}
+  .product-name {{min-height:auto; font-size:1rem; color:#0B2C20 !important; font-weight:900 !important; line-height:1.32;}}
+  .visit-name,.detail-title,.page-title,.section-title {{color:#0B2C20 !important;}}
+  .visit-sub,.detail-sub,.reason-box,[data-testid="stCaptionContainer"],[data-testid="stCaptionContainer"] p,[data-testid="stCaptionContainer"] span,.stCaption,small {{color:#3F584B !important;}}
+  .inventory-pill {{background:#F2EEDF !important; color:#153225 !important; border-color:rgba(15,59,43,.24) !important; font-size:.76rem !important; font-weight:800 !important;}}
+  div[data-testid="stMetricLabel"] p {{color:#385044 !important; font-weight:900 !important;}}
+  div[data-testid="stMetricValue"] {{color:#0B2C20 !important;}}
+  .stButton > button, .stDownloadButton > button {{color:#153225 !important;}}
+  [data-baseweb="select"] > div, .stTextInput input, .stNumberInput input {{color:#153225 !important;}}
   div[data-testid="stMetricValue"] {{font-size:1.2rem !important;}}
 }}
 
