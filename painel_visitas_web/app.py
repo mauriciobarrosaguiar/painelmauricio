@@ -133,12 +133,10 @@ i.material-icons-round,
 .metric-label {{font-size:.78rem; color:#617567; font-weight:800;}}
 .metric-value {{font-size:1.02rem; color:{COR_PRIMARIA}; font-weight:900; margin-top:4px; line-height:1.12;}}
 .metric-help {{font-size:.74rem; color:#75877B; margin-top:4px; line-height:1.25;}}
-.metric-goal {{align-items:stretch; min-height:160px;}}
+.metric-goal {{min-height:122px;}}
 .metric-goal .metric-label, .metric-goal .metric-value, .metric-goal .metric-help {{text-align:center;}}
-.metric-targets {{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; margin-top:10px; width:100%;}}
-.metric-target-chip {{background:#F7FAF5; border:1px solid #D4E2D5; border-radius:12px; padding:7px 6px; text-align:center;}}
-.metric-target-chip span {{display:block; font-size:.67rem; color:#698074; font-weight:800; line-height:1.1; margin-bottom:2px;}}
-.metric-target-chip strong {{display:block; font-size:.76rem; color:#0F3B2B; font-weight:900; line-height:1.15;}}
+.metric-target-line {{margin-top:10px; width:100%; display:flex; flex-wrap:wrap; justify-content:center; gap:6px;}}
+.metric-target-pill {{display:inline-block; padding:5px 8px; border-radius:999px; background:#F5F7F2; border:1px solid #D5E0D6; color:#153225; font-size:.7rem; font-weight:800; line-height:1.15;}}
 .metric-target-empty {{margin-top:10px; font-size:.72rem; color:#75877B; font-weight:700; text-align:center;}}
 .page-title {{margin:.15rem 0 .9rem 0; color:{COR_TEXTO}; font-size:1.8rem; font-weight:900; text-align:center;}}
 div[data-testid="stMetric"] {{background: rgba(255,255,255,.92); border:1px solid rgba(15,59,43,.18); border-radius:18px; padding:.72rem .82rem; box-shadow:0 10px 24px rgba(15,59,43,.05);}}
@@ -209,8 +207,8 @@ small {{
   [data-baseweb="select"] > div, .stTextInput input, .stNumberInput input {{color:#153225 !important;}}
   div[data-testid="stMetricValue"] {{font-size:1.2rem !important;}}
   .metric-goal {{min-height:auto;}}
-  .metric-targets {{grid-template-columns:repeat(3, minmax(0, 1fr)); gap:5px;}}
-  .metric-target-chip strong {{font-size:.72rem;}}
+  .metric-target-line {{gap:5px;}}
+  .metric-target-pill {{font-size:.68rem; padding:4px 7px;}}
 }}
 
 .mini-alert-card {{background:#FFFFFF; border:1px solid #D8E2D9; border-radius:12px; padding:.7rem .9rem; margin:.2rem 0; box-shadow:0 2px 10px rgba(15,59,43,.05);}} 

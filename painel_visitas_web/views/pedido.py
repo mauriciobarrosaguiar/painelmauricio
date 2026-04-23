@@ -414,7 +414,7 @@ def render_pedido(
                                 "Produto": produto_nome,
                                 "EAN": item.get("ean", ""),
                                 "Qtd minima": int(item.get("qtd_minima", 1) or 1),
-                                "Estoque": int(pd.to_numeric((escolha_calc or {}).get("estoque", 0), errors="coerce") or 0) if escolha_calc is not None else 0,
+                                "Estoque": int(pd.to_numeric(escolha_calc.get("estoque", 0), errors="coerce") or 0) if escolha_calc is not None else 0,
                                 "Preco acao": _money(_calc_preco_sem(escolha_calc)) if escolha_calc is not None else "-",
                                 "Desconto": f"{float(pd.to_numeric(item.get('desconto', 0), errors='coerce') or 0):.2f}%".replace(".", ","),
                             }

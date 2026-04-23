@@ -71,15 +71,10 @@ def _metric_goal(label: str, atual: float, meta: float, *, money: bool = True, h
         help_html = atingimento
     if meta:
         targets_html = "".join(
-            f"""
-            <div class="metric-target-chip">
-                <span>Falta {int(level * 100)}%</span>
-                <strong>{_format_gap(meta * level - atual, money)}</strong>
-            </div>
-            """
+            f'<span class="metric-target-pill">{int(level * 100)}%: {_format_gap(max(0.0, meta * level - atual), money)}</span>'
             for level in (0.8, 0.9, 1.0)
         )
-        footer = f'<div class="metric-targets">{targets_html}</div>'
+        footer = f'<div class="metric-target-line">{targets_html}</div>'
     else:
         footer = '<div class="metric-target-empty">Cadastre uma meta para acompanhar as faixas.</div>'
     st.markdown(
@@ -329,7 +324,7 @@ def render_dashboard(
         st.warning(" | ".join(erros))
 
     st.markdown('<div class="section-title">Indicadores do periodo</div>', unsafe_allow_html=True)
-    row1 = st.columns(5)
+    row1 = st.columns(4)
     with row1[0]:
         _metric_goal(
             "OL sem combate",
@@ -352,12 +347,6 @@ def render_dashboard(
             help_text=f"{_pct(perc_lanc)} do OL",
         )
     with row1[3]:
-        _metric(
-            "Combate",
-            _money(total_combate),
-            "Valor de combate no periodo",
-        )
-    with row1[4]:
         _metric_goal(
             "Clientes com venda",
             float(clientes_com_venda),
@@ -366,12 +355,14 @@ def render_dashboard(
             help_text="Venda sem combate",
         )
 
-    row2 = st.columns(3)
+    row2 = st.columns(4)
     with row2[0]:
-        _metric("Faturado do periodo", _money(faturado_periodo), "Base refletida pelas ultimas cargas")
+        _metric("Combate", _money(total_combate), "Valor de combate no periodo")
     with row2[1]:
-        _metric("Clientes com OL", str(clientes_com_ol), "Clientes com oportunidade no periodo")
+        _metric("Faturado do periodo", _money(faturado_periodo), "Base refletida pelas ultimas cargas")
     with row2[2]:
+        _metric("Clientes com OL", str(clientes_com_ol), "Clientes com oportunidade no periodo")
+    with row2[3]:
         _metric("Sem venda", str(clientes_sem_venda), f"{total_cnpjs_base} CNPJs - {clientes_com_venda} com venda")
 
     st.markdown('<div class="section-title">Clientes para visitar</div>', unsafe_allow_html=True)
