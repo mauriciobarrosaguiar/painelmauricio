@@ -217,44 +217,42 @@ def _render_combo_section(df: pd.DataFrame, inv: pd.DataFrame, header: dict | No
     if df.empty:
         st.caption("Nenhum combo vigente para os filtros atuais.")
         return
-    cols = st.columns(2)
     group_cols = ["distribuidora", "nome_acao", "cupom", "validade"]
     for idx, (_, grupo) in enumerate(df.sort_values(["distribuidora", "nome_acao", "produto"]).groupby(group_cols, dropna=False)):
         meta = grupo.iloc[0].to_dict()
-        with cols[idx % 2]:
-            with st.container(border=True):
-                st.markdown(f"**{_campaign_label(meta, 'Combo')}**")
-                st.caption(f"{meta.get('distribuidora', '-')} | Cupom: {meta.get('cupom', '-') or '-'} | Validade: {_format_date(meta.get('validade', ''))}")
-                linhas = []
+        with st.container(border=True):
+            st.markdown(f"**{_campaign_label(meta, 'Combo')}**")
+            st.caption(f"{meta.get('distribuidora', '-')} | Cupom: {meta.get('cupom', '-') or '-'} | Validade: {_format_date(meta.get('validade', ''))}")
+            linhas = []
+            for _, row in grupo.iterrows():
+                choice = _find_inventory_choice(inv, row.to_dict())
+                linhas.append(
+                    {
+                        "Produto": str(row.get("produto", "") or ""),
+                        "EAN": str(row.get("ean", "") or ""),
+                        "Qtd minima": int(row.get("qtd_minima", 1) or 1),
+                        "Desconto": _pct(row.get("desconto", 0)),
+                        "Estoque": _safe_int((choice or {}).get("estoque", 0), 0),
+                        "Preco acao": _money(action_price_from_choice(choice or {}, row.get("desconto", 0))) if choice else "-",
+                    }
+                )
+            st.dataframe(pd.DataFrame(linhas), use_container_width=True, hide_index=True)
+            disabled = header is None
+            if st.button("Levar combo ao carrinho", key=f"combo_add_{idx}", use_container_width=True, disabled=disabled):
+                itens = []
+                faltantes = []
                 for _, row in grupo.iterrows():
                     choice = _find_inventory_choice(inv, row.to_dict())
-                    linhas.append(
-                        {
-                            "Produto": str(row.get("produto", "") or ""),
-                            "EAN": str(row.get("ean", "") or ""),
-                            "Qtd minima": int(row.get("qtd_minima", 1) or 1),
-                            "Desconto": _pct(row.get("desconto", 0)),
-                            "Estoque": _safe_int((choice or {}).get("estoque", 0), 0),
-                            "Preco acao": _money(action_price_from_choice(choice or {}, row.get("desconto", 0))) if choice else "-",
-                        }
-                    )
-                st.dataframe(pd.DataFrame(linhas), use_container_width=True, hide_index=True)
-                disabled = header is None
-                if st.button("Levar combo ao carrinho", key=f"combo_add_{idx}", use_container_width=True, disabled=disabled):
-                    itens = []
-                    faltantes = []
-                    for _, row in grupo.iterrows():
-                        choice = _find_inventory_choice(inv, row.to_dict())
-                        if not choice:
-                            faltantes.append(str(row.get("produto", "") or row.get("ean", "")))
-                            continue
-                        itens.append(_build_action_item(header, row.to_dict(), choice, int(row.get("qtd_minima", 1) or 1), foco_eans))
-                    if itens:
-                        adicionados = _add_to_cart(itens)
-                        _remember_coupon(meta.get("cupom", ""))
-                        st.success(f"{adicionados if adicionados else len(itens)} item(ns) do combo enviados ao carrinho.")
-                    if faltantes:
-                        st.warning(f"Sem estoque/localizacao para: {', '.join(faltantes[:4])}")
+                    if not choice:
+                        faltantes.append(str(row.get("produto", "") or row.get("ean", "")))
+                        continue
+                    itens.append(_build_action_item(header, row.to_dict(), choice, int(row.get("qtd_minima", 1) or 1), foco_eans))
+                if itens:
+                    adicionados = _add_to_cart(itens)
+                    _remember_coupon(meta.get("cupom", ""))
+                    st.success(f"{adicionados if adicionados else len(itens)} item(ns) do combo enviados ao carrinho.")
+                if faltantes:
+                    st.warning(f"Sem estoque/localizacao para: {', '.join(faltantes[:4])}")
 
 
 def _render_progressive_section(df: pd.DataFrame, inv: pd.DataFrame, header: dict | None, foco_eans: set[str], action_key=()):
@@ -262,48 +260,46 @@ def _render_progressive_section(df: pd.DataFrame, inv: pd.DataFrame, header: dic
     if df.empty:
         st.caption("Nenhuma acao escalonada vigente para os filtros atuais.")
         return
-    cols = st.columns(2)
     group_cols = ["distribuidora", "nome_acao", "ean", "produto", "validade"]
     for idx, (_, grupo) in enumerate(df.sort_values(["distribuidora", "nome_acao", "produto", "qtd_de"]).groupby(group_cols, dropna=False)):
         meta = grupo.iloc[0].to_dict()
         choice = _find_inventory_choice(inv, meta)
-        with cols[idx % 2]:
-            with st.container(border=True):
-                st.markdown(f"**{_campaign_label(meta, 'Escalonada')}**")
-                st.caption(f"{meta.get('produto', '')} | {meta.get('distribuidora', '-')} | Validade: {_format_date(meta.get('validade', ''))}")
-                tiers = []
-                for _, row in grupo.iterrows():
-                    qtd_de = int(row.get("qtd_de", 1) or 1)
-                    qtd_ate = int(row.get("qtd_ate", 0) or 0)
-                    faixa = f"{qtd_de}+" if qtd_ate <= 0 else f"{qtd_de} a {qtd_ate}"
-                    tiers.append(
-                        {
-                            "Faixa": faixa,
-                            "Desconto": _pct(row.get("desconto", 0)),
-                            "Cupom": str(row.get("cupom", "") or "-"),
-                            "Preco acao": _money(action_price_from_choice(choice or {}, row.get("desconto", 0))) if choice else "-",
-                        }
-                    )
-                st.dataframe(pd.DataFrame(tiers), use_container_width=True, hide_index=True)
-                qty = st.number_input("Quantidade", min_value=1, step=1, value=max(1, int(meta.get("qtd_de", 1) or 1)), key=f"prog_qty_{idx}")
-                action = find_action_for_item(
-                    action_key,
-                    ean=str(meta.get("ean", "") or ""),
-                    distribuidora=str(meta.get("distribuidora", "") or ""),
-                    quantidade=int(qty),
-                    produto=str(meta.get("produto", "") or ""),
-                    tipo_preferido=TYPE_PROGRESSIVO,
+        with st.container(border=True):
+            st.markdown(f"**{_campaign_label(meta, 'Escalonada')}**")
+            st.caption(f"{meta.get('produto', '')} | {meta.get('distribuidora', '-')} | Validade: {_format_date(meta.get('validade', ''))}")
+            tiers = []
+            for _, row in grupo.iterrows():
+                qtd_de = int(row.get("qtd_de", 1) or 1)
+                qtd_ate = int(row.get("qtd_ate", 0) or 0)
+                faixa = f"{qtd_de}+" if qtd_ate <= 0 else f"{qtd_de} a {qtd_ate}"
+                tiers.append(
+                    {
+                        "Faixa": faixa,
+                        "Desconto": _pct(row.get("desconto", 0)),
+                        "Cupom": str(row.get("cupom", "") or "-"),
+                        "Preco acao": _money(action_price_from_choice(choice or {}, row.get("desconto", 0))) if choice else "-",
+                    }
                 )
-                if action:
-                    st.caption(f"Faixa aplicada: {int(action.get('qtd_de', 1) or 1)}{'+' if int(action.get('qtd_ate', 0) or 0) <= 0 else f' a {int(action.get('qtd_ate', 0) or 0)}'} | Cupom: {action.get('cupom', '-') or '-'}")
-                else:
-                    st.caption("A quantidade informada ainda nao atinge nenhuma faixa promocional.")
-                disabled = header is None or action is None or choice is None
-                if st.button("Levar produto ao carrinho", key=f"prog_add_{idx}", use_container_width=True, disabled=disabled):
-                    item = _build_action_item(header, action or meta, choice, int(qty), foco_eans)
-                    adicionados = _add_to_cart([item])
-                    _remember_coupon((action or meta).get("cupom", ""))
-                    st.success(f"{adicionados if adicionados else 1} item enviado ao carrinho.")
+            st.dataframe(pd.DataFrame(tiers), use_container_width=True, hide_index=True)
+            qty = st.number_input("Quantidade", min_value=1, step=1, value=max(1, int(meta.get("qtd_de", 1) or 1)), key=f"prog_qty_{idx}")
+            action = find_action_for_item(
+                action_key,
+                ean=str(meta.get("ean", "") or ""),
+                distribuidora=str(meta.get("distribuidora", "") or ""),
+                quantidade=int(qty),
+                produto=str(meta.get("produto", "") or ""),
+                tipo_preferido=TYPE_PROGRESSIVO,
+            )
+            if action:
+                st.caption(f"Faixa aplicada: {int(action.get('qtd_de', 1) or 1)}{'+' if int(action.get('qtd_ate', 0) or 0) <= 0 else f' a {int(action.get('qtd_ate', 0) or 0)}'} | Cupom: {action.get('cupom', '-') or '-'}")
+            else:
+                st.caption("A quantidade informada ainda nao atinge nenhuma faixa promocional.")
+            disabled = header is None or action is None or choice is None
+            if st.button("Levar produto ao carrinho", key=f"prog_add_{idx}", use_container_width=True, disabled=disabled):
+                item = _build_action_item(header, action or meta, choice, int(qty), foco_eans)
+                adicionados = _add_to_cart([item])
+                _remember_coupon((action or meta).get("cupom", ""))
+                st.success(f"{adicionados if adicionados else 1} item enviado ao carrinho.")
 
 
 def _render_open_section(df: pd.DataFrame, inv: pd.DataFrame, header: dict | None, foco_eans: set[str]):
@@ -311,67 +307,69 @@ def _render_open_section(df: pd.DataFrame, inv: pd.DataFrame, header: dict | Non
     if df.empty:
         st.caption("Nenhuma acao aberta vigente para os filtros atuais.")
         return
-    cols = st.columns(2)
     group_cols = ["distribuidora", "nome_acao", "cupom", "validade"]
     for idx, (_, grupo) in enumerate(df.sort_values(["distribuidora", "nome_acao", "produto"]).groupby(group_cols, dropna=False)):
         meta = grupo.iloc[0].to_dict()
-        with cols[idx % 2]:
-            with st.container(border=True):
-                st.markdown(f"**{_campaign_label(meta, 'Campanha aberta')}**")
-                st.caption(f"{meta.get('distribuidora', '-')} | Cupom: {meta.get('cupom', '-') or '-'} | Validade: {_format_date(meta.get('validade', ''))}")
-                linhas = []
-                choices_by_ean: dict[str, dict] = {}
-                for _, row in grupo.iterrows():
-                    action_row = row.to_dict()
-                    choice = _find_inventory_choice(inv, action_row)
-                    ean = str(row.get("ean", "") or "")
-                    choices_by_ean[ean] = choice or {}
-                    linhas.append(
-                        {
-                            "Selecionar": False,
-                            "EAN": ean,
-                            "Produto": str(row.get("produto", "") or ""),
-                            "Estoque": _safe_int((choice or {}).get("estoque", 0), 0),
-                            "Preco acao": _money(action_price_from_choice(choice or {}, row.get("desconto", 0))) if choice else "-",
-                            "Qtde": 1,
-                        }
-                    )
-                editor = st.data_editor(
-                    pd.DataFrame(linhas),
-                    use_container_width=True,
-                    hide_index=True,
-                    key=f"open_editor_{idx}",
-                    num_rows="fixed",
-                    column_config={
-                        "Selecionar": st.column_config.CheckboxColumn("Sel."),
-                        "Qtde": st.column_config.NumberColumn("Qtde", min_value=1, step=1),
-                    },
+        with st.container(border=True):
+            st.markdown(f"**{_campaign_label(meta, 'Campanha aberta')}**")
+            st.caption(f"{meta.get('distribuidora', '-')} | Cupom: {meta.get('cupom', '-') or '-'} | Validade: {_format_date(meta.get('validade', ''))}")
+            linhas = []
+            choices_by_ean: dict[str, dict] = {}
+            for _, row in grupo.iterrows():
+                action_row = row.to_dict()
+                choice = _find_inventory_choice(inv, action_row)
+                ean = str(row.get("ean", "") or "")
+                choices_by_ean[ean] = choice or {}
+                linhas.append(
+                    {
+                        "Selecionar": False,
+                        "EAN": ean,
+                        "Produto": str(row.get("produto", "") or ""),
+                        "Estoque": _safe_int((choice or {}).get("estoque", 0), 0),
+                        "Preco acao": _money(action_price_from_choice(choice or {}, row.get("desconto", 0))) if choice else "-",
+                        "Qtde": 1,
+                    }
                 )
-                disabled = header is None
-                if st.button("Adicionar selecionados ao carrinho", key=f"open_add_{idx}", use_container_width=True, disabled=disabled):
-                    selecionados = editor[editor["Selecionar"]].copy()
-                    if selecionados.empty:
-                        st.warning("Selecione ao menos um produto.")
-                    else:
-                        itens = []
-                        faltantes = []
-                        for _, row_sel in selecionados.iterrows():
-                            ean = str(row_sel.get("EAN", "") or "")
-                            original = grupo[grupo["ean"].astype(str) == ean].head(1)
-                            if original.empty:
-                                continue
-                            action_row = original.iloc[0].to_dict()
-                            choice = choices_by_ean.get(ean) or _find_inventory_choice(inv, action_row)
-                            if not choice:
-                                faltantes.append(str(action_row.get("produto", "") or ean))
-                                continue
-                            itens.append(_build_action_item(header, action_row, choice, int(row_sel.get("Qtde", 1) or 1), foco_eans))
-                        if itens:
-                            adicionados = _add_to_cart(itens)
-                            _remember_coupon(meta.get("cupom", ""))
-                            st.success(f"{adicionados if adicionados else len(itens)} produto(s) enviados ao carrinho.")
-                        if faltantes:
-                            st.warning(f"Sem estoque/localizacao para: {', '.join(faltantes[:4])}")
+            editor = st.data_editor(
+                pd.DataFrame(linhas),
+                use_container_width=True,
+                hide_index=True,
+                key=f"open_editor_{idx}",
+                num_rows="fixed",
+                column_config={
+                    "Selecionar": st.column_config.CheckboxColumn("Sel.", width="small"),
+                    "EAN": st.column_config.TextColumn("EAN", width="medium"),
+                    "Produto": st.column_config.TextColumn("Produto", width="large"),
+                    "Estoque": st.column_config.NumberColumn("Estoque", width="small"),
+                    "Preco acao": st.column_config.TextColumn("Preco acao", width="small"),
+                    "Qtde": st.column_config.NumberColumn("Qtde", min_value=1, step=1, width="small"),
+                },
+            )
+            disabled = header is None
+            if st.button("Adicionar selecionados ao carrinho", key=f"open_add_{idx}", use_container_width=True, disabled=disabled):
+                selecionados = editor[editor["Selecionar"]].copy()
+                if selecionados.empty:
+                    st.warning("Selecione ao menos um produto.")
+                else:
+                    itens = []
+                    faltantes = []
+                    for _, row_sel in selecionados.iterrows():
+                        ean = str(row_sel.get("EAN", "") or "")
+                        original = grupo[grupo["ean"].astype(str) == ean].head(1)
+                        if original.empty:
+                            continue
+                        action_row = original.iloc[0].to_dict()
+                        choice = choices_by_ean.get(ean) or _find_inventory_choice(inv, action_row)
+                        if not choice:
+                            faltantes.append(str(action_row.get("produto", "") or ean))
+                            continue
+                        itens.append(_build_action_item(header, action_row, choice, int(row_sel.get("Qtde", 1) or 1), foco_eans))
+                    if itens:
+                        adicionados = _add_to_cart(itens)
+                        _remember_coupon(meta.get("cupom", ""))
+                        st.success(f"{adicionados if adicionados else len(itens)} produto(s) enviados ao carrinho.")
+                    if faltantes:
+                        st.warning(f"Sem estoque/localizacao para: {', '.join(faltantes[:4])}")
 
 
 def render_acoes_desconto(
