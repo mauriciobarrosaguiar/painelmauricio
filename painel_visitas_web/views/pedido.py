@@ -402,17 +402,24 @@ def render_pedido(
                     st.caption(
                         f"Distribuidora: {combo.get('distribuidora', '-')} | Cupom: {combo.get('cupom', '-') or '-'} | Validade: {pd.to_datetime(combo.get('validade'), errors='coerce').strftime('%d/%m/%Y') if pd.notna(pd.to_datetime(combo.get('validade'), errors='coerce')) else '-'}"
                     )
-                    combo_df = pd.DataFrame(
-                        [
+                    combo_rows = []
+                    for item in combo.get("itens", []):
+                        escolha = _find_inventory_choice(item.get("ean", ""), item.get("produto", ""), item.get("distribuidora", ""))
+                        escolha_calc = apply_action_to_choice(escolha, item) if escolha is not None else None
+                        produto_nome = str(item.get("produto", "") or "")
+                        if not produto_nome and escolha is not None:
+                            produto_nome = str(escolha.get("principio_ativo", "") or "")
+                        combo_rows.append(
                             {
-                                "Produto": item.get("produto", ""),
+                                "Produto": produto_nome,
                                 "EAN": item.get("ean", ""),
                                 "Qtd minima": int(item.get("qtd_minima", 1) or 1),
+                                "Estoque": int(pd.to_numeric((escolha_calc or {}).get("estoque", 0), errors="coerce") or 0) if escolha_calc is not None else 0,
+                                "Preco acao": _money(_calc_preco_sem(escolha_calc)) if escolha_calc is not None else "-",
                                 "Desconto": f"{float(pd.to_numeric(item.get('desconto', 0), errors='coerce') or 0):.2f}%".replace(".", ","),
                             }
-                            for item in combo.get("itens", [])
-                        ]
-                    )
+                        )
+                    combo_df = pd.DataFrame(combo_rows)
                     st.dataframe(combo_df, use_container_width=True, hide_index=True)
                     if st.button(f"Adicionar combo {idx_combo + 1}", key=f"add_combo_{idx_combo}", use_container_width=True):
                         itens_combo = []

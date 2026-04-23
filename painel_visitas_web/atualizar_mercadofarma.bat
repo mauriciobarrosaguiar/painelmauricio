@@ -6,7 +6,7 @@ if not exist "%LOGS_DIR%" mkdir "%LOGS_DIR%"
 if not exist "%MERCADOFARMA_DOWNLOADS%" mkdir "%MERCADOFARMA_DOWNLOADS%"
 
 set "LOG_FILE=%LOGS_DIR%\mercadofarma_%date:~-4,4%-%date:~-7,2%-%date:~-10,2%.log"
-set "MERCADOFARMA_INPUT=%PROJECT_DIR%\data\PRODUTOS COM EAN - POR LANCAMENTOS-PRIORITARIOS-LINHA.xlsx"
+set "MERCADOFARMA_INPUT=%PROJECT_DIR%\data\PRODUTOS_MIX.xlsx"
 set "MERCADOFARMA_OUTPUT=%PROJECT_DIR%\data\Estoque_preco_distribuidora.xlsx"
 
 echo ==== MERCADO FARMA %date% %time% ==== >> "%LOG_FILE%"

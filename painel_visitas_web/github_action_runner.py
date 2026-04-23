@@ -13,6 +13,8 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
+from config import PRODUTOS_CANONICAL_FILE, PRODUTOS_FILE
+from services.cleaning import clean_produtos
 from services.integrations import (
     clear_mercadofarma_mass_order,
     load_creds,
@@ -285,10 +287,27 @@ def _status_callback(chave: str, command_id: str | None, ultimo_resultado: str =
 
 
 def _produtos_df() -> pd.DataFrame:
-    path = DATA / "PRODUTOS COM EAN - POR LANCAMENTOS-PRIORITARIOS-LINHA.xlsx"
-    if path.exists():
-        return pd.read_excel(path)
-    return pd.DataFrame()
+    candidatos = [
+        PRODUTOS_CANONICAL_FILE,
+        PRODUTOS_FILE,
+        DATA / "PRODUTOS COM EAN - POR LANCAMENTOS-PRIORITARIOS-LINHA.xlsx",
+    ]
+    vistos: set[str] = set()
+    for path in candidatos:
+        if path is None:
+            continue
+        path = Path(path)
+        key = str(path.resolve()) if path.exists() else str(path)
+        if key in vistos or not path.exists():
+            continue
+        vistos.add(key)
+        try:
+            df = clean_produtos(pd.read_excel(path))
+            if not df.empty and df["ean"].astype(str).str.strip().ne("").any():
+                return df
+        except Exception:
+            continue
+    return pd.DataFrame(columns=["ean", "principio_ativo", "mix_lancamentos"])
 
 
 def _load_pedido_payload() -> list[dict]:

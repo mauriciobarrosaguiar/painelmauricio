@@ -56,6 +56,45 @@ def _metric(label: str, value: str, help_text: str = ""):
     )
 
 
+def _format_gap(value: float, money: bool) -> str:
+    if money:
+        return _money(value)
+    return str(max(0, int(round(value))))
+
+
+def _metric_goal(label: str, atual: float, meta: float, *, money: bool = True, help_text: str = ""):
+    value_fmt = _money(atual) if money else str(int(round(atual)))
+    atingimento = f"Atingimento: {_pct(float(atual) / float(meta))}" if meta else "Meta nao cadastrada"
+    if help_text:
+        help_html = f"{help_text} | {atingimento}" if meta else help_text
+    else:
+        help_html = atingimento
+    if meta:
+        targets_html = "".join(
+            f"""
+            <div class="metric-target-chip">
+                <span>Falta {int(level * 100)}%</span>
+                <strong>{_format_gap(meta * level - atual, money)}</strong>
+            </div>
+            """
+            for level in (0.8, 0.9, 1.0)
+        )
+        footer = f'<div class="metric-targets">{targets_html}</div>'
+    else:
+        footer = '<div class="metric-target-empty">Cadastre uma meta para acompanhar as faixas.</div>'
+    st.markdown(
+        f"""
+        <div class="metric-card metric-center metric-goal">
+            <div class="metric-label">{label}</div>
+            <div class="metric-value">{value_fmt}</div>
+            <div class="metric-help">{help_html}</div>
+            {footer}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def _metric_compact(label: str, value: str, help_text: str = ""):
     st.markdown(
         f"""
@@ -290,30 +329,41 @@ def render_dashboard(
         st.warning(" | ".join(erros))
 
     st.markdown('<div class="section-title">Indicadores do periodo</div>', unsafe_allow_html=True)
-    row1 = st.columns(4)
+    row1 = st.columns(5)
     with row1[0]:
-        _metric(
+        _metric_goal(
             "OL sem combate",
-            _money(total_ol),
-            f"Combate: {_money(total_combate)} | Meta: {_pct(total_ol / metas.get('meta_ol', 1)) if metas.get('meta_ol', 0) else '-'}",
+            total_ol,
+            float(metas.get("meta_ol", 0) or 0),
+            help_text="Meta mensal",
         )
     with row1[1]:
-        _metric(
+        _metric_goal(
             "OL prioritarios",
-            _money(total_prio),
-            f"{_pct(perc_prio)} do OL | Meta: {_pct(total_prio / metas.get('meta_prioritarios', 1)) if metas.get('meta_prioritarios', 0) else '-'}",
+            total_prio,
+            float(metas.get("meta_prioritarios", 0) or 0),
+            help_text=f"{_pct(perc_prio)} do OL",
         )
     with row1[2]:
-        _metric(
+        _metric_goal(
             "OL lancamentos",
-            _money(total_lanc),
-            f"{_pct(perc_lanc)} do OL | Meta: {_pct(total_lanc / metas.get('meta_lancamentos', 1)) if metas.get('meta_lancamentos', 0) else '-'}",
+            total_lanc,
+            float(metas.get("meta_lancamentos", 0) or 0),
+            help_text=f"{_pct(perc_lanc)} do OL",
         )
     with row1[3]:
         _metric(
+            "Combate",
+            _money(total_combate),
+            "Valor de combate no periodo",
+        )
+    with row1[4]:
+        _metric_goal(
             "Clientes com venda",
-            str(clientes_com_venda),
-            f"Venda sem combate | Meta: {_pct(clientes_com_venda / metas.get('meta_clientes', 1)) if metas.get('meta_clientes', 0) else '-'}",
+            float(clientes_com_venda),
+            float(metas.get("meta_clientes", 0) or 0),
+            money=False,
+            help_text="Venda sem combate",
         )
 
     row2 = st.columns(3)

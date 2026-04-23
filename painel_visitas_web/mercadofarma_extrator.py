@@ -36,7 +36,7 @@ from services.mercadofarma_inventory import (
 
 MF_URL = "https://www.mercadofarma.com.br/"
 CONFIG_FILE = "config.ini"
-DEFAULT_INPUT_NAME = "PRODUTOS COM EAN - POR LANCAMENTOS-PRIORITARIOS-LINHA.xlsx"
+DEFAULT_INPUT_NAME = "PRODUTOS_MIX.xlsx"
 DEFAULT_OUTPUT_NAME = "Estoque_preco_distribuidora.xlsx"
 DEFAULT_CRED_JSON = "credenciais_integracao.json"
 DEFAULT_CRED_INI = "integracoes.ini"
@@ -769,7 +769,7 @@ def main() -> int:
 
     if not input_path.exists():
         log(f"Arquivo base não encontrado: {input_path}")
-        log("Confirme se existe a planilha data/PRODUTOS COM EAN - POR LANCAMENTOS-PRIORITARIOS-LINHA.xlsx dentro da pasta do painel.")
+        log(f"Confirme se existe a planilha data/{DEFAULT_INPUT_NAME} dentro da pasta do painel.")
         return 1
 
     headless = True if args.headless else False
