@@ -258,7 +258,7 @@ def compute_views(
     distrib_visiveis: tuple[str, ...] = (),
     descontos_adic: tuple[tuple[str, float], ...] = (),
     descontos_exc: tuple[tuple[str, str], ...] = (),
-    acoes_desconto_key: tuple[tuple[str, str, float, str, str, str], ...] = (),
+    acoes_desconto_key: tuple[tuple, ...] = (),
 ):
     pedidos, produtos, clientes, foco, inventario, base_full = get_clean_bases(data_version_key)
     foco = foco.copy()
@@ -515,13 +515,13 @@ elif page == 'Clientes':
     render_clientes(score_df, oportunidades, cancelados, base_full, produtos, inventario, foco, clientes)
 elif page == 'Montar pedido':
     pedidos, produtos, clientes, foco, inventario, base, base_full, resumo, gap, score_df, oportunidades, cancelados = _views_for(cidade_global)
-    render_pedido(score_df, oportunidades, inventario, cidade_global, base_full=base_full, produtos=produtos, foco=foco, clientes_df=clientes)
+    render_pedido(score_df, oportunidades, inventario, cidade_global, base_full=base_full, produtos=produtos, foco=foco, clientes_df=clientes, action_records=discount_actions_records, action_key=acoes_desconto_key)
 elif page == 'Pedido Inteligente':
     pedidos, produtos, clientes, foco, inventario, base, base_full, resumo, gap, score_df, oportunidades, cancelados = _views_for(cidade_global)
     render_busca_inteligente(score_df, inventario, clientes_df=clientes)
 elif page == 'Carrinho':
     _, _, clientes_g, foco_g, inventario_g, _, base_full_g, _, _, score_df_g, oportunidades_g, _ = _views_for('Todas')
-    render_cart(inventario_g, foco=foco_g)
+    render_cart(inventario_g, foco=foco_g, action_key=acoes_desconto_key)
 elif page == 'SIP':
     _, _, clientes_g, foco_g, inventario_g, _, base_full_g, _, _, score_df_g, oportunidades_g, _ = _views_for('Todas')
     render_sip(score_df_g, clientes_g)

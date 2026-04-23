@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from config import CLIENTES_FILE, DATA_DIR, FOCO_SEMANA_FILE, INVENTARIO_FILE, PEDIDOS_FILE, PRODUTOS_CANONICAL_FILE, PRODUTOS_FILE
-from services.discount_actions import actions_to_dataframe, parse_discount_actions
+from services.discount_actions import action_template_dataframe, actions_to_dataframe, parse_discount_actions
 from services.integrations import IntegracaoCreds, choose_low_production_cnpj, load_creds, read_last_logs, save_creds
 from services.order_builder import build_order_dataframe
 from services.repo_state import (
@@ -54,6 +54,17 @@ def _xlsx_bytes(df: pd.DataFrame) -> bytes:
     with pd.ExcelWriter(bio, engine="openpyxl") as writer:
         df.to_excel(writer, index=False)
     return bio.getvalue()
+
+
+def _parse_actions_upload(uploaded_file, default_distribuidora: str = "", default_validade=None) -> tuple[list[dict], list[str]]:
+    if uploaded_file is None:
+        return [], ["Selecione uma planilha de acoes."]
+    try:
+        df = pd.read_excel(uploaded_file, dtype=str).fillna("")
+    except Exception as exc:
+        return [], [f"Nao foi possivel ler a planilha de acoes: {exc}"]
+    text = df.to_csv(index=False, sep="\t")
+    return parse_discount_actions(text, default_distribuidora=default_distribuidora, default_validade=default_validade)
 
 
 def _runs_df(runs: list[dict]) -> pd.DataFrame:
@@ -134,8 +145,11 @@ def _pedido_dist_df(df: pd.DataFrame) -> pd.DataFrame:
 
 def _pedido_items_df(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
-        return pd.DataFrame(columns=["Produto", "EAN", "Distribuidora", "Qtde", "Preco", "Total"])
-    show = df[["Produto", "EAN", "Distribuidora", "Qtde", "Preco", "Total"]].copy()
+        return pd.DataFrame(columns=["Produto", "EAN", "Distribuidora", "Qtde", "Preco", "Total", "Cupom", "Acao"])
+    for column in ["Cupom", "Acao"]:
+        if column not in df.columns:
+            df[column] = ""
+    show = df[["Produto", "EAN", "Distribuidora", "Qtde", "Preco", "Total", "Cupom", "Acao"]].copy()
     show["Preco"] = show["Preco"].map(_money)
     show["Total"] = show["Total"].map(_money)
     return show
@@ -274,26 +288,40 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
     a1, a2 = st.columns([1.1, 0.9])
     default_dist = a1.selectbox("Distribuidora padrao", dist_options, key="acoes_dist_padrao")
     validade_padrao = a2.date_input("Validade padrao", format="DD/MM/YYYY", key="acoes_validade_padrao")
+    replace_actions = st.checkbox("Substituir acoes atuais ao importar", value=False, key="acoes_replace_all")
+    uploaded_actions = st.file_uploader("Importar planilha padrao de acoes", type=["xlsx"], key="upload_acoes_promocionais")
     pasted = st.text_area(
         "Cole aqui as acoes copiadas da planilha",
-        placeholder="EAN\tPRODUTO\tDESCONTO\tDISTRIBUIDORA\tCUPOM\tVALIDADE DA ACAO",
-        height=150,
+        placeholder="TIPO_ACAO\tNOME_ACAO\tEAN\tPRODUTO\tDESCONTO\tDISTRIBUIDORA\tCUPOM\tVALIDADE_DA_ACAO\tQTD_MINIMA\tQTD_DE\tQTD_ATE",
+        height=170,
         key="acoes_coladas_texto",
     )
-    c1, c2 = st.columns([1, 1])
-    if c1.button("Adicionar acoes coladas", use_container_width=True, key="btn_adicionar_acoes_coladas"):
+    c1, c2, c3 = st.columns([1, 1, 1])
+    if c1.button("Importar planilha de acoes", use_container_width=True, key="btn_importar_planilha_acoes"):
+        default = "" if default_dist == "Usar coluna da planilha" else default_dist
+        records, errors = _parse_actions_upload(uploaded_actions, default_distribuidora=default, default_validade=validade_padrao)
+        if records:
+            state = load_discount_actions()
+            current = [] if replace_actions else list(state.get("acoes", []) or [])
+            current.extend(records)
+            ok, msg = save_discount_actions({"acoes": current})
+            st.cache_data.clear()
+            (st.success if ok else st.warning)(f"{len(records)} acao(oes) importada(s). {msg}")
+        if errors:
+            st.warning(" | ".join(errors[:5]))
+    if c2.button("Adicionar acoes coladas", use_container_width=True, key="btn_adicionar_acoes_coladas"):
         default = "" if default_dist == "Usar coluna da planilha" else default_dist
         records, errors = parse_discount_actions(pasted, default_distribuidora=default, default_validade=validade_padrao)
         if records:
             state = load_discount_actions()
-            current = list(state.get("acoes", []) or [])
+            current = [] if replace_actions else list(state.get("acoes", []) or [])
             current.extend(records)
             ok, msg = save_discount_actions({"acoes": current})
             st.cache_data.clear()
             (st.success if ok else st.warning)(f"{len(records)} acao(oes) adicionada(s). {msg}")
         if errors:
             st.warning(" | ".join(errors[:5]))
-    if c2.button("Remover acoes vencidas", use_container_width=True, key="btn_remover_acoes_vencidas"):
+    if c3.button("Remover acoes vencidas", use_container_width=True, key="btn_remover_acoes_vencidas"):
         state = load_discount_actions()
         df_actions = actions_to_dataframe(state.get("acoes", []))
         keep = df_actions[df_actions["status"] == "Vigente"].to_dict("records") if not df_actions.empty else []
@@ -310,12 +338,17 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
             show_actions = actions_df.copy()
             show_actions.rename(
                 columns={
+                    "tipo_acao": "Tipo",
+                    "nome_acao": "Acao",
                     "ean": "EAN",
                     "produto": "Produto",
                     "desconto": "Desconto",
                     "distribuidora": "Distribuidora",
                     "cupom": "Cupom",
                     "validade": "Validade",
+                    "qtd_minima": "Qtd minima",
+                    "qtd_de": "Qtd de",
+                    "qtd_ate": "Qtd ate",
                     "status": "Status",
                 },
                 inplace=True,
@@ -328,11 +361,13 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
     tpl_cli = pd.DataFrame(columns=["SETOR", "CNPJ", "RAZAO SOCIAL", "NOME FANTASIA", "ENDERECO", "BAIRRO", "CIDADE", "UF", "CEP", "NOME CONTATO", "CONTATO"])
     tpl_foco = pd.DataFrame(columns=["EAN", "PRINCIPIO ATIVO", "PESO FOCO", "OBSERVACAO"])
     tpl_prod = pd.DataFrame(columns=["EAN", "PRINCIPIO ATIVO", "LINHA/COMBATE/PRIORITARIOS/LANCAMENTOS"])
+    tpl_acoes = action_template_dataframe()
     mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    d1, d2, d3 = st.columns(3)
+    d1, d2, d3, d4 = st.columns(4)
     d1.download_button("Modelo painel", _xlsx_bytes(tpl_cli), "template_painel_clientes.xlsx", mime=mime, use_container_width=True)
     d2.download_button("Modelo foco", _xlsx_bytes(tpl_foco), "template_foco_semana.xlsx", mime=mime, use_container_width=True)
     d3.download_button("Modelo produtos", _xlsx_bytes(tpl_prod), "template_produtos_mix.xlsx", mime=mime, use_container_width=True)
+    d4.download_button("Modelo acoes", _xlsx_bytes(tpl_acoes), "template_acoes_promocionais.xlsx", mime=mime, use_container_width=True)
 
     if runs:
         st.markdown("### GitHub Actions")

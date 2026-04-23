@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from services.discount_actions import apply_action_to_choice, find_action_for_item
 from services.order_builder import build_order_dataframe, build_order_exports, build_order_payload, save_generated_order
 from services.repo_state import command_to_monitor_block, enqueue_command, load_latest_command, load_status
 from views.monitoring import render_monitor
@@ -52,6 +53,9 @@ def _normalize_state_item(item: dict) -> dict:
         "Mix": str(item.get("Mix", "LINHA") or "LINHA"),
         "Qtde": max(0, _safe_int(item.get("Qtde", 0), 0)),
         "Foco": bool(item.get("Foco", False)),
+        "Cupom": str(item.get("Cupom", item.get("cupom", "")) or ""),
+        "Acao": str(item.get("Acao", item.get("acao", item.get("nome_acao", ""))) or ""),
+        "Tipo acao": str(item.get("Tipo acao", item.get("tipo_acao", "")) or ""),
     }
 
 
@@ -89,7 +93,7 @@ def _monitor_block() -> dict:
     return status_block
 
 
-def render_cart(inventario: pd.DataFrame | None = None, foco: pd.DataFrame | None = None):
+def render_cart(inventario: pd.DataFrame | None = None, foco: pd.DataFrame | None = None, action_key=()):
     st.markdown('<h2 class="page-title">Carrinho</h2>', unsafe_allow_html=True)
 
     raw_items = st.session_state.get("cart_items", [])
@@ -106,6 +110,7 @@ def render_cart(inventario: pd.DataFrame | None = None, foco: pd.DataFrame | Non
         inv["ean"] = inv["ean"].astype(str)
         inv["preco_sem_imposto"] = pd.to_numeric(inv.get("preco_sem_imposto", 0), errors="coerce").fillna(0.0)
         inv["estoque"] = pd.to_numeric(inv.get("estoque", 0), errors="coerce").fillna(0).astype(int)
+        inv["desconto"] = pd.to_numeric(inv.get("desconto", 0), errors="coerce").fillna(0.0)
 
     header_df = build_order_dataframe(items)
     header = header_df.iloc[0].to_dict() if not header_df.empty else {}
@@ -155,13 +160,27 @@ def render_cart(inventario: pd.DataFrame | None = None, foco: pd.DataFrame | Non
             choice = selected_row.iloc[0] if not selected_row.empty else variants.iloc[0]
 
             qty = st.number_input("Quantidade", min_value=0, step=1, value=int(item.get("Qtde", 0)), key=f"cart_qtd_{idx}")
-            price = _safe_float(choice.get("preco_sem_imposto", item.get("Preco", 0)), 0.0)
-            stock = _safe_int(choice.get("estoque", item.get("Estoque", 0)), 0)
+            action = find_action_for_item(
+                action_key,
+                ean=ean,
+                distribuidora=selected_dist,
+                quantidade=int(qty or 0),
+                produto=item.get("Produto", ""),
+                tipo_preferido=item.get("Tipo acao", ""),
+            )
+            choice_calc = apply_action_to_choice(choice, action) if action else choice
+            price = _safe_float(choice_calc.get("preco_sem_imposto", item.get("Preco", 0)), 0.0)
+            stock = _safe_int(choice_calc.get("estoque", item.get("Estoque", 0)), 0)
 
-            info1, info2, info3 = st.columns(3)
+            info1, info2, info3, info4 = st.columns(4)
             info1.metric("Preco", _money(price))
             info2.metric("Estoque", str(stock))
             info3.metric("Total", _money(price * qty))
+            info4.metric("Cupom", str((action or {}).get("cupom", item.get("Cupom", "")) or "-"))
+            if action:
+                st.caption(f"Acao ativa: {action.get('tipo_acao', '')} | {action.get('nome_acao', '') or 'Sem nome'}")
+            elif item.get("Acao") or item.get("Cupom"):
+                st.caption(f"Acao salva no item: {item.get('Tipo acao', '') or 'PROMO'} | {item.get('Acao', '') or '-'}")
 
             if st.button("Remover item", key=f"del_{idx}", use_container_width=True):
                 remove_idx = idx
@@ -170,6 +189,9 @@ def render_cart(inventario: pd.DataFrame | None = None, foco: pd.DataFrame | Non
             updated[idx]["Preco"] = price
             updated[idx]["Estoque"] = stock
             updated[idx]["Qtde"] = int(qty)
+            updated[idx]["Cupom"] = str((action or {}).get("cupom", "") or "")
+            updated[idx]["Acao"] = str((action or {}).get("nome_acao", "") or "")
+            updated[idx]["Tipo acao"] = str((action or {}).get("tipo_acao", "") or "")
 
     if remove_idx is not None:
         updated.pop(remove_idx)
@@ -191,8 +213,13 @@ def render_cart(inventario: pd.DataFrame | None = None, foco: pd.DataFrame | Non
     st.dataframe(pd.DataFrame(minimum_rows), use_container_width=True, hide_index=True)
 
     headless = st.toggle("Enviar invisivel", value=True)
-    cupom = st.text_input("Cupom de desconto (opcional)", value=st.session_state.get("mf_cupom", ""))
+    item_cupons = [str(item.get("Cupom", "") or "").strip() for item in updated if str(item.get("Cupom", "") or "").strip()]
+    item_cupons = list(dict.fromkeys(item_cupons))
+    default_cupom = st.session_state.get("mf_cupom", "") or "; ".join(item_cupons)
+    cupom = st.text_input("Cupom de desconto (opcional)", value=default_cupom)
     st.session_state["mf_cupom"] = cupom
+    if item_cupons:
+        st.caption(f"Cupons identificados nos itens: {' | '.join(item_cupons)}")
 
     payload = build_order_payload(updated, cupom=cupom, headless=headless)
     exports = build_order_exports(payload)

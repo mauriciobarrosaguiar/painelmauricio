@@ -28,6 +28,9 @@ ORDER_COLUMNS = [
     "Mix",
     "Qtde",
     "Foco",
+    "Cupom",
+    "Acao",
+    "Tipo acao",
 ]
 
 
@@ -111,6 +114,9 @@ def normalize_cart_items(cart_items: list[dict] | None) -> list[dict]:
                 "Mix": str(_first_value(item, "Mix", default="LINHA") or "LINHA"),
                 "Qtde": qtde,
                 "Foco": bool(_first_value(item, "Foco", default=False)),
+                "Cupom": str(_first_value(item, "Cupom", "cupom")),
+                "Acao": str(_first_value(item, "Acao", "Ação", "acao", "nome_acao")),
+                "Tipo acao": str(_first_value(item, "Tipo acao", "Tipo ação", "tipo_acao")),
             }
         )
     return normalized
@@ -136,6 +142,12 @@ def build_order_payload(cart_items: list[dict] | None, cupom: str = "", headless
     df = build_order_dataframe(cart_items)
     header = df.iloc[0].to_dict() if not df.empty else {}
     grouped = []
+    cupons = []
+    if cupom:
+        cupons.append(str(cupom).strip())
+    if not df.empty and "Cupom" in df.columns:
+        cupons.extend([str(c).strip() for c in df["Cupom"].dropna().tolist() if str(c).strip()])
+    cupons = list(dict.fromkeys(cupons))
 
     if not df.empty:
         resumo_dist = (
@@ -156,6 +168,7 @@ def build_order_payload(cart_items: list[dict] | None, cupom: str = "", headless
     return {
         "gerado_em": datetime.now(TZ_BR).isoformat(),
         "cupom": str(cupom or "").strip(),
+        "cupons": cupons,
         "headless": bool(headless),
         "cliente": {
             "Cliente": header.get("Cliente", ""),
@@ -204,7 +217,7 @@ def build_order_exports(payload: dict) -> dict[str, bytes]:
 
     for _, row in df.iterrows():
         linhas.append(
-            f"{row['CNPJ']}; {row['EAN']}; {row['Produto']}; {row['Distribuidora']}; {int(row['Qtde'])}; {_money(row['Preco'])}; {_money(row['Total'])}"
+            f"{row['CNPJ']}; {row['EAN']}; {row['Produto']}; {row['Distribuidora']}; {int(row['Qtde'])}; {_money(row['Preco'])}; {_money(row['Total'])}; Cupom: {row.get('Cupom', '') or '-'}"
         )
 
     txt_bytes = "\n".join(linhas).encode("utf-8-sig")

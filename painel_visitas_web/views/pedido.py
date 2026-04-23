@@ -8,6 +8,8 @@ import unicodedata
 import pandas as pd
 import streamlit as st
 
+from services.discount_actions import apply_action_to_choice, combo_groups, find_action_for_item
+
 
 def _money(value):
     try:
@@ -166,6 +168,8 @@ def render_pedido(
     produtos: pd.DataFrame | None = None,
     foco: pd.DataFrame | None = None,
     clientes_df: pd.DataFrame | None = None,
+    action_records: list[dict] | None = None,
+    action_key=(),
 ):
     st.markdown('<h2 class="page-title">Montar pedido</h2>', unsafe_allow_html=True)
     clientes = _merge_clientes(score_df.copy(), clientes_df)
@@ -295,6 +299,44 @@ def render_pedido(
         inv["estoque"] = pd.to_numeric(inv.get("estoque", 0), errors="coerce").fillna(0)
         inv["desconto"] = pd.to_numeric(inv.get("desconto", 0), errors="coerce").fillna(0)
 
+    def _remember_coupon(cupom: str):
+        cupom = str(cupom or "").strip()
+        if not cupom:
+            return
+        atual = [item.strip() for item in str(st.session_state.get("mf_cupom", "") or "").split(";") if item.strip()]
+        if cupom not in atual:
+            atual.append(cupom)
+        st.session_state["mf_cupom"] = "; ".join(atual)
+
+    def _find_catalog_row(ean: str, produto_nome: str):
+        ean = str(ean or "")
+        if ean and not catalogo.empty:
+            match = catalogo[catalogo["ean"].astype(str) == ean]
+            if not match.empty:
+                return match.iloc[0]
+        if produto_nome and not catalogo.empty:
+            alvo = _norm(produto_nome)
+            match = catalogo[catalogo["principio_ativo"].astype(str).map(lambda value: _norm(value) == alvo)]
+            if not match.empty:
+                return match.iloc[0]
+        return pd.Series({"ean": ean, "principio_ativo": produto_nome, "mix_lancamentos": "LINHA"})
+
+    def _find_inventory_choice(ean: str, produto_nome: str, distribuidora: str):
+        if inv.empty:
+            return None
+        base = inv[inv["distribuidora"].astype(str) == str(distribuidora or "")]
+        ean = str(ean or "")
+        if ean:
+            match = base[base["ean"].astype(str) == ean]
+            if not match.empty:
+                return match.sort_values(["preco_sem_imposto", "estoque"], ascending=[True, False]).iloc[0]
+        if produto_nome:
+            alvo = _norm(produto_nome)
+            match = base[base["principio_ativo"].astype(str).map(lambda value: _norm(value) == alvo)]
+            if not match.empty:
+                return match.sort_values(["preco_sem_imposto", "estoque"], ascending=[True, False]).iloc[0]
+        return None
+
     filtros = st.columns([1.7, 1.0, 1.0, 0.7])
     busca = filtros[0].text_input("Buscar produto por nome ou EAN")
     mix_filtro = filtros[1].selectbox("Mix", ["Todos", "LANCAMENTOS", "PRIORITARIOS", "LINHA", "COMBATE"])
@@ -332,8 +374,9 @@ def render_pedido(
     catalogo_pagina = catalogo.iloc[(page - 1) * per_page : page * per_page].copy()
     st.markdown('<div class="section-title">Produtos sugeridos e catalogo completo</div>', unsafe_allow_html=True)
 
-    def _item_from_row(row: pd.Series, escolha: pd.Series, quantidade: int) -> dict:
+    def _item_from_row(row: pd.Series, escolha: pd.Series, quantidade: int, action: dict | None = None) -> dict:
         foco_flag = False if foco is None or foco.empty else str(row.get("ean", "")) in foco["ean"].astype(str).tolist()
+        escolha_calc = apply_action_to_choice(escolha, action) if action else escolha
         return {
             "Cliente": cliente_row["nome_fantasia"],
             "CNPJ": str(cnpj),
@@ -344,12 +387,56 @@ def render_pedido(
             "EAN": str(row.get("ean", "")),
             "Produto": row.get("principio_ativo", ""),
             "Distribuidora": str(escolha.get("distribuidora", "Sem distribuidora") or "Sem distribuidora"),
-            "Preco": _calc_preco_sem(escolha),
-            "Estoque": int(pd.to_numeric(escolha.get("estoque", 0), errors="coerce") or 0),
+            "Preco": _calc_preco_sem(escolha_calc),
+            "Estoque": int(pd.to_numeric(escolha_calc.get("estoque", 0), errors="coerce") or 0),
             "Mix": row.get("mix_lancamentos", "LINHA"),
             "Qtde": int(quantidade),
             "Foco": foco_flag,
+            "Cupom": str((action or {}).get("cupom", "") or ""),
+            "Acao": str((action or {}).get("nome_acao", "") or ""),
+            "Tipo acao": str((action or {}).get("tipo_acao", "") or ""),
         }
+
+    combos = combo_groups(action_records or [])
+    if combos:
+        st.markdown('<div class="section-title">Combos e campanhas cadastradas</div>', unsafe_allow_html=True)
+        combo_cols = st.columns(2)
+        for idx_combo, combo in enumerate(combos):
+            with combo_cols[idx_combo % 2]:
+                with st.container(border=True):
+                    st.markdown(f"**{combo.get('nome_acao', 'Combo')}**")
+                    st.caption(
+                        f"Distribuidora: {combo.get('distribuidora', '-')} | Cupom: {combo.get('cupom', '-') or '-'} | Validade: {pd.to_datetime(combo.get('validade'), errors='coerce').strftime('%d/%m/%Y') if pd.notna(pd.to_datetime(combo.get('validade'), errors='coerce')) else '-'}"
+                    )
+                    combo_df = pd.DataFrame(
+                        [
+                            {
+                                "Produto": item.get("produto", ""),
+                                "EAN": item.get("ean", ""),
+                                "Qtd minima": int(item.get("qtd_minima", 1) or 1),
+                                "Desconto": f"{float(pd.to_numeric(item.get('desconto', 0), errors='coerce') or 0):.2f}%".replace(".", ","),
+                            }
+                            for item in combo.get("itens", [])
+                        ]
+                    )
+                    st.dataframe(combo_df, use_container_width=True, hide_index=True)
+                    if st.button(f"Adicionar combo {idx_combo + 1}", key=f"add_combo_{idx_combo}", use_container_width=True):
+                        itens_combo = []
+                        faltantes = []
+                        for action in combo.get("itens", []):
+                            escolha = _find_inventory_choice(action.get("ean", ""), action.get("produto", ""), action.get("distribuidora", ""))
+                            if escolha is None:
+                                faltantes.append(action.get("produto", action.get("ean", "")))
+                                continue
+                            row_ref = _find_catalog_row(action.get("ean", ""), action.get("produto", ""))
+                            quantidade = int(action.get("qtd_minima", 1) or 1)
+                            itens_combo.append(_item_from_row(row_ref, escolha, quantidade, action=action))
+                        if itens_combo:
+                            adicionados = _add_to_cart(itens_combo)
+                            _remember_coupon(combo.get("cupom", ""))
+                            st.success(f"{adicionados if adicionados else len(itens_combo)} item(ns) do combo adicionados ao carrinho.")
+                        if faltantes:
+                            st.warning(f"Itens sem estoque/localizacao no Mercado Farma: {', '.join(faltantes[:4])}")
 
     def _collect_visible_items() -> list[dict]:
         itens = []
@@ -376,7 +463,14 @@ def render_pedido(
             dist = st.session_state.get(f"dist_{cnpj}_{ean}", opcoes[0])
             escolha_df = variantes[variantes["distribuidora"] == dist]
             escolha = escolha_df.iloc[0] if not escolha_df.empty else variantes.iloc[0]
-            itens.append(_item_from_row(row, escolha, quantidade))
+            action = find_action_for_item(
+                action_key,
+                ean=ean,
+                distribuidora=dist,
+                quantidade=quantidade,
+                produto=row.get("principio_ativo", ""),
+            )
+            itens.append(_item_from_row(row, escolha, quantidade, action=action))
         return itens
 
     action_cols = st.columns(2)
@@ -420,23 +514,41 @@ def render_pedido(
                 escolha_dist = st.selectbox("Distribuidora", opcoes, index=opcoes.index(default_dist), key=f"dist_{cnpj}_{ean}")
                 escolha_df = variantes[variantes["distribuidora"] == escolha_dist]
                 escolha = escolha_df.iloc[0] if not escolha_df.empty else variantes.iloc[0]
+                quantidade = st.number_input("Quantidade", min_value=0, step=1, key=f"qty_{cnpj}_{ean}")
+                quantidade_preview = max(1, int(quantidade or 0))
+                action = find_action_for_item(
+                    action_key,
+                    ean=ean,
+                    distribuidora=escolha_dist,
+                    quantidade=quantidade_preview,
+                    produto=row.get("principio_ativo", ""),
+                )
+                escolha_calc = apply_action_to_choice(escolha, action) if action else escolha
                 st.markdown(
                     (
                         f"<span class='inventory-pill'>{escolha_dist}</span>"
-                        f"<span class='inventory-pill'>Estoque: {int(pd.to_numeric(escolha.get('estoque', 0), errors='coerce') or 0)}</span>"
-                        f"<span class='inventory-pill'>Desc.: {float(pd.to_numeric(escolha.get('desconto', 0), errors='coerce') or 0):.1f}%</span>"
+                        f"<span class='inventory-pill'>Estoque: {int(pd.to_numeric(escolha_calc.get('estoque', 0), errors='coerce') or 0)}</span>"
+                        f"<span class='inventory-pill'>Desc.: {float(pd.to_numeric(escolha_calc.get('desconto', 0), errors='coerce') or 0):.1f}%</span>"
                     ),
                     unsafe_allow_html=True,
                 )
+                if action:
+                    st.markdown(
+                        (
+                            f"<span class='inventory-pill'>Acao: {action.get('tipo_acao', '')}</span>"
+                            f"<span class='inventory-pill'>Cupom: {action.get('cupom', '-') or '-'}</span>"
+                        ),
+                        unsafe_allow_html=True,
+                    )
                 m1, m2 = st.columns(2)
-                m1.metric("Sem imposto", _money(_calc_preco_sem(escolha)))
-                m2.metric("PF Dist", _money(pd.to_numeric(escolha.get("pf_dist", 0), errors="coerce") or 0))
-                quantidade = st.number_input("Quantidade", min_value=0, step=1, key=f"qty_{cnpj}_{ean}")
+                m1.metric("Sem imposto", _money(_calc_preco_sem(escolha_calc)))
+                m2.metric("PF Dist", _money(pd.to_numeric(escolha_calc.get("pf_dist", 0), errors="coerce") or 0))
                 if st.button("Adicionar ao carrinho", key=f"add_{cnpj}_{ean}", use_container_width=True):
                     if int(quantidade or 0) <= 0:
                         st.warning("Informe uma quantidade maior que zero.")
                     else:
-                        _add_to_cart([_item_from_row(row, escolha, int(quantidade))])
+                        _add_to_cart([_item_from_row(row, escolha, int(quantidade), action=action)])
+                        _remember_coupon((action or {}).get("cupom", ""))
                         st.success("Produto adicionado ao carrinho.")
 
     if st.button("Adicionar produtos com quantidade ao carrinho", use_container_width=True, key="pedido_add_bottom"):

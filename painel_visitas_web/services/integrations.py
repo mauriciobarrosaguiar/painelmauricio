@@ -1021,6 +1021,18 @@ def _mf_apply_coupon_if_any(driver: webdriver.Chrome, cupom: str):
         return False
 
 
+def _mf_unique_coupons(cupom: str = "", items: list[dict] | None = None) -> list[str]:
+    cupons = []
+    raw_values = [cupom]
+    raw_values.extend([item.get('Cupom', '') for item in (items or [])])
+    for raw in raw_values:
+        for token in re.split(r"[,;|\s]+", str(raw or "").strip()):
+            token = token.strip()
+            if token and token not in cupons:
+                cupons.append(token)
+    return cupons
+
+
 def _mf_click_send_order(driver: webdriver.Chrome):
     _click_first(driver, None, [
         "//button[.//span[normalize-space()='Enviar pedido']]",
@@ -1162,7 +1174,8 @@ def run_mercadofarma_mass_order(
                     _log(f'Falha ao enviar item ao Mercado Farma: {ean} / {dist_desejada} / qtd {qtd} - {e}')
                     _notify(status_cb, mensagem=f'Falha no item {ean} / {dist_desejada}.', etapa='Montagem do pedido', atual=posicao + 3, total=len(itens_cnpj) + 5, erro=str(e), nivel='warning')
             try:
-                _mf_apply_coupon_if_any(driver, cupom)
+                for cupom_item in _mf_unique_coupons(cupom, itens_cnpj):
+                    _mf_apply_coupon_if_any(driver, cupom_item)
                 _notify(status_cb, mensagem='Pedido montado. Enviando para confirmacao final.', etapa='Confirmacao final', atual=len(itens_cnpj) + 4, total=len(itens_cnpj) + 5)
                 _mf_click_send_order(driver)
                 _mf_confirm_send_even_if_overstock(driver)
