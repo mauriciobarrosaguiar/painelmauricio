@@ -18,7 +18,9 @@
   "addl_discount_exclusions": {
     "Nazaria - MA - Imperatriz": [],
     "Nazaria - TO": [],
-    "Panpharma - GO": [],
+    "Panpharma - GO": [
+      "7896004706795 - Losartana Potássica 50 mg Caixa 30 Comprimidos Revestidos"
+    ],
     "Profarma - DF": [],
     "Santa Cruz - GO": [],
     "Total - TO": []
