@@ -71,7 +71,7 @@ def _metric_goal(label: str, atual: float, meta: float, *, money: bool = True, h
         help_html = atingimento
     if meta:
         targets_html = "".join(
-            f'<span class="metric-target-pill">{int(level * 100)}%: {_format_gap(max(0.0, meta * level - atual), money)}</span>'
+            f'<span class="metric-target-pill">Falta {int(level * 100)}%: {_format_gap(max(0.0, meta * level - atual), money)}</span>'
             for level in (0.8, 0.9, 1.0)
         )
         footer = f'<div class="metric-target-line">{targets_html}</div>'
@@ -281,7 +281,6 @@ def render_dashboard(
     total_combate = float(pd.to_numeric(base.get("ol_combate", 0), errors="coerce").fillna(0).sum())
     total_prio = float(pd.to_numeric(base.get("ol_prioritarios", 0), errors="coerce").fillna(0).sum())
     total_lanc = float(pd.to_numeric(base.get("ol_lancamentos", 0), errors="coerce").fillna(0).sum())
-    clientes_com_ol = int((pd.to_numeric(base.get("ol_sem_combate", 0), errors="coerce").fillna(0) > 0).sum())
     if clientes_df is not None and not clientes_df.empty and "cnpj" in clientes_df.columns:
         total_cnpjs_base = int(clientes_df["cnpj"].astype(str).map(_digits).replace("", pd.NA).dropna().nunique())
     else:
@@ -352,17 +351,15 @@ def render_dashboard(
             float(clientes_com_venda),
             float(metas.get("meta_clientes", 0) or 0),
             money=False,
-            help_text="Venda sem combate",
+            help_text="Meta de clientes com compra",
         )
 
-    row2 = st.columns(4)
+    row2 = st.columns(3)
     with row2[0]:
         _metric("Combate", _money(total_combate), "Valor de combate no periodo")
     with row2[1]:
         _metric("Faturado do periodo", _money(faturado_periodo), "Base refletida pelas ultimas cargas")
     with row2[2]:
-        _metric("Clientes com OL", str(clientes_com_ol), "Clientes com oportunidade no periodo")
-    with row2[3]:
         _metric("Sem venda", str(clientes_sem_venda), f"{total_cnpjs_base} CNPJs - {clientes_com_venda} com venda")
 
     st.markdown('<div class="section-title">Clientes para visitar</div>', unsafe_allow_html=True)
