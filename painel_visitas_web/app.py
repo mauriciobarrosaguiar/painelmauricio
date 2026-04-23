@@ -493,8 +493,8 @@ if page == 'Dashboard':
     _, _, clientes_g, foco_g, inventario_g, _, base_full_g, _, _, score_df_g, oportunidades_g, _ = _views_for('Todas')
     render_dashboard(score_df_g, oportunidades_g, foco_g, inventario_g, clientes_g, base_full_g, data_inicio=data_inicio, data_fim=data_fim)
 elif page == 'Ações':
-    _, _, _, _, inventario_g, _, _, _, _, _, _, _ = _views_for('Todas')
-    render_acoes_desconto(inventario_g, discount_actions_records)
+    _, _, clientes_g, foco_g, inventario_g, _, base_full_g, _, _, score_df_g, _, _ = _views_for('Todas')
+    render_acoes_desconto(inventario_g, discount_actions_records, score_df=score_df_g, clientes_df=clientes_g, base_full=base_full_g, foco=foco_g, action_key=acoes_desconto_key)
 elif page == 'Clientes':
     pedidos, produtos, clientes, foco, inventario, base, base_full, resumo, gap, score_df, oportunidades, cancelados = _views_for(cidade_global)
     if not score_df.empty:
