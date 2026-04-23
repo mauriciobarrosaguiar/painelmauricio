@@ -219,11 +219,11 @@
     }
   },
   "mercadofarma": {
-    "ultimo_sucesso": "20/04/2026 10:49:47",
+    "ultimo_sucesso": "23/04/2026 18:53:53",
     "status": "ok",
     "mensagem": "Mercado Farma atualizado.",
-    "ultimo_comando_id": "cmd_1776691486787",
-    "atualizado_em": "20/04/2026 10:49:47",
+    "ultimo_comando_id": "cmd_1776979666714",
+    "atualizado_em": "23/04/2026 18:53:53",
     "etapa_atual": "Concluido",
     "erro": "",
     "resumo": {
@@ -231,202 +231,202 @@
     },
     "eventos": [
       {
-        "quando": "20/04/2026 10:48:08",
+        "quando": "23/04/2026 18:52:12",
         "texto": "Consultando EAN 384/418: 7896004787336",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:11",
+        "quando": "23/04/2026 18:52:15",
         "texto": "Consultando EAN 385/418: 7896004787343",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:14",
+        "quando": "23/04/2026 18:52:18",
         "texto": "Consultando EAN 386/418: 7896004787725",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:18",
+        "quando": "23/04/2026 18:52:21",
         "texto": "Consultando EAN 387/418: 7896004789828",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:20",
+        "quando": "23/04/2026 18:52:24",
         "texto": "Consultando EAN 388/418: 7896004789835",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:23",
+        "quando": "23/04/2026 18:52:26",
         "texto": "Consultando EAN 389/418: 7896004790152",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:26",
+        "quando": "23/04/2026 18:52:30",
         "texto": "Consultando EAN 390/418: 7896004790169",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:29",
-        "texto": "Parcial salva com 1491 linhas.",
+        "quando": "23/04/2026 18:52:33",
+        "texto": "Parcial salva com 1477 linhas.",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:29",
+        "quando": "23/04/2026 18:52:33",
         "texto": "Consultando EAN 391/418: 7896004791104",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:32",
+        "quando": "23/04/2026 18:52:36",
         "texto": "Consultando EAN 392/418: 7896004791111",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:35",
+        "quando": "23/04/2026 18:52:39",
         "texto": "Consultando EAN 393/418: 7896004791418",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:38",
+        "quando": "23/04/2026 18:52:42",
         "texto": "Consultando EAN 394/418: 7896004791456",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:40",
+        "quando": "23/04/2026 18:52:45",
         "texto": "Consultando EAN 395/418: 7896004792040",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:44",
+        "quando": "23/04/2026 18:52:48",
         "texto": "Consultando EAN 396/418: 7896004792057",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:47",
+        "quando": "23/04/2026 18:52:51",
         "texto": "Consultando EAN 397/418: 7896004792286",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:50",
+        "quando": "23/04/2026 18:52:54",
         "texto": "Consultando EAN 398/418: 7896004792293",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:53",
+        "quando": "23/04/2026 18:52:57",
         "texto": "Consultando EAN 399/418: 7896004792309",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:56",
+        "quando": "23/04/2026 18:53:00",
         "texto": "Consultando EAN 400/418: 7896004792316",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:58",
-        "texto": "Parcial salva com 1531 linhas.",
+        "quando": "23/04/2026 18:53:03",
+        "texto": "Parcial salva com 1515 linhas.",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:48:58",
+        "quando": "23/04/2026 18:53:03",
         "texto": "Consultando EAN 401/418: 7896004792323",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:01",
+        "quando": "23/04/2026 18:53:06",
         "texto": "Consultando EAN 402/418: 7896004793429",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:03",
+        "quando": "23/04/2026 18:53:08",
         "texto": "Consultando EAN 403/418: 7896004793436",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:06",
+        "quando": "23/04/2026 18:53:11",
         "texto": "Consultando EAN 404/418: 7896004793719",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:09",
+        "quando": "23/04/2026 18:53:14",
         "texto": "Consultando EAN 405/418: 7896004793801",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:11",
+        "quando": "23/04/2026 18:53:16",
         "texto": "Consultando EAN 406/418: 7896004793818",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:14",
+        "quando": "23/04/2026 18:53:20",
         "texto": "Consultando EAN 407/418: 7896004793825",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:17",
+        "quando": "23/04/2026 18:53:23",
         "texto": "Consultando EAN 408/418: 7896004793931",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:20",
+        "quando": "23/04/2026 18:53:26",
         "texto": "Consultando EAN 409/418: 7896004794044",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:23",
+        "quando": "23/04/2026 18:53:29",
         "texto": "Consultando EAN 410/418: 7896004794051",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:26",
-        "texto": "Parcial salva com 1560 linhas.",
+        "quando": "23/04/2026 18:53:32",
+        "texto": "Parcial salva com 1545 linhas.",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:26",
+        "quando": "23/04/2026 18:53:32",
         "texto": "Consultando EAN 411/418: 7896004794068",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:29",
+        "quando": "23/04/2026 18:53:35",
         "texto": "Consultando EAN 412/418: 7896004794075",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:31",
+        "quando": "23/04/2026 18:53:37",
         "texto": "Consultando EAN 413/418: 7896004794174",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:34",
+        "quando": "23/04/2026 18:53:40",
         "texto": "Consultando EAN 414/418: 7896004794198",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:37",
+        "quando": "23/04/2026 18:53:43",
         "texto": "Consultando EAN 415/418: 7896004795041",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:40",
+        "quando": "23/04/2026 18:53:46",
         "texto": "Consultando EAN 416/418: 7896004795058",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:42",
+        "quando": "23/04/2026 18:53:48",
         "texto": "Consultando EAN 417/418: 7896004795065",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:45",
+        "quando": "23/04/2026 18:53:51",
         "texto": "Consultando EAN 418/418: 7896004796352",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:47",
+        "quando": "23/04/2026 18:53:53",
         "texto": "Mercado Farma atualizado com sucesso: Estoque_preco_distribuidora.xlsx",
         "nivel": "info"
       },
       {
-        "quando": "20/04/2026 10:49:47",
+        "quando": "23/04/2026 18:53:53",
         "texto": "Mercado Farma atualizado.",
         "nivel": "info"
       }
@@ -505,8 +505,8 @@
   },
   "github_actions": {
     "status": "ok",
-    "mensagem": "Bussola atualizado.",
-    "atualizado_em": "23/04/2026 18:49:31",
+    "mensagem": "Mercado Farma atualizado.",
+    "atualizado_em": "23/04/2026 18:53:53",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",
