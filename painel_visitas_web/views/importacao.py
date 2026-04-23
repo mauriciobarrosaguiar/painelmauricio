@@ -9,15 +9,18 @@ import pandas as pd
 import streamlit as st
 
 from config import CLIENTES_FILE, DATA_DIR, FOCO_SEMANA_FILE, INVENTARIO_FILE, PEDIDOS_FILE, PRODUTOS_CANONICAL_FILE, PRODUTOS_FILE
+from services.discount_actions import actions_to_dataframe, parse_discount_actions
 from services.integrations import IntegracaoCreds, choose_low_production_cnpj, load_creds, read_last_logs, save_creds
 from services.order_builder import build_order_dataframe
 from services.repo_state import (
     command_to_monitor_block,
     enqueue_command,
+    load_discount_actions,
     load_commands,
     load_latest_command,
     load_recent_workflow_runs,
     load_status,
+    save_discount_actions,
 )
 from views.monitoring import render_monitor
 
@@ -66,6 +69,18 @@ def _money(value) -> str:
         return f"R$ {float(pd.to_numeric(value, errors='coerce') or 0):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     except Exception:
         return "R$ 0,00"
+
+
+def _pct(value) -> str:
+    try:
+        return f"{float(value):.2f}%".replace(".", ",")
+    except Exception:
+        return "0,00%"
+
+
+def _format_date(value: str) -> str:
+    dt = pd.to_datetime(value, errors="coerce")
+    return "-" if pd.isna(dt) else dt.strftime("%d/%m/%Y")
 
 
 def _pedido_monitor_block(status: dict) -> dict:
@@ -138,7 +153,7 @@ def _base_card(label: str, value: str):
     )
 
 
-def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFrame | None = None):
+def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFrame | None = None, inventario: pd.DataFrame | None = None):
     st.markdown('<h2 class="page-title">Importacao</h2>', unsafe_allow_html=True)
     st.caption("Automacoes, bases e acompanhamento das rotinas.")
 
@@ -250,6 +265,64 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
             _replace_produtos_upload(up_prod)
             st.cache_data.clear()
             st.success("Base de produtos atualizada. A planilha antiga foi substituida.")
+
+    st.markdown("### Acoes de desconto")
+    inv_ref = inventario.copy() if isinstance(inventario, pd.DataFrame) else pd.DataFrame()
+    dist_options = ["Usar coluna da planilha"]
+    if not inv_ref.empty and "distribuidora" in inv_ref.columns:
+        dist_options += sorted([d for d in inv_ref["distribuidora"].dropna().astype(str).unique().tolist() if d])
+    a1, a2 = st.columns([1.1, 0.9])
+    default_dist = a1.selectbox("Distribuidora padrao", dist_options, key="acoes_dist_padrao")
+    validade_padrao = a2.date_input("Validade padrao", format="DD/MM/YYYY", key="acoes_validade_padrao")
+    pasted = st.text_area(
+        "Cole aqui as acoes copiadas da planilha",
+        placeholder="EAN\tPRODUTO\tDESCONTO\tDISTRIBUIDORA\tCUPOM\tVALIDADE DA ACAO",
+        height=150,
+        key="acoes_coladas_texto",
+    )
+    c1, c2 = st.columns([1, 1])
+    if c1.button("Adicionar acoes coladas", use_container_width=True, key="btn_adicionar_acoes_coladas"):
+        default = "" if default_dist == "Usar coluna da planilha" else default_dist
+        records, errors = parse_discount_actions(pasted, default_distribuidora=default, default_validade=validade_padrao)
+        if records:
+            state = load_discount_actions()
+            current = list(state.get("acoes", []) or [])
+            current.extend(records)
+            ok, msg = save_discount_actions({"acoes": current})
+            st.cache_data.clear()
+            (st.success if ok else st.warning)(f"{len(records)} acao(oes) adicionada(s). {msg}")
+        if errors:
+            st.warning(" | ".join(errors[:5]))
+    if c2.button("Remover acoes vencidas", use_container_width=True, key="btn_remover_acoes_vencidas"):
+        state = load_discount_actions()
+        df_actions = actions_to_dataframe(state.get("acoes", []))
+        keep = df_actions[df_actions["status"] == "Vigente"].to_dict("records") if not df_actions.empty else []
+        ok, msg = save_discount_actions({"acoes": keep})
+        st.cache_data.clear()
+        (st.success if ok else st.warning)(f"Acoes vencidas removidas. {msg}")
+
+    actions_state = load_discount_actions()
+    actions_df = actions_to_dataframe(actions_state.get("acoes", []))
+    with st.expander("Acoes cadastradas", expanded=False):
+        if actions_df.empty:
+            st.caption("Nenhuma acao cadastrada.")
+        else:
+            show_actions = actions_df.copy()
+            show_actions.rename(
+                columns={
+                    "ean": "EAN",
+                    "produto": "Produto",
+                    "desconto": "Desconto",
+                    "distribuidora": "Distribuidora",
+                    "cupom": "Cupom",
+                    "validade": "Validade",
+                    "status": "Status",
+                },
+                inplace=True,
+            )
+            show_actions["Desconto"] = show_actions["Desconto"].map(_pct)
+            show_actions["Validade"] = show_actions["Validade"].map(_format_date)
+            st.dataframe(show_actions, use_container_width=True, hide_index=True)
 
     st.markdown("### Modelos")
     tpl_cli = pd.DataFrame(columns=["SETOR", "CNPJ", "RAZAO SOCIAL", "NOME FANTASIA", "ENDERECO", "BAIRRO", "CIDADE", "UF", "CEP", "NOME CONTATO", "CONTATO"])

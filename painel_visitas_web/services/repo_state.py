@@ -282,6 +282,14 @@ def save_user_config(cfg: dict):
     return repo_save_json("data/config_usuario.json", cfg, "Atualizar configurações do painel")
 
 
+def load_discount_actions() -> dict:
+    return repo_load_json("data/descontos_acoes.json", {"acoes": []}, prefer_remote=False)
+
+
+def save_discount_actions(data: dict):
+    return repo_save_json("data/descontos_acoes.json", data, "Atualizar acoes de desconto")
+
+
 def load_status() -> dict:
     return repo_load_json(
         "data/status_atualizacao.json",

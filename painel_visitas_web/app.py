@@ -8,6 +8,7 @@ from services.loaders import load_pedidos, load_produtos, load_clientes, load_fo
 from services.cleaning import clean_pedidos, clean_produtos, clean_clientes, clean_foco_semana, clean_inventario
 from services.analytics import enrich_pedidos, build_cliente_resumo, build_gap_por_cliente, build_oportunidades_cliente, build_cancelados_cliente
 from services.scoring import score_clientes
+from services.discount_actions import actions_to_key, apply_discount_actions
 from views.dashboard import render_dashboard
 from views.clientes import render_clientes
 from views.importacao import render_importacao
@@ -15,8 +16,9 @@ from views.pedido import render_pedido
 from views.busca_inteligente import render_busca_inteligente
 from views.cart import render_cart
 from views.sip import render_sip
+from views.acoes_desconto import render_acoes_desconto
 from config import COR_BORDA, COR_PRIMARIA, COR_TEXTO
-from services.repo_state import load_user_config, save_user_config, load_status
+from services.repo_state import load_discount_actions, load_user_config, save_user_config, load_status
 
 TZ_BR = ZoneInfo("America/Sao_Paulo")
 
@@ -246,7 +248,18 @@ def get_clean_bases(data_version_key: str = ''):
     return pedidos, produtos, clientes, foco, inventario, base_full
 
 @st.cache_data(show_spinner=False)
-def compute_views(data_version_key: str, foco_manual_key: tuple[str, ...], cidade_key: str, preferencias_key: tuple[tuple[str, str], ...], data_inicio=None, data_fim=None, distrib_visiveis: tuple[str, ...] = (), descontos_adic: tuple[tuple[str, float], ...] = (), descontos_exc: tuple[tuple[str, str], ...] = ()): 
+def compute_views(
+    data_version_key: str,
+    foco_manual_key: tuple[str, ...],
+    cidade_key: str,
+    preferencias_key: tuple[tuple[str, str], ...],
+    data_inicio=None,
+    data_fim=None,
+    distrib_visiveis: tuple[str, ...] = (),
+    descontos_adic: tuple[tuple[str, float], ...] = (),
+    descontos_exc: tuple[tuple[str, str], ...] = (),
+    acoes_desconto_key: tuple[tuple[str, str, float, str, str, str], ...] = (),
+):
     pedidos, produtos, clientes, foco, inventario, base_full = get_clean_bases(data_version_key)
     foco = foco.copy()
     if foco_manual_key:
@@ -255,19 +268,26 @@ def compute_views(data_version_key: str, foco_manual_key: tuple[str, ...], cidad
         foco_manual['observacao'] = 'selecionado manualmente'
         foco = pd.concat([foco, foco_manual[['ean', 'principio_ativo', 'peso_foco', 'observacao']]], ignore_index=True).drop_duplicates('ean')
     if not inventario.empty:
+        inventario = apply_discount_actions(inventario, acoes_desconto_key)
         if distrib_visiveis:
             inventario = inventario[inventario['distribuidora'].astype(str).isin(list(distrib_visiveis))].copy()
         if descontos_adic:
+            if 'acao_desconto' not in inventario.columns:
+                inventario['acao_desconto'] = False
+            acao_mask = inventario['acao_desconto'].fillna(False).astype(bool)
+            normal_mask = ~acao_mask
             mapa = {k: float(v) for k, v in descontos_adic}
             exc_map = {k: set(v.split('|')) if isinstance(v, str) and v else set() for k, v in descontos_exc}
-            inventario['desconto_adicional'] = inventario['distribuidora'].map(mapa).fillna(0.0)
+            inventario['desconto_adicional'] = 0.0
+            inventario.loc[normal_mask, 'desconto_adicional'] = inventario.loc[normal_mask, 'distribuidora'].map(mapa).fillna(0.0)
             exc_mask = inventario.apply(lambda r: str(r.get('ean','')) in exc_map.get(str(r.get('distribuidora','')), set()), axis=1) if descontos_exc else pd.Series(False, index=inventario.index)
+            exc_mask = exc_mask & normal_mask
             inventario.loc[exc_mask, 'desconto_adicional'] = 0.0
             inventario['desconto_total'] = inventario['desconto'].fillna(0) + inventario['desconto_adicional']
             inventario['pf_base_sem'] = (inventario['preco_sem_imposto'] / (1 - (inventario['desconto'].fillna(0) / 100)).clip(lower=0.0001)).replace([pd.NA, pd.NaT], 0)
-            inventario['pf_dist'] = inventario['pf_base_sem'].where(inventario['pf_base_sem'] > 0, inventario['pf_dist'])
-            inventario['preco_sem_imposto'] = (inventario['pf_dist'] * (1 - (inventario['desconto_total'] / 100))).round(2)
-            inventario['desconto'] = inventario['desconto_total']
+            inventario.loc[normal_mask, 'pf_dist'] = inventario.loc[normal_mask, 'pf_base_sem'].where(inventario.loc[normal_mask, 'pf_base_sem'] > 0, inventario.loc[normal_mask, 'pf_dist'])
+            inventario.loc[normal_mask, 'preco_sem_imposto'] = (inventario.loc[normal_mask, 'pf_dist'] * (1 - (inventario.loc[normal_mask, 'desconto_total'] / 100))).round(2)
+            inventario.loc[normal_mask, 'desconto'] = inventario.loc[normal_mask, 'desconto_total']
     base = base_full.copy()
     if data_inicio is not None and data_fim is not None and 'data_do_pedido' in base.columns:
         ini = pd.to_datetime(data_inicio)
@@ -303,6 +323,9 @@ data_version_key = '|'.join([
 ])
 
 persist_cfg = load_user_config()
+discount_actions_state = load_discount_actions()
+discount_actions_records = list(discount_actions_state.get('acoes', []) or [])
+acoes_desconto_key = actions_to_key(discount_actions_records)
 
 USER_CONFIG_KEYS = [
     'foco_semana_manual',
@@ -382,7 +405,7 @@ if 'filtro_data_final' not in st.session_state:
 with st.sidebar:
     st.markdown('<div class="sidebar-title">Painel de Visitas</div>', unsafe_allow_html=True)
     cart_n = len(st.session_state.get('cart_items', []))
-    menu_items = ['Dashboard', 'Clientes', 'Montar pedido', 'Pedido Inteligente', f'Carrinho ({cart_n})', 'SIP', 'Importação']
+    menu_items = ['Dashboard', 'Ações', 'Clientes', 'Montar pedido', 'Pedido Inteligente', f'Carrinho ({cart_n})', 'SIP', 'Importação']
     for item in menu_items:
         page_name = 'Carrinho' if item.startswith('Carrinho') else item
         is_active = st.session_state.page == page_name
@@ -460,6 +483,7 @@ def _views_for(cidade: str):
         tuple(st.session_state.visible_dists),
         descontos_key,
         exclusoes_key,
+        acoes_desconto_key,
     )
 
 
@@ -468,6 +492,9 @@ page = st.session_state.page
 if page == 'Dashboard':
     _, _, clientes_g, foco_g, inventario_g, _, base_full_g, _, _, score_df_g, oportunidades_g, _ = _views_for('Todas')
     render_dashboard(score_df_g, oportunidades_g, foco_g, inventario_g, clientes_g, base_full_g, data_inicio=data_inicio, data_fim=data_fim)
+elif page == 'Ações':
+    _, _, _, _, inventario_g, _, _, _, _, _, _, _ = _views_for('Todas')
+    render_acoes_desconto(inventario_g, discount_actions_records)
 elif page == 'Clientes':
     pedidos, produtos, clientes, foco, inventario, base, base_full, resumo, gap, score_df, oportunidades, cancelados = _views_for(cidade_global)
     if not score_df.empty:
@@ -500,5 +527,5 @@ elif page == 'SIP':
     render_sip(score_df_g, clientes_g)
 else:
     _, _, _, _, _, _, _, _, _, score_df_g, _, _ = _views_for('Todas')
-    render_importacao(score_df_g, produtos_ref)
+    render_importacao(score_df_g, produtos_ref, inventario_ref)
 

@@ -144,16 +144,27 @@ def _numeric_series(df: pd.DataFrame, candidates: list[str]) -> pd.Series:
     return pd.to_numeric(df[col], errors="coerce").fillna(0.0)
 
 
-def _build_period_sales(base_full: pd.DataFrame) -> tuple[dict[str, float], dict[str, bool]]:
+def _build_period_sales(base_full: pd.DataFrame, sem_combate: bool = False) -> tuple[dict[str, float], dict[str, bool]]:
     if base_full is None or base_full.empty:
         return {}, {}
     cnpj_col = _first_existing(base_full, ["cnpj", "cnpj_pdv"])
     if cnpj_col is None:
         return {}, {}
-    faturado = _numeric_series(base_full, ["total_faturado", "valor_faturado", "faturado", "total fat.", "total_fat"])
+    aux_base = base_full.copy()
+    status_col = _first_existing(aux_base, ["status_pedido", "status"])
+    if status_col:
+        status = aux_base[status_col].astype(str).str.upper().str.strip()
+        aux_base = aux_base[status.isin(["FATURADO", "FATURADO PARCIAL"])]
+    mix_col = _first_existing(aux_base, ["mix_lancamentos", "mix"])
+    if sem_combate and mix_col:
+        mix = aux_base[mix_col].astype(str).str.upper().str.strip()
+        aux_base = aux_base[mix.ne("COMBATE")]
+    if aux_base.empty:
+        return {}, {}
+    faturado = _numeric_series(aux_base, ["total_faturado", "valor_faturado", "faturado", "total fat.", "total_fat"])
     if faturado.empty:
-        faturado = _numeric_series(base_full, ["total_solicitado", "valor_solicitado"])
-    aux = pd.DataFrame({"cnpj": base_full[cnpj_col].astype(str), "faturado": faturado})
+        faturado = _numeric_series(aux_base, ["total_solicitado", "valor_solicitado"])
+    aux = pd.DataFrame({"cnpj": aux_base[cnpj_col].astype(str), "faturado": faturado})
     aux["cnpj"] = aux["cnpj"].map(_digits)
     aux = aux[aux["cnpj"] != ""]
     grouped = aux.groupby("cnpj", dropna=False)["faturado"].sum()
@@ -217,26 +228,33 @@ def render_dashboard(
         return
 
     base_full = base_full.copy() if isinstance(base_full, pd.DataFrame) else pd.DataFrame()
-    venda_periodo, comprou_periodo = _build_period_sales(base_full)
+    venda_total_periodo, _ = _build_period_sales(base_full, sem_combate=False)
+    venda_periodo, comprou_periodo = _build_period_sales(base_full, sem_combate=True)
     base["cnpj_norm"] = base.get("cnpj", pd.Series(dtype=str)).astype(str).map(_digits)
+    base = base[base["cnpj_norm"].ne("")].drop_duplicates("cnpj_norm").copy()
     base["venda_periodo"] = base["cnpj_norm"].map(venda_periodo).fillna(0.0)
-    base["comprou_periodo"] = base["cnpj_norm"].map(comprou_periodo).fillna(False)
+    base["comprou_periodo"] = base["cnpj_norm"].map(comprou_periodo).fillna(False).astype(bool)
 
     if clientes_df is not None and not clientes_df.empty:
         cols_merge = [col for col in ["cnpj", "nome_contato", "contato", "telefone_limpo"] if col in clientes_df.columns]
         if cols_merge:
             contato_ref = clientes_df[cols_merge].drop_duplicates("cnpj").copy()
-            contato_ref["cnpj"] = contato_ref["cnpj"].astype(str).map(_digits)
-            base = base.merge(contato_ref, left_on="cnpj_norm", right_on="cnpj", how="left", suffixes=("", "_cad"))
+            contato_ref["cnpj_norm"] = contato_ref["cnpj"].astype(str).map(_digits)
+            contato_ref = contato_ref[contato_ref["cnpj_norm"].ne("")].drop_duplicates("cnpj_norm")
+            base = base.merge(contato_ref.drop(columns=["cnpj"], errors="ignore"), on="cnpj_norm", how="left", suffixes=("", "_cad"))
 
     total_ol = float(pd.to_numeric(base.get("ol_sem_combate", 0), errors="coerce").fillna(0).sum())
     total_combate = float(pd.to_numeric(base.get("ol_combate", 0), errors="coerce").fillna(0).sum())
     total_prio = float(pd.to_numeric(base.get("ol_prioritarios", 0), errors="coerce").fillna(0).sum())
     total_lanc = float(pd.to_numeric(base.get("ol_lancamentos", 0), errors="coerce").fillna(0).sum())
     clientes_com_ol = int((pd.to_numeric(base.get("ol_sem_combate", 0), errors="coerce").fillna(0) > 0).sum())
-    clientes_com_venda = int(base["comprou_periodo"].sum())
-    clientes_sem_venda = int((~base["comprou_periodo"]).sum())
-    faturado_periodo = float(pd.to_numeric(base["venda_periodo"], errors="coerce").fillna(0).sum())
+    if clientes_df is not None and not clientes_df.empty and "cnpj" in clientes_df.columns:
+        total_cnpjs_base = int(clientes_df["cnpj"].astype(str).map(_digits).replace("", pd.NA).dropna().nunique())
+    else:
+        total_cnpjs_base = int(base["cnpj_norm"].nunique())
+    clientes_com_venda = int(base.loc[base["comprou_periodo"], "cnpj_norm"].nunique())
+    clientes_sem_venda = max(0, total_cnpjs_base - clientes_com_venda)
+    faturado_periodo = float(sum(venda_total_periodo.values()))
     perc_prio = (total_prio / total_ol) if total_ol else 0.0
     perc_lanc = (total_lanc / total_ol) if total_ol else 0.0
     metas = _load_metas()
@@ -295,7 +313,7 @@ def render_dashboard(
         _metric(
             "Clientes com venda",
             str(clientes_com_venda),
-            f"Atingido vs meta: {_pct(clientes_com_venda / metas.get('meta_clientes', 1)) if metas.get('meta_clientes', 0) else '-'}",
+            f"Venda sem combate | Meta: {_pct(clientes_com_venda / metas.get('meta_clientes', 1)) if metas.get('meta_clientes', 0) else '-'}",
         )
 
     row2 = st.columns(3)
@@ -304,7 +322,7 @@ def render_dashboard(
     with row2[1]:
         _metric("Clientes com OL", str(clientes_com_ol), "Clientes com oportunidade no periodo")
     with row2[2]:
-        _metric("Sem venda", str(clientes_sem_venda), "Clientes sem faturamento no periodo")
+        _metric("Sem venda", str(clientes_sem_venda), f"{total_cnpjs_base} CNPJs - {clientes_com_venda} com venda")
 
     st.markdown('<div class="section-title">Clientes para visitar</div>', unsafe_allow_html=True)
     top = base.copy()
