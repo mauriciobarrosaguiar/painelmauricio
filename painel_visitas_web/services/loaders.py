@@ -12,7 +12,7 @@ try:
 except Exception:  # pragma: no cover
     st = None
 
-from config import PEDIDOS_FILE, PRODUTOS_FILE, CLIENTES_FILE, FOCO_SEMANA_FILE, INVENTARIO_FILE
+from config import CLIENTES_FILE, FOCO_SEMANA_FILE, INVENTARIO_FILE, PEDIDOS_FILE, PRODUTOS_CANONICAL_FILE, PRODUTOS_FILE
 
 
 def _secret(name: str, default: str = "") -> str:
@@ -90,7 +90,8 @@ def load_pedidos() -> pd.DataFrame:
 
 
 def load_produtos() -> pd.DataFrame:
-    return _read_excel_local(PRODUTOS_FILE)
+    produtos_path = PRODUTOS_CANONICAL_FILE if PRODUTOS_CANONICAL_FILE.exists() else PRODUTOS_FILE
+    return _read_excel_local(produtos_path)
 
 
 def load_clientes() -> pd.DataFrame:

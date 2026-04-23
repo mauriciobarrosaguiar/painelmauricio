@@ -1,7 +1,10 @@
 from __future__ import annotations
+import re
+import unicodedata
+
 import pandas as pd
 
-def slug(texto: str) -> str:
+def _legacy_slug(texto: str) -> str:
     texto = str(texto).strip().lower()
     rep = {
         'ç':'c','ã':'a','á':'a','à':'a','â':'a','é':'e','ê':'e','í':'i','ó':'o','ô':'o','õ':'o','ú':'u','ü':'u',
@@ -12,6 +15,45 @@ def slug(texto: str) -> str:
     while '__' in texto:
         texto = texto.replace('__', '_')
     return texto.strip('_')
+
+
+def _strip_accents(texto: str) -> str:
+    texto = str(texto)
+    substituicoes = {
+        'Ã§': 'c', 'Ã£': 'a', 'Ã¡': 'a', 'Ã ': 'a', 'Ã¢': 'a',
+        'Ã©': 'e', 'Ãª': 'e', 'Ã­': 'i', 'Ã³': 'o', 'Ã´': 'o',
+        'Ãµ': 'o', 'Ãº': 'u', 'Ã¼': 'u', 'Ã‡': 'c',
+        'Ã': 'a', 'Ã€': 'a', 'Ã‚': 'a', 'Ãƒ': 'a', 'Ã‰': 'e',
+        'ÃŠ': 'e', 'Ã': 'i', 'Ã“': 'o', 'Ã”': 'o', 'Ã•': 'o',
+        'Ãš': 'u',
+    }
+    for old, new in substituicoes.items():
+        texto = texto.replace(old, new)
+    texto = unicodedata.normalize('NFKD', texto)
+    return ''.join(ch for ch in texto if not unicodedata.combining(ch))
+
+
+def slug(texto: str) -> str:
+    texto = _strip_accents(texto).strip().lower().replace('%', ' percent ')
+    texto = texto.replace('Âº', 'o')
+    texto = re.sub(r'[^a-z0-9]+', '_', texto)
+    return texto.strip('_')
+
+
+def normalize_mix_value(value) -> str:
+    texto = _strip_accents(value).upper().strip()
+    texto = re.sub(r'\s+', ' ', texto)
+    if texto in {'', 'NAN', 'NONE', '<NA>'}:
+        return 'LINHA'
+    if 'PRIORIT' in texto or 'PRIOTIR' in texto:
+        return 'PRIORITARIOS'
+    if 'LANC' in texto:
+        return 'LANCAMENTOS'
+    if 'COMBATE' in texto:
+        return 'COMBATE'
+    if 'LINHA' in texto:
+        return 'LINHA'
+    return texto
 
 def normalize_cnpj(series: pd.Series) -> pd.Series:
     return series.astype(str).str.replace(r'\D', '', regex=True).str.zfill(14)
@@ -71,10 +113,18 @@ def clean_produtos(df: pd.DataFrame) -> pd.DataFrame:
     df = _padronizar_colunas(df)
     rename_map = {
         'nome_do_produto': 'principio_ativo',
+        'nome_produto': 'principio_ativo',
+        'descricao': 'principio_ativo',
+        'principio': 'principio_ativo',
+        'principio_ativo': 'principio_ativo',
         'produto': 'principio_ativo',
         'mix': 'mix_lancamentos',
         'mix_lancamentos': 'mix_lancamentos',
         'mix_lancamento': 'mix_lancamentos',
+        'linha_combate_priotirarios_lancamentos': 'mix_lancamentos',
+        'linha_combate_prioritarios_lancamentos': 'mix_lancamentos',
+        'linha_combate_prioritario_lancamentos': 'mix_lancamentos',
+        'linha_combate_lancamentos_prioritarios': 'mix_lancamentos',
         'molecula': 'principio_ativo',
     }
     for old, new in rename_map.items():
@@ -90,6 +140,8 @@ def clean_produtos(df: pd.DataFrame) -> pd.DataFrame:
     df['principio_ativo'] = df['principio_ativo'].astype(str).str.strip()
     df['mix_lancamentos'] = df['mix_lancamentos'].astype(str).str.upper().str.strip()
     df['mix_lancamentos'] = df['mix_lancamentos'].replace({'PRIORITÁRIOS':'PRIORITARIOS', 'LANÇAMENTO':'LANCAMENTOS', 'LANCAMENTO':'LANCAMENTOS'})
+    df['mix_lancamentos'] = df['mix_lancamentos'].apply(normalize_mix_value)
+    df = df[df['ean'].ne('') | df['principio_ativo'].ne('')].copy()
     return df[['ean', 'principio_ativo', 'mix_lancamentos']].drop_duplicates()
 
 def clean_clientes(df: pd.DataFrame) -> pd.DataFrame:

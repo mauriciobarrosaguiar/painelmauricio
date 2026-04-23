@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import io
+import re
+import unicodedata
 from html import escape
 
 import pandas as pd
 import streamlit as st
 
-from config import CLIENTES_FILE, DATA_DIR, FOCO_SEMANA_FILE, INVENTARIO_FILE, PEDIDOS_FILE
+from config import CLIENTES_FILE, DATA_DIR, FOCO_SEMANA_FILE, INVENTARIO_FILE, PEDIDOS_FILE, PRODUTOS_CANONICAL_FILE, PRODUTOS_FILE
 from services.integrations import IntegracaoCreds, choose_low_production_cnpj, load_creds, read_last_logs, save_creds
 from services.order_builder import build_order_dataframe
 from services.repo_state import (
@@ -24,6 +26,24 @@ def _save_upload(uploaded_file, target_name: str):
     path = DATA_DIR / target_name
     path.write_bytes(uploaded_file.getbuffer())
     return path
+
+
+def _normalizar_nome_arquivo(texto: str) -> str:
+    texto = unicodedata.normalize("NFKD", str(texto))
+    texto = "".join(ch for ch in texto if not unicodedata.combining(ch))
+    return re.sub(r"[^a-z0-9]+", " ", texto.lower()).strip()
+
+
+def _replace_produtos_upload(uploaded_file):
+    for path in DATA_DIR.glob("*.xls*"):
+        nome = _normalizar_nome_arquivo(path.name)
+        is_produtos_mix = nome.startswith("produtos") and any(
+            token in nome
+            for token in ["mix", "ean", "combate", "prioritarios", "priotirarios", "lancamentos", "linha"]
+        )
+        if is_produtos_mix and path.resolve() != PRODUTOS_CANONICAL_FILE.resolve():
+            path.unlink(missing_ok=True)
+    return _save_upload(uploaded_file, PRODUTOS_CANONICAL_FILE.name)
 
 
 def _xlsx_bytes(df: pd.DataFrame) -> bytes:
@@ -176,14 +196,16 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
             (st.success if ok else st.error)(msg)
 
     st.markdown("### Bases em uso")
-    b1, b2, b3, b4 = st.columns(4)
+    b1, b2, b3, b4, b5 = st.columns(5)
     with b1:
         _base_card("Pedidos", PEDIDOS_FILE.name if PEDIDOS_FILE else "-")
     with b2:
         _base_card("Painel", CLIENTES_FILE.name if CLIENTES_FILE else "-")
     with b3:
-        _base_card("Foco", "-" if FOCO_SEMANA_FILE is None else FOCO_SEMANA_FILE.name)
+        _base_card("Produtos / Mix", PRODUTOS_CANONICAL_FILE.name if PRODUTOS_CANONICAL_FILE.exists() else (PRODUTOS_FILE.name if PRODUTOS_FILE else "-"))
     with b4:
+        _base_card("Foco", "-" if FOCO_SEMANA_FILE is None else FOCO_SEMANA_FILE.name)
+    with b5:
         _base_card("Estoque", INVENTARIO_FILE.name if INVENTARIO_FILE else "-")
 
     with st.expander("Credenciais e referencia", expanded=False):
@@ -209,7 +231,7 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
             st.success("Dados salvos.")
 
     st.markdown("### Atualizacao manual")
-    u1, u2 = st.columns(2)
+    u1, u2, u3 = st.columns(3)
     with u1:
         up_cli = st.file_uploader("Enviar painel de clientes", type=["xlsx"], key="upload_painel_clientes")
         if st.button("Salvar painel", use_container_width=True, disabled=up_cli is None, key="btn_salvar_painel_manual"):
@@ -222,14 +244,22 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
             _save_upload(up_foco, "FOCO_SEMANA.xlsx")
             st.cache_data.clear()
             st.success("Planilha de foco atualizada.")
+    with u3:
+        up_prod = st.file_uploader("Enviar produtos / mix", type=["xlsx"], key="upload_produtos_mix")
+        if st.button("Salvar produtos", use_container_width=True, disabled=up_prod is None, key="btn_salvar_produtos_mix"):
+            _replace_produtos_upload(up_prod)
+            st.cache_data.clear()
+            st.success("Base de produtos atualizada. A planilha antiga foi substituida.")
 
     st.markdown("### Modelos")
     tpl_cli = pd.DataFrame(columns=["SETOR", "CNPJ", "RAZAO SOCIAL", "NOME FANTASIA", "ENDERECO", "BAIRRO", "CIDADE", "UF", "CEP", "NOME CONTATO", "CONTATO"])
     tpl_foco = pd.DataFrame(columns=["EAN", "PRINCIPIO ATIVO", "PESO FOCO", "OBSERVACAO"])
+    tpl_prod = pd.DataFrame(columns=["EAN", "PRINCIPIO ATIVO", "LINHA/COMBATE/PRIORITARIOS/LANCAMENTOS"])
     mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    d1, d2 = st.columns(2)
+    d1, d2, d3 = st.columns(3)
     d1.download_button("Modelo painel", _xlsx_bytes(tpl_cli), "template_painel_clientes.xlsx", mime=mime, use_container_width=True)
     d2.download_button("Modelo foco", _xlsx_bytes(tpl_foco), "template_foco_semana.xlsx", mime=mime, use_container_width=True)
+    d3.download_button("Modelo produtos", _xlsx_bytes(tpl_prod), "template_produtos_mix.xlsx", mime=mime, use_container_width=True)
 
     if runs:
         st.markdown("### GitHub Actions")

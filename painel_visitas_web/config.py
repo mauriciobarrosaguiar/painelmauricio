@@ -1,5 +1,6 @@
 from pathlib import Path
 import re
+import unicodedata
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / 'data'
@@ -23,6 +24,8 @@ def _normalizar(texto: str) -> str:
     }
     for a, b in substituicoes.items():
         texto = texto.replace(a, b)
+    texto = unicodedata.normalize('NFKD', texto)
+    texto = ''.join(ch for ch in texto if not unicodedata.combining(ch))
     texto = texto.lower()
     texto = re.sub(r'[^a-z0-9]+', ' ', texto)
     return texto.strip()
@@ -45,8 +48,23 @@ def localizar_arquivo(*palavras_chave: str, required: bool = True) -> Path | Non
         )
     return None
 
+PRODUTOS_CANONICAL_FILE = DATA_DIR / 'PRODUTOS_MIX.xlsx'
+
+def localizar_produtos_file() -> Path | None:
+    if PRODUTOS_CANONICAL_FILE.exists():
+        return PRODUTOS_CANONICAL_FILE
+    return (
+        localizar_arquivo('produtos', 'mix', required=False)
+        or localizar_arquivo('produtos', 'combate', required=False)
+        or localizar_arquivo('produtos', 'prioritarios', required=False)
+        or localizar_arquivo('produtos', 'lancamentos', required=False)
+        or localizar_arquivo('produtos', 'linha', required=False)
+        or localizar_arquivo('produtos', 'ean', required=False)
+        or localizar_arquivo('produtos', required=False)
+    )
+
 PEDIDOS_FILE = localizar_arquivo('pedidos')
-PRODUTOS_FILE = localizar_arquivo('produtos', 'ean')
+PRODUTOS_FILE = localizar_produtos_file()
 CLIENTES_FILE = localizar_arquivo('painel')
 FOCO_SEMANA_FILE = localizar_arquivo('foco', required=False)
 INVENTARIO_FILE = localizar_arquivo('estoque', 'distribuidora', required=False) or localizar_arquivo('estoque', required=False) or localizar_arquivo('preco', required=False)
