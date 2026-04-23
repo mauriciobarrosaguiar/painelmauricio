@@ -43,6 +43,8 @@ BUSSOLA_URL = 'https://bussolaweb.bussola.mercadofarma.com.br/login'
 
 @dataclass
 class IntegracaoCreds:
+    login: str = ''
+    senha: str = ''
     bussola_login: str = ''
     bussola_senha: str = ''
     mercado_login: str = ''
@@ -130,6 +132,8 @@ def load_creds() -> IntegracaoCreds:
         if cfg.has_section('integracoes'):
             data.update(dict(cfg.items('integracoes')))
     env_map = {
+        'login': os.getenv('PAINEL_LOGIN', ''),
+        'senha': os.getenv('PAINEL_SENHA', ''),
         'bussola_login': os.getenv('BUSSOLA_LOGIN', ''),
         'bussola_senha': os.getenv('BUSSOLA_SENHA', ''),
         'mercado_login': os.getenv('MERCADOFARMA_LOGIN', ''),
@@ -139,21 +143,29 @@ def load_creds() -> IntegracaoCreds:
     for k, v in env_map.items():
         if v:
             data[k] = v
+    login_unico = str(data.get('login', '') or data.get('usuario', '') or data.get('bussola_login', '') or data.get('mercado_login', '')).strip()
+    senha_unica = str(data.get('senha', '') or data.get('bussola_senha', '') or data.get('mercado_senha', '')).strip()
     return IntegracaoCreds(
-        bussola_login=data.get('bussola_login', ''),
-        bussola_senha=data.get('bussola_senha', ''),
-        mercado_login=data.get('mercado_login', ''),
-        mercado_senha=data.get('mercado_senha', ''),
+        login=login_unico,
+        senha=senha_unica,
+        bussola_login=str(data.get('bussola_login', '') or login_unico),
+        bussola_senha=str(data.get('bussola_senha', '') or senha_unica),
+        mercado_login=str(data.get('mercado_login', '') or login_unico),
+        mercado_senha=str(data.get('mercado_senha', '') or senha_unica),
         mercado_cnpj=_clean_cnpj(data.get('mercado_cnpj', '')),
     )
 
 
 def save_creds(creds: IntegracaoCreds):
+    login_unico = str(getattr(creds, 'login', '') or creds.bussola_login or creds.mercado_login or '').strip()
+    senha_unica = str(getattr(creds, 'senha', '') or creds.bussola_senha or creds.mercado_senha or '').strip()
     payload = {
-        'bussola_login': creds.bussola_login,
-        'bussola_senha': creds.bussola_senha,
-        'mercado_login': creds.mercado_login,
-        'mercado_senha': creds.mercado_senha,
+        'login': login_unico,
+        'senha': senha_unica,
+        'bussola_login': login_unico,
+        'bussola_senha': senha_unica,
+        'mercado_login': login_unico,
+        'mercado_senha': senha_unica,
         'mercado_cnpj': _clean_cnpj(creds.mercado_cnpj),
     }
     CRED_FILE.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')

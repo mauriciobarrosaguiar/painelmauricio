@@ -13,7 +13,6 @@ from views.dashboard import render_dashboard
 from views.clientes import render_clientes
 from views.importacao import render_importacao
 from views.pedido import render_pedido
-from views.busca_inteligente import render_busca_inteligente
 from views.cart import render_cart
 from views.sip import render_sip
 from views.acoes_desconto import render_acoes_desconto
@@ -405,7 +404,7 @@ if 'filtro_data_final' not in st.session_state:
 with st.sidebar:
     st.markdown('<div class="sidebar-title">Painel de Visitas</div>', unsafe_allow_html=True)
     cart_n = len(st.session_state.get('cart_items', []))
-    menu_items = ['Dashboard', 'Ações', 'Clientes', 'Montar pedido', 'Pedido Inteligente', f'Carrinho ({cart_n})', 'SIP', 'Importação']
+    menu_items = ['Dashboard', 'Ações', 'Clientes', 'Montar pedido', f'Carrinho ({cart_n})', 'SIP', 'Importação']
     for item in menu_items:
         page_name = 'Carrinho' if item.startswith('Carrinho') else item
         is_active = st.session_state.page == page_name
@@ -488,6 +487,9 @@ def _views_for(cidade: str):
 
 
 page = st.session_state.page
+if page == 'Pedido Inteligente':
+    st.session_state.page = 'Montar pedido'
+    page = 'Montar pedido'
 
 if page == 'Dashboard':
     _, _, clientes_g, foco_g, inventario_g, _, base_full_g, _, _, score_df_g, oportunidades_g, _ = _views_for('Todas')
@@ -516,9 +518,6 @@ elif page == 'Clientes':
 elif page == 'Montar pedido':
     pedidos, produtos, clientes, foco, inventario, base, base_full, resumo, gap, score_df, oportunidades, cancelados = _views_for(cidade_global)
     render_pedido(score_df, oportunidades, inventario, cidade_global, base_full=base_full, produtos=produtos, foco=foco, clientes_df=clientes, action_records=discount_actions_records, action_key=acoes_desconto_key)
-elif page == 'Pedido Inteligente':
-    pedidos, produtos, clientes, foco, inventario, base, base_full, resumo, gap, score_df, oportunidades, cancelados = _views_for(cidade_global)
-    render_busca_inteligente(score_df, inventario, clientes_df=clientes)
 elif page == 'Carrinho':
     _, _, clientes_g, foco_g, inventario_g, _, base_full_g, _, _, score_df_g, oportunidades_g, _ = _views_for('Todas')
     render_cart(inventario_g, foco=foco_g, action_key=acoes_desconto_key)

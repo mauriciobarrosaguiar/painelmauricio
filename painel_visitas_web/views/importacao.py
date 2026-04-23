@@ -237,23 +237,19 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
     with b5:
         _base_card("Estoque", INVENTARIO_FILE.name if INVENTARIO_FILE else "-")
 
-    with st.expander("Credenciais e referencia", expanded=False):
+    with st.expander("Login unico do painel", expanded=True):
+        st.caption("Use o mesmo login e senha para Bussola, Mercado Farma e envio de pedido. O CNPJ abaixo fica so para a extracao do Mercado Farma.")
         c1, c2 = st.columns(2)
         with c1:
-            bussola_login = st.text_input("Login Bussola", value=creds.bussola_login)
-            bussola_senha = st.text_input("Senha Bussola", value=creds.bussola_senha, type="password")
+            login_unico = st.text_input("Login unico", value=creds.login or creds.bussola_login or creds.mercado_login)
         with c2:
-            mercado_login = st.text_input("Login Mercado Farma", value=creds.mercado_login)
-            mercado_senha = st.text_input("Senha Mercado Farma", value=creds.mercado_senha, type="password")
-
+            senha_unica = st.text_input("Senha unica", value=creds.senha or creds.bussola_senha or creds.mercado_senha, type="password")
         mercado_cnpj_ref = st.text_input("CNPJ de referencia", value=creds.mercado_cnpj or cnpj_auto, key="mercado_cnpj_referencia")
-        if st.button("Salvar referencia no painel", use_container_width=True):
+        if st.button("Salvar login e referencia", use_container_width=True):
             save_creds(
                 IntegracaoCreds(
-                    bussola_login=bussola_login,
-                    bussola_senha=bussola_senha,
-                    mercado_login=mercado_login,
-                    mercado_senha=mercado_senha,
+                    login=login_unico,
+                    senha=senha_unica,
                     mercado_cnpj=mercado_cnpj_ref,
                 )
             )

@@ -262,7 +262,7 @@ def render_pedido(
         with cols_m[3]:
             st.markdown(f"<div class='metric-card metric-center'><div class='metric-label'>Combate</div><div class='metric-value'>{_money(row.get('ol_combate', 0))}</div></div>", unsafe_allow_html=True)
 
-    top_actions = st.columns(4)
+    top_actions = st.columns(2)
     if wa:
         top_actions[0].link_button("Abrir WhatsApp", wa, use_container_width=True)
     else:
@@ -275,12 +275,6 @@ def render_pedido(
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True,
     )
-    if top_actions[2].button("Ir para Pedido Inteligente", use_container_width=True):
-        st.session_state.page = "Pedido Inteligente"
-        st.rerun()
-    if top_actions[3].button("Limpar selecao inteligente", use_container_width=True):
-        st.session_state.preselected_products = {}
-        st.rerun()
 
     catalogo = _catalogo_cliente(cnpj, base_full if base_full is not None else pd.DataFrame(), produtos if produtos is not None else pd.DataFrame(), inventario, oportunidades)
     if catalogo.empty:
