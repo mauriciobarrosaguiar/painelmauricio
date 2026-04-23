@@ -1,4 +1,5 @@
 ﻿from __future__ import annotations
+import json
 import streamlit as st
 import pandas as pd
 from datetime import datetime, date, timedelta
@@ -303,6 +304,55 @@ data_version_key = '|'.join([
 
 persist_cfg = load_user_config()
 
+USER_CONFIG_KEYS = [
+    'foco_semana_manual',
+    'foco_mes_manual',
+    'visible_dists',
+    'addl_discount',
+    'addl_discount_exclusions',
+    'dist_pref',
+]
+
+
+def _config_signature(cfg: dict) -> str:
+    return json.dumps(cfg, ensure_ascii=False, sort_keys=True, default=str)
+
+
+def _extract_ean_from_option(value: str) -> str:
+    raw = str(value or '').strip()
+    first = raw.split(' — ')[0].split(' - ')[0].strip()
+    digits = ''.join(ch for ch in first if ch.isdigit())
+    return digits or first
+
+
+def _current_user_config() -> dict:
+    return {
+        'foco_semana_manual': list(st.session_state.get('foco_semana_manual', [])),
+        'foco_mes_manual': list(st.session_state.get('foco_mes_manual', [])),
+        'visible_dists': list(st.session_state.get('visible_dists', [])),
+        'addl_discount': {str(k): float(v or 0) for k, v in dict(st.session_state.get('addl_discount', {})).items()},
+        'addl_discount_exclusions': {
+            str(k): list(v or [])
+            for k, v in dict(st.session_state.get('addl_discount_exclusions', {})).items()
+        },
+        'dist_pref': {
+            str(k): list(v or [])
+            for k, v in dict(st.session_state.get('dist_pref', {})).items()
+        },
+    }
+
+
+def _persist_user_config_if_changed(force: bool = False) -> dict:
+    cfg = _current_user_config()
+    signature = _config_signature(cfg)
+    if force or signature != st.session_state.get('_user_config_signature'):
+        ok, msg = save_user_config(cfg)
+        st.session_state._user_config_signature = signature
+        st.session_state._user_config_save_ok = bool(ok)
+        st.session_state._user_config_save_msg = str(msg or '')
+        st.session_state._user_config_saved_at = agora_br().strftime('%H:%M:%S')
+    return cfg
+
 for key, default in {
     'page': 'Dashboard',
     'dist_pref': persist_cfg.get('dist_pref', {}),
@@ -318,6 +368,9 @@ for key, default in {
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default
+
+if '_user_config_signature' not in st.session_state:
+    st.session_state._user_config_signature = _config_signature({k: persist_cfg.get(k, {}) for k in USER_CONFIG_KEYS})
 
 pedidos_ref, produtos_ref, clientes_ref, _, inventario_ref, _ = get_clean_bases(data_version_key)
 
@@ -349,21 +402,25 @@ with st.sidebar:
     st.markdown('<div class="sidebar-section">Distribuidoras</div>', unsafe_allow_html=True)
     with st.expander('Desconto adicional por distribuidora', expanded=False):
         dist_options = sorted(inventario_ref['distribuidora'].dropna().astype(str).unique().tolist()) if not inventario_ref.empty else []
-        default_visiveis = st.session_state.visible_dists or dist_options
+        default_visiveis = [d for d in st.session_state.visible_dists if d in dist_options] or dist_options
         visiveis = st.multiselect('Distribuidoras visiveis no painel', dist_options, default=default_visiveis, placeholder='Todos')
         st.session_state.visible_dists = visiveis
-        add_map = {}
-        exc_map = {}
+        add_map = {k: v for k, v in dict(st.session_state.get('addl_discount', {})).items() if k in dist_options}
+        exc_map = {k: v for k, v in dict(st.session_state.get('addl_discount_exclusions', {})).items() if k in dist_options}
         for dist in visiveis:
             add_map[dist] = st.number_input(f'{dist} (%)', min_value=0.0, max_value=100.0, value=float(st.session_state.addl_discount.get(dist, 0.0)), step=0.5, key=f'add_{dist}')
             opts_exc = []
             if not inventario_ref.empty:
                 aux = inventario_ref[inventario_ref['distribuidora'].astype(str) == dist][['ean','principio_ativo']].drop_duplicates().sort_values('principio_ativo')
                 opts_exc = [f"{r['ean']} - {r['principio_ativo']}" for _, r in aux.iterrows()]
-            sel_exc = st.multiselect(f'Aplicar em todos os produtos exceto', opts_exc, default=st.session_state.addl_discount_exclusions.get(dist, []), key=f'exc_{dist}', placeholder='Escolha as opcoes')
+            default_exc = [item for item in st.session_state.addl_discount_exclusions.get(dist, []) if item in opts_exc]
+            sel_exc = st.multiselect(f'Aplicar em todos os produtos exceto', opts_exc, default=default_exc, key=f'exc_{dist}', placeholder='Escolha as opcoes')
             exc_map[dist] = sel_exc
         st.session_state.addl_discount = add_map
         st.session_state.addl_discount_exclusions = exc_map
+        saved_at = st.session_state.get('_user_config_saved_at', '')
+        if saved_at:
+            st.caption(f'Ajustes salvos automaticamente as {saved_at}.')
 
     st.markdown('<div class="sidebar-section">Foco</div>', unsafe_allow_html=True)
     with st.expander('Produtos foco do painel', expanded=False):
@@ -374,6 +431,8 @@ with st.sidebar:
         hoje = agora_br().weekday()
         semana_ativa = hoje in [1, 2, 3]
         st.caption(f'Foco automatico ativo: {"Sim" if semana_ativa else "Nao"}.')
+
+    _persist_user_config_if_changed()
 
 if 'cidade_global' not in locals():
     cidades = sorted(clientes_ref['cidade'].dropna().unique().tolist())
@@ -386,7 +445,7 @@ if 'cidade_global' not in locals():
 
 preferencias_key = tuple(sorted((k, '|'.join(v) if isinstance(v, list) else str(v)) for k, v in st.session_state.dist_pref.items()))
 descontos_key = tuple(sorted((k, float(v)) for k, v in st.session_state.addl_discount.items()))
-exclusoes_key = tuple(sorted((k, '|'.join([x.split(' — ')[0] for x in v])) for k, v in st.session_state.addl_discount_exclusions.items()))
+exclusoes_key = tuple(sorted((k, '|'.join([_extract_ean_from_option(x) for x in v])) for k, v in st.session_state.addl_discount_exclusions.items()))
 foco_key = tuple(sorted(set((foco_manual if semana_ativa or foco_manual else []) + foco_mes_manual)))
 
 
@@ -423,14 +482,7 @@ elif page == 'Clientes':
                 pref = st.multiselect('Distribuidoras preferidas', dist_options, default=atual, key=f'pref_{cnpj_sel}', placeholder='Escolha as opções')
                 if st.button('Salvar distribuidoras preferidas'):
                     st.session_state.dist_pref[cnpj_sel] = pref
-                    save_user_config({
-                        'foco_semana_manual': st.session_state.get('foco_semana_manual', []),
-                        'foco_mes_manual': st.session_state.get('foco_mes_manual', []),
-                        'visible_dists': st.session_state.get('visible_dists', []),
-                        'addl_discount': st.session_state.get('addl_discount', {}),
-                        'addl_discount_exclusions': st.session_state.get('addl_discount_exclusions', {}),
-                        'dist_pref': st.session_state.get('dist_pref', {}),
-                    })
+                    _persist_user_config_if_changed(force=True)
                     st.cache_data.clear()
                     st.rerun()
     render_clientes(score_df, oportunidades, cancelados, base_full, produtos, inventario, foco, clientes)
