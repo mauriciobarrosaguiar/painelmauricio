@@ -2944,15 +2944,14 @@
       }
     },
     {
-      "id": "cmd_1777260778915",
-      "acao": "atualizar_mercado_farma",
+      "id": "cmd_1777260786480",
+      "acao": "atualizar_bussola",
       "params": {
-        "headless": true,
-        "cnpj": "36106802000128"
+        "headless": true
       },
       "status": "solicitado",
-      "criado_em": "27/04/2026 00:32:58",
-      "atualizado_em": "27/04/2026 00:32:58",
+      "criado_em": "27/04/2026 00:33:06",
+      "atualizado_em": "27/04/2026 00:33:06",
       "mensagem": "Solicitado pelo painel web.",
       "origem": "streamlit"
     }
