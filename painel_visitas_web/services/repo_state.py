@@ -170,6 +170,12 @@ def _write_local_json(rel_path: str, data: Any) -> None:
         p.write_text(content, encoding="utf-8")
 
 
+def _write_local_bytes(rel_path: str, content: bytes) -> None:
+    for p in _candidate_local_paths(rel_path):
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(content)
+
+
 def _load_local_json(rel_path: str) -> Any | None:
     for p in _candidate_local_paths(rel_path):
         if p.exists():
@@ -181,6 +187,20 @@ def _load_local_json(rel_path: str) -> Any | None:
 
 
 def _load_remote_json(rel_path: str) -> Any | None:
+    token = _token()
+    if token:
+        try:
+            r = requests.get(_contents_url(rel_path), headers=_headers(), timeout=12)
+            if r.ok:
+                payload = r.json()
+                content = str(payload.get("content") or "")
+                if content.strip():
+                    text = base64.b64decode(content).decode("utf-8")
+                    data = json.loads(text)
+                    _write_local_json(rel_path, data)
+                    return data
+        except Exception:
+            pass
     try:
         r = requests.get(_raw_url(rel_path), headers=_raw_headers(), timeout=12)
         if not r.ok or not r.text.strip():
@@ -236,6 +256,35 @@ def repo_save_json(rel_path: str, data: Any, message: str = "Atualizar estado do
         return False, f"Erro ao atualizar GitHub: {e}"
 
 
+def repo_save_bytes(rel_path: str, content: bytes, message: str = "Atualizar arquivo do painel"):
+    _write_local_bytes(rel_path, content)
+    token = _token()
+    if not token:
+        return False, "GITHUB_TOKEN nÃ£o configurado. Salvo apenas localmente."
+    try:
+        sha = None
+        r0 = requests.get(_contents_url(rel_path), headers=_headers(), timeout=25)
+        if r0.ok:
+            sha = r0.json().get("sha")
+        payload = {
+            "message": message,
+            "content": base64.b64encode(content).decode("utf-8"),
+            "branch": _repo_branch(),
+        }
+        if sha:
+            payload["sha"] = sha
+        r = requests.put(_contents_url(rel_path), headers=_headers(), json=payload, timeout=60)
+        if r.ok:
+            return True, "GitHub atualizado."
+        try:
+            detail = r.json()
+        except Exception:
+            detail = r.text[:200]
+        return False, f"Falha ao atualizar GitHub: {r.status_code} {detail}"
+    except Exception as e:
+        return False, f"Erro ao atualizar GitHub: {e}"
+
+
 def now_str() -> str:
     return datetime.now(TZ_BR).strftime("%d/%m/%Y %H:%M:%S")
 
@@ -274,7 +323,7 @@ def load_user_config() -> dict:
             "addl_discount_exclusions": {},
             "dist_pref": {},
         },
-        prefer_remote=False,
+        prefer_remote=True,
     )
 
 
@@ -283,7 +332,7 @@ def save_user_config(cfg: dict):
 
 
 def load_discount_actions() -> dict:
-    return repo_load_json("data/descontos_acoes.json", {"acoes": []}, prefer_remote=False)
+    return repo_load_json("data/descontos_acoes.json", {"acoes": []}, prefer_remote=True)
 
 
 def save_discount_actions(data: dict):

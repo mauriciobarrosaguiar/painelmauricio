@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import json
-
 import pandas as pd
 import streamlit as st
 
-from config import DATA_DIR
+from services.repo_state import repo_load_json, repo_save_json
 
-SIP_FILE = DATA_DIR / "sip_grupos.json"
+SIP_REL_PATH = "data/sip_grupos.json"
 
 
 def _money(value) -> str:
@@ -39,16 +37,12 @@ def _metric_card(label: str, value: str, help_text: str = "") -> str:
 
 
 def load_sip_groups() -> list[dict]:
-    if SIP_FILE.exists():
-        try:
-            return json.loads(SIP_FILE.read_text(encoding="utf-8"))
-        except Exception:
-            return []
-    return []
+    groups = repo_load_json(SIP_REL_PATH, [], prefer_remote=True)
+    return groups if isinstance(groups, list) else []
 
 
 def save_sip_groups(groups: list[dict]):
-    SIP_FILE.write_text(json.dumps(groups, ensure_ascii=False, indent=2), encoding="utf-8")
+    return repo_save_json(SIP_REL_PATH, list(groups or []), "Atualizar grupos SIP")
 
 
 def selected_group() -> dict | None:
@@ -151,17 +145,19 @@ def render_sip(score_df: pd.DataFrame, clientes_df: pd.DataFrame):
             "cnpjs": [str(label_to_cnpj[item]) for item in membros],
         }
         groups = [group for group in groups if group.get("id") != gid] + [novo]
-        save_sip_groups(groups)
+        ok, msg = save_sip_groups(groups)
         st.session_state["sip_selected_id"] = gid
-        st.success("Grupo SIP salvo.")
-        st.rerun()
+        (st.success if ok else st.warning)(f"Grupo SIP salvo. {msg}")
+        if ok:
+            st.rerun()
 
     if editing and s2.button("Excluir grupo", use_container_width=True):
         groups = [group for group in groups if group.get("id") != editing.get("id")]
-        save_sip_groups(groups)
+        ok, msg = save_sip_groups(groups)
         st.session_state["sip_selected_id"] = None
-        st.success("Grupo removido.")
-        st.rerun()
+        (st.success if ok else st.warning)(f"Grupo removido. {msg}")
+        if ok:
+            st.rerun()
 
     groups = load_sip_groups()
     if not groups:

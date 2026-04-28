@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
@@ -10,10 +9,11 @@ import pandas as pd
 import streamlit as st
 
 from config import DATA_DIR
-from services.repo_state import command_to_monitor_block, load_latest_command, load_status
+from services.repo_state import command_to_monitor_block, load_latest_command, load_status, repo_load_json, repo_save_json
 
 TZ_BR = ZoneInfo("America/Sao_Paulo")
-META_FILE = DATA_DIR / "metas_dashboard.json"
+METAS_REL_PATH = "data/metas_dashboard.json"
+DEFAULT_METAS = {"meta_ol": 0.0, "meta_prioritarios": 0.0, "meta_lancamentos": 0.0, "meta_clientes": 0}
 
 
 def _digits(value: str) -> str:
@@ -60,6 +60,16 @@ def _format_gap(value: float, money: bool) -> str:
     if money:
         return _money(value)
     return str(max(0, int(round(value))))
+
+
+def _as_float(value, default: float = 0.0) -> float:
+    number = pd.to_numeric(value, errors="coerce")
+    return float(default if pd.isna(number) else number)
+
+
+def _as_int(value, default: int = 0) -> int:
+    number = pd.to_numeric(value, errors="coerce")
+    return int(default if pd.isna(number) else number)
 
 
 def _metric_goal(label: str, atual: float, meta: float, *, money: bool = True, help_text: str = ""):
@@ -127,16 +137,25 @@ def _compact_stat(label: str, value: str):
 
 
 def _load_metas() -> dict:
-    if META_FILE.exists():
-        try:
-            return json.loads(META_FILE.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-    return {"meta_ol": 0.0, "meta_prioritarios": 0.0, "meta_lancamentos": 0.0, "meta_clientes": 0}
+    data = repo_load_json(METAS_REL_PATH, DEFAULT_METAS.copy(), prefer_remote=True)
+    metas = {**DEFAULT_METAS, **(data if isinstance(data, dict) else {})}
+    return {
+        "meta_ol": _as_float(metas.get("meta_ol", 0)),
+        "meta_prioritarios": _as_float(metas.get("meta_prioritarios", 0)),
+        "meta_lancamentos": _as_float(metas.get("meta_lancamentos", 0)),
+        "meta_clientes": _as_int(metas.get("meta_clientes", 0)),
+    }
 
 
 def _save_metas(data: dict):
-    META_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    metas = {**DEFAULT_METAS, **data}
+    payload = {
+        "meta_ol": _as_float(metas.get("meta_ol", 0)),
+        "meta_prioritarios": _as_float(metas.get("meta_prioritarios", 0)),
+        "meta_lancamentos": _as_float(metas.get("meta_lancamentos", 0)),
+        "meta_clientes": _as_int(metas.get("meta_clientes", 0)),
+    }
+    return repo_save_json(METAS_REL_PATH, payload, "Atualizar metas do dashboard")
 
 
 def _parse_br_datetime(value: str | None) -> str:
@@ -471,7 +490,7 @@ def render_dashboard(
         meta_lanc = m3.number_input("Meta OL lancamentos", min_value=0.0, value=float(metas.get("meta_lancamentos", 0.0)), step=100.0)
         meta_cli = m4.number_input("Meta clientes com venda", min_value=0, value=int(metas.get("meta_clientes", 0)), step=1)
         if st.button("Salvar metas", use_container_width=True):
-            _save_metas(
+            ok, msg = _save_metas(
                 {
                     "meta_ol": meta_ol,
                     "meta_prioritarios": meta_prio,
@@ -479,4 +498,5 @@ def render_dashboard(
                     "meta_clientes": meta_cli,
                 }
             )
-            st.success("Metas salvas.")
+            st.cache_data.clear()
+            (st.success if ok else st.warning)(f"Metas salvas. {msg}")

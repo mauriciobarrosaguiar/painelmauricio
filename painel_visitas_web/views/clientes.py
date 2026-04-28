@@ -27,10 +27,13 @@ def _excel_bytes(df: pd.DataFrame, sheet_name: str) -> bytes:
     output = BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
         df.to_excel(writer, index=False, sheet_name=sheet_name[:31])
+        workbook = writer.book
         worksheet = writer.sheets[sheet_name[:31]]
+        number_format = workbook.add_format({"num_format": "#,##0.00"})
         for idx, column in enumerate(df.columns):
             largura = max(len(str(column)), min(44, int(df[column].astype(str).str.len().fillna(0).max()) + 2 if not df.empty else 14))
-            worksheet.set_column(idx, idx, largura)
+            fmt = number_format if pd.api.types.is_numeric_dtype(df[column]) else None
+            worksheet.set_column(idx, idx, largura, fmt)
     output.seek(0)
     return output.getvalue()
 
@@ -246,7 +249,7 @@ def render_clientes(
         "Faturado no periodo",
     ]
     for column in ["OL sem combate", "OL prioritarios", "OL lancamentos", "Combate", "Faturado no periodo"]:
-        export_df[column] = export_df[column].map(_money)
+        export_df[column] = pd.to_numeric(export_df[column], errors="coerce").fillna(0.0)
     st.download_button(
         "Extrair base de clientes",
         data=_excel_bytes(export_df, "Clientes"),

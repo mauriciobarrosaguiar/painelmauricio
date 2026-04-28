@@ -20,15 +20,20 @@ from services.repo_state import (
     load_latest_command,
     load_recent_workflow_runs,
     load_status,
+    repo_save_bytes,
     save_discount_actions,
 )
 from views.monitoring import render_monitor
 
 
 def _save_upload(uploaded_file, target_name: str):
-    path = DATA_DIR / target_name
-    path.write_bytes(uploaded_file.getbuffer())
-    return path
+    content = bytes(uploaded_file.getbuffer())
+    ok, msg = repo_save_bytes(
+        f"painel_visitas_web/data/{target_name}",
+        content,
+        f"Atualizar {target_name}",
+    )
+    return DATA_DIR / target_name, ok, msg
 
 
 def _normalizar_nome_arquivo(texto: str) -> str:
@@ -260,21 +265,21 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
     with u1:
         up_cli = st.file_uploader("Enviar painel de clientes", type=["xlsx"], key="upload_painel_clientes")
         if st.button("Salvar painel", use_container_width=True, disabled=up_cli is None, key="btn_salvar_painel_manual"):
-            _save_upload(up_cli, "PAINEL.xlsx")
+            _, ok, msg = _save_upload(up_cli, "PAINEL.xlsx")
             st.cache_data.clear()
-            st.success("Planilha de painel atualizada.")
+            (st.success if ok else st.warning)(f"Planilha de painel atualizada. {msg}")
     with u2:
         up_foco = st.file_uploader("Enviar foco da semana", type=["xlsx"], key="upload_foco_semana")
         if st.button("Salvar foco", use_container_width=True, disabled=up_foco is None, key="btn_salvar_foco_manual"):
-            _save_upload(up_foco, "FOCO_SEMANA.xlsx")
+            _, ok, msg = _save_upload(up_foco, "FOCO_SEMANA.xlsx")
             st.cache_data.clear()
-            st.success("Planilha de foco atualizada.")
+            (st.success if ok else st.warning)(f"Planilha de foco atualizada. {msg}")
     with u3:
         up_prod = st.file_uploader("Enviar produtos / mix", type=["xlsx"], key="upload_produtos_mix")
         if st.button("Salvar produtos", use_container_width=True, disabled=up_prod is None, key="btn_salvar_produtos_mix"):
-            _replace_produtos_upload(up_prod)
+            _, ok, msg = _replace_produtos_upload(up_prod)
             st.cache_data.clear()
-            st.success("Base de produtos atualizada. A planilha antiga foi substituida.")
+            (st.success if ok else st.warning)(f"Base de produtos atualizada. A planilha antiga foi substituida. {msg}")
 
     st.markdown("### Acoes de desconto")
     inv_ref = inventario.copy() if isinstance(inventario, pd.DataFrame) else pd.DataFrame()
