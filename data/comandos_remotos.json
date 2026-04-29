@@ -4506,6 +4506,40 @@
       "resumo": {
         "arquivo": "Pedidos.xlsx"
       }
+    },
+    {
+      "id": "cmd_1777494689689",
+      "acao": "enviar_pedido_mf",
+      "params": {
+        "cart_items": [
+          {
+            "Cliente": "DROGARIA AMORIM",
+            "CNPJ": "22729251000144",
+            "Empresa": "DROGARIA AMORIM",
+            "Razao social": "DROGARIA AMORIM LTDA",
+            "Nome do comprador": "ALESSANDRO",
+            "Tel do comprador": "63992240607",
+            "EAN": "7896004777184",
+            "Produto": "CLORIDRATO DE TRAMADOL 100 MG X 10 C.R.LIB PROL-LG",
+            "Distribuidora": "Total - TO",
+            "Preco": 51.29,
+            "Estoque": 209,
+            "Mix": "PRIORITARIOS",
+            "Qtde": 12,
+            "Foco": false,
+            "Cupom": "",
+            "Acao": "",
+            "Tipo acao": ""
+          }
+        ],
+        "headless": true,
+        "cupom": ""
+      },
+      "status": "solicitado",
+      "criado_em": "29/04/2026 17:31:29",
+      "atualizado_em": "29/04/2026 17:31:29",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
     }
   ]
 }
