@@ -1,45 +1,49 @@
 {
-  "gerado_em": "2026-04-17T08:50:40.483202-03:00",
+  "gerado_em": "2026-04-29T17:31:28.409819-03:00",
   "cupom": "",
+  "cupons": [],
   "headless": true,
   "cliente": {
-    "Cliente": "A FARMACEUTICA",
-    "CNPJ": "07666799000107",
-    "Empresa": "A FARMACEUTICA",
-    "Razao social": "RE COMERCIO DE PRODUTOS FARMACEUTICOS E PERFUMARIA LTDA",
-    "Nome do comprador": "RONES",
-    "Tel do comprador": "63984074672"
+    "Cliente": "DROGARIA AMORIM",
+    "CNPJ": "22729251000144",
+    "Empresa": "DROGARIA AMORIM",
+    "Razao social": "DROGARIA AMORIM LTDA",
+    "Nome do comprador": "ALESSANDRO",
+    "Tel do comprador": "63992240607"
   },
   "resumo": {
     "linhas": 1,
     "produtos": 1,
     "distribuidoras": 1,
-    "total_estimado": 395.5
+    "total_estimado": 615.48
   },
   "por_distribuidora": [
     {
-      "Distribuidora": "Nazaria - TO",
+      "Distribuidora": "Total - TO",
       "Produtos": 1,
-      "Unidades": 50,
-      "Total": 395.5
+      "Unidades": 12,
+      "Total": 615.48
     }
   ],
   "cart_items": [
     {
-      "Cliente": "A FARMACEUTICA",
-      "CNPJ": "07666799000107",
-      "Empresa": "A FARMACEUTICA",
-      "Razao social": "RE COMERCIO DE PRODUTOS FARMACEUTICOS E PERFUMARIA LTDA",
-      "Nome do comprador": "RONES",
-      "Tel do comprador": "63984074672",
-      "EAN": "7896004728858",
-      "Produto": "ROSUVASTATINA CALCICA CPR REV 20MG 3BLX10",
-      "Distribuidora": "Nazaria - TO",
-      "Preco": 7.91,
-      "Estoque": 142,
+      "Cliente": "DROGARIA AMORIM",
+      "CNPJ": "22729251000144",
+      "Empresa": "DROGARIA AMORIM",
+      "Razao social": "DROGARIA AMORIM LTDA",
+      "Nome do comprador": "ALESSANDRO",
+      "Tel do comprador": "63992240607",
+      "EAN": "7896004777184",
+      "Produto": "CLORIDRATO DE TRAMADOL 100 MG X 10 C.R.LIB PROL-LG",
+      "Distribuidora": "Total - TO",
+      "Preco": 51.29,
+      "Estoque": 209,
       "Mix": "PRIORITARIOS",
-      "Qtde": 50,
-      "Foco": false
+      "Qtde": 12,
+      "Foco": false,
+      "Cupom": "",
+      "Acao": "",
+      "Tipo acao": ""
     }
   ]
 }
