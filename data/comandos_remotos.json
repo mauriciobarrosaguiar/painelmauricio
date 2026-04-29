@@ -3354,6 +3354,19 @@
       "resumo": {
         "arquivo": "Pedidos.xlsx"
       }
+    },
+    {
+      "id": "cmd_1777462478340",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "solicitado",
+      "criado_em": "29/04/2026 08:34:38",
+      "atualizado_em": "29/04/2026 08:34:38",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
     }
   ]
 }
