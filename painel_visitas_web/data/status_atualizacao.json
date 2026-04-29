@@ -213,9 +213,9 @@
       }
     ],
     "progresso": {
-      "atual": 5,
-      "total": 5,
-      "percentual": 100
+      "atual": 0,
+      "total": 0,
+      "percentual": 0
     }
   },
   "mercadofarma": {
@@ -443,12 +443,12 @@
     }
   },
   "comandos": {
-    "ultimo_sucesso": "17/04/2026 08:52:14",
+    "ultimo_sucesso": "29/04/2026 17:33:32",
     "status": "ok",
     "mensagem": "Pedido enviado ao Mercado Farma.",
     "ultimo_resultado": "Pedido enviado ao Mercado Farma.",
-    "atualizado_em": "17/04/2026 08:52:14",
-    "ultimo_comando_id": "cmd_1776426641246",
+    "atualizado_em": "29/04/2026 17:33:32",
+    "ultimo_comando_id": "cmd_1777494689689",
     "etapa_atual": "Concluido",
     "erro": "",
     "resumo": {
@@ -500,6 +500,51 @@
         "quando": "17/04/2026 08:52:14",
         "texto": "Pedido enviado ao Mercado Farma.",
         "nivel": "info"
+      },
+      {
+        "quando": "29/04/2026 17:32:29",
+        "texto": "Workflow iniciado.",
+        "nivel": "info"
+      },
+      {
+        "quando": "29/04/2026 17:32:29",
+        "texto": "Pedido carregado com 1 item(ns).",
+        "nivel": "info"
+      },
+      {
+        "quando": "29/04/2026 17:32:32",
+        "texto": "Iniciando envio do pedido para o CNPJ 22729251000144.",
+        "nivel": "info"
+      },
+      {
+        "quando": "29/04/2026 17:32:49",
+        "texto": "Cliente autenticado no Mercado Farma.",
+        "nivel": "info"
+      },
+      {
+        "quando": "29/04/2026 17:33:12",
+        "texto": "1 distribuidora(s) selecionada(s).",
+        "nivel": "info"
+      },
+      {
+        "quando": "29/04/2026 17:33:13",
+        "texto": "Enviando item 1/1: 7896004777184 / Total - TO",
+        "nivel": "info"
+      },
+      {
+        "quando": "29/04/2026 17:33:20",
+        "texto": "Pedido montado. Enviando para confirmacao final.",
+        "nivel": "info"
+      },
+      {
+        "quando": "29/04/2026 17:33:32",
+        "texto": "Pedido enviado ao Mercado Farma para o CNPJ 22729251000144.",
+        "nivel": "info"
+      },
+      {
+        "quando": "29/04/2026 17:33:32",
+        "texto": "Pedido enviado ao Mercado Farma.",
+        "nivel": "info"
       }
     ],
     "progresso": {
@@ -510,8 +555,8 @@
   },
   "github_actions": {
     "status": "ok",
-    "mensagem": "Bussola atualizado.",
-    "atualizado_em": "29/04/2026 17:09:52",
+    "mensagem": "Pedido enviado ao Mercado Farma.",
+    "atualizado_em": "29/04/2026 17:33:32",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",

@@ -4506,6 +4506,97 @@
       "resumo": {
         "arquivo": "Pedidos.xlsx"
       }
+    },
+    {
+      "id": "cmd_1777494689689",
+      "acao": "enviar_pedido_mf",
+      "params": {
+        "cart_items": [
+          {
+            "Cliente": "DROGARIA AMORIM",
+            "CNPJ": "22729251000144",
+            "Empresa": "DROGARIA AMORIM",
+            "Razao social": "DROGARIA AMORIM LTDA",
+            "Nome do comprador": "ALESSANDRO",
+            "Tel do comprador": "63992240607",
+            "EAN": "7896004777184",
+            "Produto": "CLORIDRATO DE TRAMADOL 100 MG X 10 C.R.LIB PROL-LG",
+            "Distribuidora": "Total - TO",
+            "Preco": 51.29,
+            "Estoque": 209,
+            "Mix": "PRIORITARIOS",
+            "Qtde": 12,
+            "Foco": false,
+            "Cupom": "",
+            "Acao": "",
+            "Tipo acao": ""
+          }
+        ],
+        "headless": true,
+        "cupom": ""
+      },
+      "status": "ok",
+      "criado_em": "29/04/2026 17:31:29",
+      "atualizado_em": "29/04/2026 17:33:32",
+      "mensagem": "Pedido enviado ao Mercado Farma.",
+      "origem": "streamlit",
+      "etapa_atual": "Concluido",
+      "eventos": [
+        {
+          "quando": "29/04/2026 17:32:29",
+          "texto": "Workflow iniciado.",
+          "nivel": "info"
+        },
+        {
+          "quando": "29/04/2026 17:32:29",
+          "texto": "Pedido carregado com 1 item(ns).",
+          "nivel": "info"
+        },
+        {
+          "quando": "29/04/2026 17:32:32",
+          "texto": "Iniciando envio do pedido para o CNPJ 22729251000144.",
+          "nivel": "info"
+        },
+        {
+          "quando": "29/04/2026 17:32:49",
+          "texto": "Cliente autenticado no Mercado Farma.",
+          "nivel": "info"
+        },
+        {
+          "quando": "29/04/2026 17:33:12",
+          "texto": "1 distribuidora(s) selecionada(s).",
+          "nivel": "info"
+        },
+        {
+          "quando": "29/04/2026 17:33:12",
+          "texto": "Enviando item 1/1: 7896004777184 / Total - TO",
+          "nivel": "info"
+        },
+        {
+          "quando": "29/04/2026 17:33:20",
+          "texto": "Pedido montado. Enviando para confirmacao final.",
+          "nivel": "info"
+        },
+        {
+          "quando": "29/04/2026 17:33:32",
+          "texto": "Pedido enviado ao Mercado Farma para o CNPJ 22729251000144.",
+          "nivel": "info"
+        },
+        {
+          "quando": "29/04/2026 17:33:32",
+          "texto": "Pedido enviado ao Mercado Farma.",
+          "nivel": "info"
+        }
+      ],
+      "progresso": {
+        "atual": 6,
+        "total": 6,
+        "percentual": 100
+      },
+      "resumo": {
+        "itens": 1,
+        "cnpj": "36106802000128"
+      }
     }
   ]
 }
