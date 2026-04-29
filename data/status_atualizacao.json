@@ -1,21 +1,16 @@
 {
   "bussola": {
     "ultimo_sucesso": "29/04/2026 08:02:22",
-    "status": "ok",
-    "mensagem": "Bussola atualizado.",
-    "ultimo_comando_id": "cmd_1777460474413",
-    "atualizado_em": "29/04/2026 08:02:22",
-    "etapa_atual": "Concluido",
+    "status": "solicitado",
+    "mensagem": "Comando enviado para a fila do painel.",
+    "ultimo_comando_id": "cmd_1777465183177",
+    "atualizado_em": "29/04/2026 09:19:46",
+    "etapa_atual": "Aguardando execucao",
     "erro": "",
     "resumo": {
       "arquivo": "Pedidos.xlsx"
     },
     "eventos": [
-      {
-        "quando": "28/04/2026 08:18:55",
-        "texto": "Abrindo menu Exportar...",
-        "nivel": "info"
-      },
       {
         "quando": "28/04/2026 08:19:01",
         "texto": "Aguardando download terminar...",
@@ -210,12 +205,17 @@
         "quando": "29/04/2026 08:02:22",
         "texto": "Bussola atualizado.",
         "nivel": "info"
+      },
+      {
+        "quando": "29/04/2026 09:19:46",
+        "texto": "Comando enviado para a fila do painel.",
+        "nivel": "info"
       }
     ],
     "progresso": {
-      "atual": 5,
-      "total": 5,
-      "percentual": 100
+      "atual": 0,
+      "total": 0,
+      "percentual": 0
     }
   },
   "mercadofarma": {
@@ -509,9 +509,9 @@
     }
   },
   "github_actions": {
-    "status": "ok",
-    "mensagem": "Mercado Farma atualizado.",
-    "atualizado_em": "29/04/2026 08:59:55",
+    "status": "solicitado",
+    "mensagem": "Comando enviado para a fila do painel.",
+    "atualizado_em": "29/04/2026 09:19:46",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",
