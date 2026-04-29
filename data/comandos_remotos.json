@@ -4597,6 +4597,18 @@
         "itens": 1,
         "cnpj": "36106802000128"
       }
+    },
+    {
+      "id": "cmd_1777496339317",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "29/04/2026 17:58:59",
+      "atualizado_em": "29/04/2026 17:58:59",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
     }
   ]
 }
