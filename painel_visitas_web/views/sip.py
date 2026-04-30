@@ -3,6 +3,15 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from services.order_status import (
+    STATUS_OPTIONS,
+    build_order_detail,
+    display_order_detail,
+    excel_bytes as order_excel_bytes,
+    filter_order_detail,
+    money as status_money,
+    summarize_order_detail,
+)
 from services.repo_state import repo_load_json, repo_save_json
 
 SIP_REL_PATH = "data/sip_grupos.json"
@@ -96,7 +105,85 @@ def build_sip_summary(score_df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows).sort_values(["Faturado", "SIP"], ascending=[False, True]).reset_index(drop=True)
 
 
-def render_sip(score_df: pd.DataFrame, clientes_df: pd.DataFrame):
+def _default_period(detail: pd.DataFrame):
+    datas = pd.to_datetime(detail.get("Data pedido", pd.Series(dtype="datetime64[ns]")), errors="coerce").dropna()
+    if datas.empty:
+        hoje = pd.Timestamp.today().normalize()
+        return hoje.replace(day=1).date(), hoje.date()
+    fim = datas.max().normalize()
+    return fim.replace(day=1).date(), fim.date()
+
+
+def _render_pedidos_sip(base_full: pd.DataFrame | None, group: dict):
+    group_cnpjs = {_digits(item) for item in group.get("cnpjs", [])}
+    detail_all = build_order_detail(base_full if base_full is not None else pd.DataFrame(), group_cnpjs)
+    st.markdown('<div class="section-title">Pedidos e notas da SIP</div>', unsafe_allow_html=True)
+    if detail_all.empty:
+        st.info("Nenhum pedido encontrado no Bussola para os CNPJs deste grupo.")
+        return
+
+    default_inicio, default_fim = _default_period(detail_all)
+    gid = str(group.get("id", "sip"))
+    f1, f2, f3 = st.columns([1, 1, 1.1])
+    data_inicio = f1.date_input("Data inicial", value=default_inicio, format="DD/MM/YYYY", key=f"sip_ped_ini_{gid}")
+    data_fim = f2.date_input("Data final", value=default_fim, format="DD/MM/YYYY", key=f"sip_ped_fim_{gid}")
+    status_sel = f3.selectbox("Status do pedido", STATUS_OPTIONS, index=0, key=f"sip_ped_status_{gid}")
+    if data_inicio > data_fim:
+        st.warning("A data inicial nao pode ser maior que a data final.")
+        return
+
+    detail = filter_order_detail(detail_all, data_inicio, data_fim, status_sel)
+    resumo = summarize_order_detail(detail)
+    m1, m2, m3 = st.columns(3)
+    with m1:
+        st.markdown(
+            f"<div class='metric-card metric-center'><div class='metric-label'>Pedidos faturados</div><div class='metric-value'>{resumo['faturado_qtd']}</div><div class='metric-help'>{status_money(resumo['faturado_valor'])} faturado</div></div>",
+            unsafe_allow_html=True,
+        )
+    with m2:
+        st.markdown(
+            f"<div class='metric-card metric-center'><div class='metric-label'>Sem nota</div><div class='metric-value'>{resumo['sem_nota_qtd']}</div><div class='metric-help'>{status_money(resumo['sem_nota_valor'])} a faturar</div></div>",
+            unsafe_allow_html=True,
+        )
+    with m3:
+        st.markdown(
+            f"<div class='metric-card metric-center'><div class='metric-label'>Cancelados</div><div class='metric-value'>{resumo['cancelado_qtd']}</div><div class='metric-help'>{status_money(resumo['cancelado_valor'])} cancelado</div></div>",
+            unsafe_allow_html=True,
+        )
+
+    export_cols = [
+        "Categoria",
+        "Pedido",
+        "Nota fiscal",
+        "Status",
+        "CNPJ",
+        "Cliente",
+        "Cidade",
+        "Data pedido",
+        "Data faturamento",
+        "Valor solicitado",
+        "Valor faturado",
+        "Falta faturar",
+        "Valor cancelado",
+        "Linhas",
+        "Produtos",
+        "Produtos no pedido",
+    ]
+    st.download_button(
+        "Extrair pedidos detalhados da SIP",
+        data=order_excel_bytes(detail[export_cols], "Pedidos SIP"),
+        file_name=f"pedidos_sip_{gid}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+        disabled=detail.empty,
+    )
+    if detail.empty:
+        st.info("Nenhum pedido encontrado para os filtros selecionados.")
+    else:
+        st.dataframe(display_order_detail(detail[export_cols]), use_container_width=True, hide_index=True)
+
+
+def render_sip(score_df: pd.DataFrame, clientes_df: pd.DataFrame, base_full: pd.DataFrame | None = None):
     st.markdown('<h2 class="page-title">SIP / Redes</h2>', unsafe_allow_html=True)
     groups = load_sip_groups()
     cli_ref = clientes_df[["cnpj", "nome_fantasia"]].drop_duplicates().sort_values("nome_fantasia").copy()
@@ -205,3 +292,5 @@ def render_sip(score_df: pd.DataFrame, clientes_df: pd.DataFrame):
         for col in ["Faturado", "Prioritarios", "Lancamentos"]:
             show[col] = pd.to_numeric(show[col], errors="coerce").fillna(0).map(_money)
         st.dataframe(show, use_container_width=True, hide_index=True)
+
+    _render_pedidos_sip(base_full, group)

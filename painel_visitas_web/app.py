@@ -111,7 +111,18 @@ i.material-icons-round,
 [data-testid="stSidebar"] span {{color: #F8FFF9 !important;}}
 .sidebar-title {{font-size:1.48rem; font-weight:900; margin-bottom:.65rem; line-height:1.18; letter-spacing:-.01em;}}
 .sidebar-section {{font-size:.78rem; font-weight:900; text-transform:uppercase; letter-spacing:.08em; color:#DCC17A; margin:1rem 0 .45rem 0;}}
-.stRadio > label, .stMultiSelect > label, .stSelectbox > label, .stDateInput > label {{font-weight:800 !important; color:#F2F8F3 !important;}}
+[data-testid="stSidebar"] .stRadio > label,
+[data-testid="stSidebar"] .stMultiSelect > label,
+[data-testid="stSidebar"] .stSelectbox > label,
+[data-testid="stSidebar"] .stDateInput > label {{font-weight:800 !important; color:#F2F8F3 !important;}}
+.main .stRadio > label,
+.main .stMultiSelect > label,
+.main .stSelectbox > label,
+.main .stDateInput > label,
+.main .stTextInput > label,
+.main .stNumberInput > label,
+.main .stTextArea > label,
+.main [data-testid="stWidgetLabel"] * {{font-weight:800 !important; color:#153225 !important; opacity:1 !important;}}
 [data-testid="stSidebar"] .stButton > button {{width:100%; min-height:44px; border-radius:16px !important; font-weight:800; border:1px solid rgba(255,255,255,.18) !important; background: rgba(255,255,255,.06) !important; color:#fff !important; margin:0 0 .46rem 0 !important; box-shadow:none !important;}}
 [data-testid="stSidebar"] .stButton > button[kind="primary"] {{background: linear-gradient(135deg, #0F3B2B 0%, #2D7A55 62%, #D9A441 100%) !important; box-shadow:0 12px 24px rgba(0,0,0,.16) !important; border-color:rgba(217,164,65,.35) !important;}}
 [data-testid="stSidebar"] .stButton > button p {{color:#fff !important; font-size:.96rem !important;}}
@@ -193,6 +204,7 @@ small {{
 @media (max-width: 900px) {{ .visit-grid, .detail-grid {{grid-template-columns:1fr;}} }}
 @media (max-width: 900px) {{
   [data-testid="collapsedControl"] {{display:flex !important; position:fixed; left:8px; top:64px; z-index:1003; background:#2D7A55; border-radius:12px; padding:8px; box-shadow:0 8px 18px rgba(0,0,0,.22);}}
+  [data-testid="collapsedControl"] * {{color:#FFFFFF !important; opacity:1 !important;}}
   [data-testid="stSidebar"] {{margin-left:-100vw !important; min-width:0 !important; max-width:0 !important; width:0 !important; opacity:0; overflow:hidden; transition:all .25s ease;}}
   [data-testid="stSidebar"][aria-expanded="true"] {{margin-left:0 !important; min-width:88vw !important; max-width:88vw !important; width:88vw !important; opacity:1; overflow:auto; box-shadow:0 20px 40px rgba(0,0,0,.28);}}
   .block-container {{padding-left: .6rem !important; padding-right: .6rem !important;}}
@@ -205,6 +217,10 @@ small {{
   div[data-testid="stMetricValue"] {{color:#0B2C20 !important;}}
   .stButton > button, .stDownloadButton > button {{color:#153225 !important;}}
   [data-baseweb="select"] > div, .stTextInput input, .stNumberInput input {{color:#153225 !important;}}
+  .main [data-testid="stWidgetLabel"] *,
+  .main label,
+  .main label p,
+  .main label span {{color:#153225 !important; opacity:1 !important;}}
   div[data-testid="stMetricValue"] {{font-size:1.2rem !important;}}
   .metric-goal {{min-height:auto;}}
   .metric-target-line {{gap:5px;}}
@@ -241,8 +257,9 @@ st.markdown("""
 [data-testid="stAlert"] {border-radius:14px !important;}
 [data-testid="stAlert"] * {color:#143224 !important;}
 @media (max-width: 900px) {
-  [data-testid="collapsedControl"] {display:flex !important; align-items:center; justify-content:center; position:fixed; left:10px; top:70px; z-index:1003; width:46px; height:46px; background:#2D7A55 !important; border:2px solid rgba(255,255,255,.92); border-radius:14px; box-shadow:0 10px 22px rgba(0,0,0,.28);}
+  [data-testid="collapsedControl"] {display:flex !important; align-items:center; justify-content:center; position:fixed; left:10px; top:70px; z-index:1003; width:46px; height:46px; background:#0F3B2B !important; border:2px solid #D9A441; border-radius:14px; box-shadow:0 10px 22px rgba(0,0,0,.28);}
   [data-testid="collapsedControl"]:hover {background:#1E6244 !important;}
+  [data-testid="collapsedControl"] * {color:#FFFFFF !important; opacity:1 !important;}
   [data-testid="collapsedControl"] button {background:transparent !important; border:none !important; box-shadow:none !important; min-height:auto !important; padding:0 !important; margin:0 !important;}
   [data-testid="collapsedControl"] svg {width:28px !important; height:28px !important; stroke:#FFFFFF !important; fill:none !important; stroke-width:2.6 !important;}
   [data-testid="collapsedControl"] path {stroke:#FFFFFF !important; fill:none !important;}
@@ -417,7 +434,7 @@ for key, default in {
 if '_user_config_signature' not in st.session_state:
     st.session_state._user_config_signature = _config_signature({k: persist_cfg.get(k, {}) for k in USER_CONFIG_KEYS})
 
-pedidos_ref, produtos_ref, clientes_ref, _, inventario_ref, _ = get_clean_bases(data_version_key)
+pedidos_ref, produtos_ref, clientes_ref, _, inventario_ref, base_full_ref = get_clean_bases(data_version_key)
 
 if 'filtro_data_inicial' not in st.session_state:
     st.session_state.filtro_data_inicial = primeiro_dia_mes_atual()
@@ -537,7 +554,7 @@ elif page == 'Clientes':
                     _persist_user_config_if_changed(force=True)
                     st.cache_data.clear()
                     st.rerun()
-    render_clientes(score_df, oportunidades, cancelados, base_full, produtos, inventario, foco, clientes)
+    render_clientes(score_df, oportunidades, cancelados, base_full, produtos, inventario, foco, clientes, orders_base_full=base_full_ref)
 elif page == 'Montar pedido':
     pedidos, produtos, clientes, foco, inventario, base, base_full, resumo, gap, score_df, oportunidades, cancelados = _views_for(cidade_global)
     render_pedido(score_df, oportunidades, inventario, cidade_global, base_full=base_full, produtos=produtos, foco=foco, clientes_df=clientes, action_records=discount_actions_records, action_key=acoes_desconto_key)
@@ -546,7 +563,7 @@ elif page == 'Carrinho':
     render_cart(inventario_g, foco=foco_g, action_key=acoes_desconto_key)
 elif page == 'SIP':
     _, _, clientes_g, foco_g, inventario_g, _, base_full_g, _, _, score_df_g, oportunidades_g, _ = _views_for('Todas')
-    render_sip(score_df_g, clientes_g)
+    render_sip(score_df_g, clientes_g, base_full=base_full_ref)
 else:
     _, _, _, _, _, _, _, _, _, score_df_g, _, _ = _views_for('Todas')
     render_importacao(score_df_g, produtos_ref, inventario_ref)
