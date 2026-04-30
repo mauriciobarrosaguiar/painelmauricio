@@ -286,11 +286,11 @@ def render_sip(score_df: pd.DataFrame, clientes_df: pd.DataFrame, base_full: pd.
         st.markdown(_metric_card("Falta regra", _money(falta_regra)), unsafe_allow_html=True)
     st.caption(f"Atingimento: {_pct(atingimento)} | Pagamento a partir de {pagamento_min:.0f}%")
 
+    _render_pedidos_sip(base_full, group)
+
     if not base.empty:
         show = base[["nome_fantasia", "cnpj", "cidade", "total_faturado", "ol_prioritarios", "ol_lancamentos"]].copy()
         show.columns = ["Cliente", "CNPJ", "Cidade", "Faturado", "Prioritarios", "Lancamentos"]
         for col in ["Faturado", "Prioritarios", "Lancamentos"]:
             show[col] = pd.to_numeric(show[col], errors="coerce").fillna(0).map(_money)
         st.dataframe(show, use_container_width=True, hide_index=True)
-
-    _render_pedidos_sip(base_full, group)

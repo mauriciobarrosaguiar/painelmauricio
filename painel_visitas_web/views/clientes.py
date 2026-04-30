@@ -6,6 +6,7 @@ import re
 import pandas as pd
 import streamlit as st
 
+from services.client_overrides import remove_client_override, upsert_client_override
 from services.order_status import (
     STATUS_OPTIONS,
     build_order_detail,
@@ -119,7 +120,8 @@ def _build_cart_items(df: pd.DataFrame, cabecalho: dict) -> list[dict]:
 
 
 def _choose_df(title: str, df: pd.DataFrame, cabecalho: dict, key_prefix: str):
-    st.markdown(f'<div class="section-title">{title}</div>', unsafe_allow_html=True)
+    if title:
+        st.markdown(f'<div class="section-title">{title}</div>', unsafe_allow_html=True)
     if df is None or df.empty:
         st.info("Nenhum produto nesta lista.")
         return
@@ -163,10 +165,49 @@ def _merge_contacts(score_df: pd.DataFrame, clientes_df: pd.DataFrame | None) ->
                 df[column] = ""
         return df
     cols = [col for col in ["cnpj", "nome_contato", "contato", "telefone_limpo", "razao_social", "endereco", "bairro", "uf"] if col in clientes_df.columns]
-    ref = clientes_df[cols].drop_duplicates("cnpj").copy()
+    ref = clientes_df[cols].drop_duplicates("cnpj", keep="last").copy()
     ref["cnpj"] = ref["cnpj"].astype(str)
     df["cnpj"] = df["cnpj"].astype(str)
     return df.merge(ref, on="cnpj", how="left", suffixes=("", "_cad"))
+
+
+def _render_cliente_editor(cnpj: str, dados: dict):
+    with st.expander("Editar dados do cliente", expanded=False):
+        st.caption("Essas alteracoes ficam salvas ate voce remover ou subir um novo PAINEL.")
+        c1, c2 = st.columns(2)
+        nome_fantasia = c1.text_input("Nome fantasia", value=str(dados.get("nome_fantasia", "") or ""), key=f"edit_nome_{cnpj}")
+        razao_social = c2.text_input("Razao social", value=str(dados.get("razao_social", "") or ""), key=f"edit_razao_{cnpj}")
+        contato = c1.text_input("Nome do comprador", value=str(dados.get("nome_contato", "") or ""), key=f"edit_contato_{cnpj}")
+        telefone = c2.text_input("Telefone", value=str(dados.get("contato", "") or ""), key=f"edit_tel_{cnpj}")
+        cidade = c1.text_input("Cidade", value=str(dados.get("cidade", "") or ""), key=f"edit_cidade_{cnpj}")
+        uf = c2.text_input("UF", value=str(dados.get("uf", "") or ""), key=f"edit_uf_{cnpj}")
+        endereco = c1.text_input("Endereco", value=str(dados.get("endereco", "") or ""), key=f"edit_end_{cnpj}")
+        bairro = c2.text_input("Bairro", value=str(dados.get("bairro", "") or ""), key=f"edit_bairro_{cnpj}")
+        b1, b2 = st.columns(2)
+        if b1.button("Salvar dados do cliente", use_container_width=True, key=f"save_cliente_{cnpj}"):
+            ok, msg = upsert_client_override(
+                cnpj,
+                {
+                    "nome_fantasia": nome_fantasia,
+                    "razao_social": razao_social,
+                    "nome_contato": contato,
+                    "contato": telefone,
+                    "cidade": cidade,
+                    "uf": uf,
+                    "endereco": endereco,
+                    "bairro": bairro,
+                },
+            )
+            st.cache_data.clear()
+            (st.success if ok else st.warning)(f"Cliente atualizado. {msg}")
+            if ok:
+                st.rerun()
+        if b2.button("Remover edicao manual", use_container_width=True, key=f"remove_cliente_{cnpj}"):
+            ok, msg = remove_client_override(cnpj)
+            st.cache_data.clear()
+            (st.success if ok else st.warning)(f"Edicao removida. {msg}")
+            if ok:
+                st.rerun()
 
 
 def _default_period(detail: pd.DataFrame):
@@ -405,6 +446,16 @@ def render_clientes(
             return str(base_cli[col].dropna().iloc[0])
         return default
 
+    dados_cliente = {
+        "nome_fantasia": _cad("nome_fantasia", nome_cli),
+        "razao_social": _cad("razao_social", nome_cli),
+        "nome_contato": _cad("nome_contato", ""),
+        "contato": _cad("contato", ""),
+        "cidade": _cad("cidade", ""),
+        "uf": _cad("uf", ""),
+        "endereco": _cad("endereco", ""),
+        "bairro": _cad("bairro", ""),
+    }
     msg = f"Ola, {_cad('nome_contato', '') or nome_cli}"
     wa = _wa_link(_cad("telefone_limpo", _cad("contato", "")), msg)
     st.markdown(
@@ -424,6 +475,7 @@ def render_clientes(
     )
     if wa:
         st.link_button("Abrir WhatsApp do cliente", wa, use_container_width=True)
+    _render_cliente_editor(str(cnpj), dados_cliente)
 
     linha_score = df[df["cnpj"].astype(str) == str(cnpj)].head(1)
     if not linha_score.empty:
@@ -460,8 +512,10 @@ def render_clientes(
     nao_comprados = nao_comprados.merge(best, on="ean", how="left").sort_values(["mix_lancamentos", "principio_ativo"]).drop_duplicates("ean")
     comprados = comprados.sort_values(["mix_lancamentos", "principio_ativo"]).drop_duplicates("ean")
 
-    _choose_df("Prioritarios e lancamentos comprados", comprados[["ean", "principio_ativo", "mix_lancamentos"]], cabecalho, f"comp_{cnpj}")
-    _choose_df("Prioritarios e lancamentos nao comprados", nao_comprados[["ean", "principio_ativo", "mix_lancamentos", "distribuidora", "preco_sem_imposto", "estoque"]], cabecalho, f"nc_{cnpj}")
+    with st.expander("Prioritarios e lancamentos comprados", expanded=False):
+        _choose_df("", comprados[["ean", "principio_ativo", "mix_lancamentos"]], cabecalho, f"comp_{cnpj}")
+    with st.expander("Prioritarios e lancamentos nao comprados", expanded=False):
+        _choose_df("", nao_comprados[["ean", "principio_ativo", "mix_lancamentos", "distribuidora", "preco_sem_imposto", "estoque"]], cabecalho, f"nc_{cnpj}")
 
     sug = oportunidades.copy() if oportunidades is not None else pd.DataFrame()
     if not sug.empty:
@@ -474,23 +528,24 @@ def render_clientes(
             sug["preco_sem_imposto"] = sug["preco_sem_imposto_best"].fillna(sug["preco_sem_imposto"])
             sug["estoque"] = sug["estoque_best"].fillna(sug["estoque"])
         sug = sug[["ean", "principio_ativo", "mix_lancamentos", "distribuidora", "preco_sem_imposto", "estoque"]].drop_duplicates("ean")
-    _choose_df(
-        "Sugestao de produtos",
-        sug if not sug.empty else pd.DataFrame(columns=["ean", "principio_ativo", "mix_lancamentos", "distribuidora", "preco_sem_imposto", "estoque"]),
-        cabecalho,
-        f"sug_{cnpj}",
-    )
+    with st.expander("Sugestao de produtos", expanded=False):
+        _choose_df(
+            "",
+            sug if not sug.empty else pd.DataFrame(columns=["ean", "principio_ativo", "mix_lancamentos", "distribuidora", "preco_sem_imposto", "estoque"]),
+            cabecalho,
+            f"sug_{cnpj}",
+        )
 
     if foco is not None and not foco.empty:
         foco_df = foco[["ean", "principio_ativo"]].drop_duplicates().merge(produtos[["ean", "mix_lancamentos"]].drop_duplicates(), on="ean", how="left").merge(best, on="ean", how="left")
         foco_df["foco"] = True
         _choose_df("Foco em evidencia", foco_df[["ean", "principio_ativo", "mix_lancamentos", "distribuidora", "preco_sem_imposto", "estoque", "foco"]].drop_duplicates("ean"), cabecalho, f"foco_{cnpj}")
 
-    st.markdown('<div class="section-title">Produtos cancelados</div>', unsafe_allow_html=True)
-    canc = cancelados[cancelados["cnpj_pdv"].astype(str) == str(cnpj)].copy() if cancelados is not None and not cancelados.empty else pd.DataFrame()
-    if canc.empty:
-        st.info("Nenhum produto cancelado para este cliente.")
-    else:
-        canc["data_do_pedido"] = pd.to_datetime(canc["data_do_pedido"], errors="coerce").dt.strftime("%d/%m/%Y")
-        canc.columns = ["CNPJ", "Data", "Produto", "Qtde Cancelada"]
-        st.dataframe(canc[["CNPJ", "Data", "Produto", "Qtde Cancelada"]], use_container_width=True, hide_index=True)
+    with st.expander("Produtos cancelados", expanded=False):
+        canc = cancelados[cancelados["cnpj_pdv"].astype(str) == str(cnpj)].copy() if cancelados is not None and not cancelados.empty else pd.DataFrame()
+        if canc.empty:
+            st.info("Nenhum produto cancelado para este cliente.")
+        else:
+            canc["data_do_pedido"] = pd.to_datetime(canc["data_do_pedido"], errors="coerce").dt.strftime("%d/%m/%Y")
+            canc.columns = ["CNPJ", "Data", "Produto", "Qtde Cancelada"]
+            st.dataframe(canc[["CNPJ", "Data", "Produto", "Qtde Cancelada"]], use_container_width=True, hide_index=True)

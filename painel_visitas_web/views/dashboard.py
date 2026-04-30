@@ -9,6 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from config import DATA_DIR
+from services.order_status import build_order_detail, summarize_order_detail
 from services.repo_state import command_to_monitor_block, load_latest_command, load_status, repo_load_json, repo_save_json
 
 TZ_BR = ZoneInfo("America/Sao_Paulo")
@@ -54,6 +55,22 @@ def _metric(label: str, value: str, help_text: str = ""):
         """,
         unsafe_allow_html=True,
     )
+
+
+def _render_pedidos_periodo(base_full: pd.DataFrame):
+    detail = build_order_detail(base_full if isinstance(base_full, pd.DataFrame) else pd.DataFrame())
+    st.markdown('<div class="section-title">Pedidos e notas do periodo</div>', unsafe_allow_html=True)
+    if detail.empty:
+        st.info("Nenhum pedido encontrado no Bussola para o periodo.")
+        return
+    resumo = summarize_order_detail(detail)
+    cols = st.columns(3)
+    with cols[0]:
+        _metric("Pedidos faturados", str(resumo["faturado_qtd"]), f"{_money(resumo['faturado_valor'])} faturado")
+    with cols[1]:
+        _metric("Sem nota", str(resumo["sem_nota_qtd"]), f"{_money(resumo['sem_nota_valor'])} a faturar")
+    with cols[2]:
+        _metric("Cancelados", str(resumo["cancelado_qtd"]), f"{_money(resumo['cancelado_valor'])} cancelado")
 
 
 def _format_gap(value: float, money: bool) -> str:
@@ -380,6 +397,8 @@ def render_dashboard(
         _metric("Faturado do periodo", _money(faturado_periodo), "Base refletida pelas ultimas cargas")
     with row2[2]:
         _metric("Sem venda", str(clientes_sem_venda), f"{total_cnpjs_base} CNPJs - {clientes_com_venda} com venda")
+
+    _render_pedidos_periodo(base_full)
 
     st.markdown('<div class="section-title">Clientes para visitar</div>', unsafe_allow_html=True)
     top = base.copy()

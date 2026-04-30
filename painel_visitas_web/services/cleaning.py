@@ -154,7 +154,7 @@ def clean_clientes(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = ''
         df[col] = df[col].astype(str).replace('nan', '')
     df['telefone_limpo'] = normalize_phone(df['contato'])
-    return df
+    return df.drop_duplicates('cnpj', keep='last').reset_index(drop=True)
 
 def clean_foco_semana(df: pd.DataFrame) -> pd.DataFrame:
     if df is None or df.empty:

@@ -123,7 +123,7 @@ def load_produtos() -> pd.DataFrame:
 
 
 def load_clientes() -> pd.DataFrame:
-    return _read_excel_local(CLIENTES_FILE)
+    return _read_excel_repo_first(CLIENTES_FILE)
 
 
 def load_foco_semana() -> pd.DataFrame:

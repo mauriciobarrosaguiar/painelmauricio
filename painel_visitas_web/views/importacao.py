@@ -9,6 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from config import CLIENTES_FILE, DATA_DIR, FOCO_SEMANA_FILE, INVENTARIO_FILE, PEDIDOS_FILE, PRODUTOS_CANONICAL_FILE, PRODUTOS_FILE
+from services.client_overrides import clear_client_overrides
 from services.discount_actions import action_template_dataframe, actions_to_dataframe, parse_discount_actions
 from services.integrations import IntegracaoCreds, choose_low_production_cnpj, load_creds, read_last_logs, save_creds
 from services.order_builder import build_order_dataframe
@@ -52,6 +53,17 @@ def _replace_produtos_upload(uploaded_file):
         if is_produtos_mix and path.resolve() != PRODUTOS_CANONICAL_FILE.resolve():
             path.unlink(missing_ok=True)
     return _save_upload(uploaded_file, PRODUTOS_CANONICAL_FILE.name)
+
+
+def _replace_painel_upload(uploaded_file):
+    for path in DATA_DIR.glob("*.xls*"):
+        nome = _normalizar_nome_arquivo(path.name)
+        if "painel" in nome and path.name.lower() != "painel.xlsx":
+            path.unlink(missing_ok=True)
+    path, ok, msg = _save_upload(uploaded_file, "PAINEL.xlsx")
+    if ok:
+        clear_client_overrides()
+    return path, ok, msg
 
 
 def _xlsx_bytes(df: pd.DataFrame) -> bytes:
@@ -265,7 +277,7 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
     with u1:
         up_cli = st.file_uploader("Enviar painel de clientes", type=["xlsx"], key="upload_painel_clientes")
         if st.button("Salvar painel", use_container_width=True, disabled=up_cli is None, key="btn_salvar_painel_manual"):
-            _, ok, msg = _save_upload(up_cli, "PAINEL.xlsx")
+            _, ok, msg = _replace_painel_upload(up_cli)
             st.cache_data.clear()
             (st.success if ok else st.warning)(f"Planilha de painel atualizada. {msg}")
     with u2:

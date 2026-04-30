@@ -9,6 +9,7 @@ from services.cleaning import clean_pedidos, clean_produtos, clean_clientes, cle
 from services.analytics import enrich_pedidos, build_cliente_resumo, build_gap_por_cliente, build_oportunidades_cliente, build_cancelados_cliente
 from services.scoring import score_clientes
 from services.discount_actions import actions_to_key, apply_discount_actions
+from services.client_overrides import apply_client_overrides
 from views.dashboard import render_dashboard
 from views.clientes import render_clientes
 from views.importacao import render_importacao
@@ -276,7 +277,7 @@ st.markdown("""
 def get_clean_bases(data_version_key: str = ''):
     pedidos = clean_pedidos(load_pedidos())
     produtos = clean_produtos(load_produtos())
-    clientes = clean_clientes(load_clientes())
+    clientes = apply_client_overrides(clean_clientes(load_clientes()))
     foco = clean_foco_semana(load_foco_semana())
     inventario = clean_inventario(load_inventario())
     if not inventario.empty:
