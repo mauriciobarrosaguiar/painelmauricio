@@ -1,91 +1,16 @@
 {
   "bussola": {
-    "ultimo_sucesso": "30/04/2026 12:34:33",
-    "status": "solicitado",
-    "mensagem": "Comando enviado para a fila do painel.",
+    "ultimo_sucesso": "30/04/2026 13:36:04",
+    "status": "ok",
+    "mensagem": "Bussola atualizado.",
     "ultimo_comando_id": "cmd_1777566894764",
-    "atualizado_em": "30/04/2026 13:34:57",
-    "etapa_atual": "Aguardando execucao",
+    "atualizado_em": "30/04/2026 13:36:04",
+    "etapa_atual": "Concluido",
     "erro": "",
     "resumo": {
       "arquivo": "Pedidos.xlsx"
     },
     "eventos": [
-      {
-        "quando": "30/04/2026 11:13:20",
-        "texto": "Aguardando download terminar...",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:13:21",
-        "texto": "Lendo arquivo baixado: Pedidos_2026-04-30T14-13-19.csv",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:13:24",
-        "texto": "CSV salvo em: /home/runner/work/painelmauricio/painelmauricio/painel_visitas_web/data/Pedidos_bussola.csv",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:13:24",
-        "texto": "XLSX salvo em: /home/runner/work/painelmauricio/painelmauricio/painel_visitas_web/data/Pedidos.xlsx",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:13:24",
-        "texto": "Extração concluída com sucesso.",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:13:24",
-        "texto": "Bussola atualizado com sucesso: Pedidos.xlsx",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:13:24",
-        "texto": "Bussola atualizado.",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:52:22",
-        "texto": "Workflow iniciado.",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:52:22",
-        "texto": "Iniciando coleta do Bussola.",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:52:22",
-        "texto": "Preparando extracao do Bussola.",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:52:22",
-        "texto": "Ambiente limpo e pronto para iniciar.",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:52:29",
-        "texto": "Abrindo login do Bússola...",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:52:33",
-        "texto": "Login concluído.",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:52:33",
-        "texto": "Abrindo análise direto com período: 31/01/2026 até 30/04/2026",
-        "nivel": "info"
-      },
-      {
-        "quando": "30/04/2026 11:52:35",
-        "texto": "Selecionando CSV...",
-        "nivel": "info"
-      },
       {
         "quando": "30/04/2026 11:52:35",
         "texto": "Abrindo menu Exportar...",
@@ -207,8 +132,83 @@
         "nivel": "info"
       },
       {
-        "quando": "30/04/2026 13:34:57",
-        "texto": "Comando enviado para a fila do painel.",
+        "quando": "30/04/2026 13:35:36",
+        "texto": "Workflow iniciado.",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:35:36",
+        "texto": "Iniciando coleta do Bussola.",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:35:36",
+        "texto": "Preparando extracao do Bussola.",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:35:36",
+        "texto": "Ambiente limpo e pronto para iniciar.",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:35:41",
+        "texto": "Abrindo login do Bússola...",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:35:46",
+        "texto": "Login concluído.",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:35:46",
+        "texto": "Abrindo análise direto com período: 31/01/2026 até 30/04/2026",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:35:49",
+        "texto": "Selecionando CSV...",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:35:49",
+        "texto": "Abrindo menu Exportar...",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:35:59",
+        "texto": "Aguardando download terminar...",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:36:00",
+        "texto": "Lendo arquivo baixado: Pedidos_2026-04-30T16-35-59.csv",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:36:04",
+        "texto": "CSV salvo em: /home/runner/work/painelmauricio/painelmauricio/painel_visitas_web/data/Pedidos_bussola.csv",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:36:04",
+        "texto": "XLSX salvo em: /home/runner/work/painelmauricio/painelmauricio/painel_visitas_web/data/Pedidos.xlsx",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:36:04",
+        "texto": "Extração concluída com sucesso.",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:36:04",
+        "texto": "Bussola atualizado com sucesso: Pedidos.xlsx",
+        "nivel": "info"
+      },
+      {
+        "quando": "30/04/2026 13:36:04",
+        "texto": "Bussola atualizado.",
         "nivel": "info"
       }
     ],
@@ -554,9 +554,9 @@
     }
   },
   "github_actions": {
-    "status": "solicitado",
-    "mensagem": "Workflow disparado com sucesso.",
-    "atualizado_em": "30/04/2026 13:34:58",
+    "status": "ok",
+    "mensagem": "Bussola atualizado.",
+    "atualizado_em": "30/04/2026 13:36:04",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",
