@@ -1,19 +1,6 @@
 {
   "commands": [
     {
-      "id": "cmd_1774933289456",
-      "acao": "atualizar_mercadofarma",
-      "params": {
-        "headless": true,
-        "cnpj": "36106802000128"
-      },
-      "status": "solicitado",
-      "criado_em": "31/03/2026 02:01:29",
-      "atualizado_em": "31/03/2026 02:01:29",
-      "mensagem": "Solicitado pelo painel web.",
-      "origem": "streamlit"
-    },
-    {
       "id": "cmd_1774936426043",
       "acao": "atualizar_bussola",
       "params": {
@@ -5864,6 +5851,18 @@
       "resumo": {
         "arquivo": "Pedidos.xlsx"
       }
+    },
+    {
+      "id": "cmd_1777566894764",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "30/04/2026 13:34:54",
+      "atualizado_em": "30/04/2026 13:34:54",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
     }
   ]
 }
