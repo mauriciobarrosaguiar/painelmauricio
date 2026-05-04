@@ -1,18 +1,6 @@
 {
   "commands": [
     {
-      "id": "cmd_1774963809865",
-      "acao": "atualizar_mercado_farma",
-      "params": {
-        "headless": true,
-        "cnpj": "36106802000128"
-      },
-      "status": "pendente",
-      "criado_em": "31/03/2026 10:30:09",
-      "atualizado_em": "31/03/2026 10:30:09",
-      "mensagem": ""
-    },
-    {
       "id": "cmd_1774964474683",
       "acao": "atualizar_mercado_farma",
       "params": {
@@ -7054,6 +7042,19 @@
       "status": "solicitado",
       "criado_em": "04/05/2026 07:46:45",
       "atualizado_em": "04/05/2026 07:46:45",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
+    },
+    {
+      "id": "cmd_1777891623777",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "solicitado",
+      "criado_em": "04/05/2026 07:47:03",
+      "atualizado_em": "04/05/2026 07:47:03",
       "mensagem": "Solicitado pelo painel web.",
       "origem": "streamlit"
     }
