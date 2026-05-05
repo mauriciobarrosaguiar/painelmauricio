@@ -439,12 +439,12 @@
   },
   "comandos": {
     "ultimo_sucesso": "29/04/2026 17:33:32",
-    "status": "ok",
-    "mensagem": "Pedido enviado ao Mercado Farma.",
+    "status": "solicitado",
+    "mensagem": "Comando enviado para a fila do painel.",
     "ultimo_resultado": "Pedido enviado ao Mercado Farma.",
-    "atualizado_em": "29/04/2026 17:33:32",
-    "ultimo_comando_id": "cmd_1777494689689",
-    "etapa_atual": "Concluido",
+    "atualizado_em": "05/05/2026 11:47:29",
+    "ultimo_comando_id": "cmd_1777992446116",
+    "etapa_atual": "Aguardando execucao",
     "erro": "",
     "resumo": {
       "itens": 1,
@@ -540,6 +540,11 @@
         "quando": "29/04/2026 17:33:32",
         "texto": "Pedido enviado ao Mercado Farma.",
         "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:47:29",
+        "texto": "Comando enviado para a fila do painel.",
+        "nivel": "info"
       }
     ],
     "progresso": {
@@ -549,9 +554,9 @@
     }
   },
   "github_actions": {
-    "status": "ok",
-    "mensagem": "Bussola atualizado.",
-    "atualizado_em": "04/05/2026 23:03:53",
+    "status": "solicitado",
+    "mensagem": "Comando enviado para a fila do painel.",
+    "atualizado_em": "05/05/2026 11:47:29",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",
