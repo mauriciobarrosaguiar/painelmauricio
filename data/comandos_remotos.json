@@ -1,17 +1,6 @@
 {
   "commands": [
     {
-      "id": "cmd_1774984963852",
-      "acao": "atualizar_bussola",
-      "params": {
-        "headless": true
-      },
-      "status": "pendente",
-      "criado_em": "31/03/2026 16:22:43",
-      "atualizado_em": "31/03/2026 16:22:43",
-      "mensagem": ""
-    },
-    {
       "id": "cmd_1774987808602",
       "acao": "atualizar_bussola",
       "params": {
@@ -9583,6 +9572,18 @@
       "status": "solicitado",
       "criado_em": "05/05/2026 14:49:14",
       "atualizado_em": "05/05/2026 14:49:14",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
+    },
+    {
+      "id": "cmd_1778019853900",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "05/05/2026 19:24:13",
+      "atualizado_em": "05/05/2026 19:24:13",
       "mensagem": "Solicitado pelo painel web.",
       "origem": "streamlit"
     }
