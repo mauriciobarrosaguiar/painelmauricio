@@ -9881,3 +9881,5 @@ Stacktrace:
 [05/05/2026 14:53:32] Item enviado ao carrinho Mercado Farma: 7896004705323 / Total - TO / qtd 6
 [05/05/2026 14:54:02] Falha ao finalizar pedido no Mercado Farma - CNPJ 29307577000122: Message: 
 
+[05/05/2026 17:22:51] Iniciando extração do Bússola via extrator de 90 dias.
+[05/05/2026 17:23:21] Base Pedidos atualizada em: Pedidos.xlsx

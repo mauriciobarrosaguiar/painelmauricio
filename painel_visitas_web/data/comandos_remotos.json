@@ -1,36 +1,6 @@
 {
   "commands": [
     {
-      "id": "cmd_1774972710015",
-      "acao": "enviar_pedido_mf",
-      "params": {
-        "cart_items": [
-          {
-            "Cliente": "",
-            "CNPJ": "36022643000183",
-            "Empresa": "",
-            "Razao social": "FPB AURENY COMERCIO DE MEDICAMENTOS LTDA",
-            "Nome do comprador": "KELBSON",
-            "Tel do comprador": "63992016489",
-            "EAN": "7896004727233",
-            "Produto": "CICLOPIROX OLAMINA SOL TÓPICA 10 MG/ ML C/ 15 ML",
-            "Distribuidora": "Nazaria - TO",
-            "Preço": 7.99,
-            "Estoque": 210,
-            "Mix": "LINHA",
-            "Qtde": 20,
-            "Foco": false
-          }
-        ],
-        "headless": true,
-        "cupom": ""
-      },
-      "status": "pendente",
-      "criado_em": "31/03/2026 12:58:30",
-      "atualizado_em": "31/03/2026 12:58:30",
-      "mensagem": ""
-    },
-    {
       "id": "cmd_1774973382988",
       "acao": "atualizar_bussola",
       "params": {
@@ -8703,6 +8673,109 @@
         "cnpj": "36106802000128"
       },
       "erro": "Message: \n"
+    },
+    {
+      "id": "cmd_1778001662439",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "ok",
+      "criado_em": "05/05/2026 14:21:02",
+      "atualizado_em": "05/05/2026 14:23:21",
+      "mensagem": "Bussola atualizado.",
+      "origem": "streamlit",
+      "etapa_atual": "Concluido",
+      "eventos": [
+        {
+          "quando": "05/05/2026 14:22:51",
+          "texto": "Workflow iniciado.",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:22:51",
+          "texto": "Iniciando coleta do Bussola.",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:22:51",
+          "texto": "Preparando extracao do Bussola.",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:22:51",
+          "texto": "Ambiente limpo e pronto para iniciar.",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:22:58",
+          "texto": "Abrindo login do Bússola...",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:23:03",
+          "texto": "Login concluído.",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:23:03",
+          "texto": "Abrindo análise direto com período: 05/02/2026 até 05/05/2026",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:23:05",
+          "texto": "Selecionando CSV...",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:23:05",
+          "texto": "Abrindo menu Exportar...",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:23:16",
+          "texto": "Aguardando download terminar...",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:23:17",
+          "texto": "Lendo arquivo baixado: Pedidos_2026-05-05T17-23-16.csv",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:23:21",
+          "texto": "CSV salvo em: /home/runner/work/painelmauricio/painelmauricio/painel_visitas_web/data/Pedidos_bussola.csv",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:23:21",
+          "texto": "XLSX salvo em: /home/runner/work/painelmauricio/painelmauricio/painel_visitas_web/data/Pedidos.xlsx",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:23:21",
+          "texto": "Extração concluída com sucesso.",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:23:21",
+          "texto": "Bussola atualizado com sucesso: Pedidos.xlsx",
+          "nivel": "info"
+        },
+        {
+          "quando": "05/05/2026 14:23:21",
+          "texto": "Bussola atualizado.",
+          "nivel": "info"
+        }
+      ],
+      "progresso": {
+        "atual": 5,
+        "total": 5,
+        "percentual": 100
+      },
+      "resumo": {
+        "arquivo": "Pedidos.xlsx"
+      }
     }
   ]
 }
