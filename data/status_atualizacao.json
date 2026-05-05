@@ -444,28 +444,18 @@
   },
   "comandos": {
     "ultimo_sucesso": "05/05/2026 11:54:02",
-    "status": "ok",
-    "mensagem": "Pedido enviado ao Mercado Farma.",
+    "status": "solicitado",
+    "mensagem": "Comando enviado para a fila do painel.",
     "ultimo_resultado": "Pedido enviado ao Mercado Farma.",
-    "atualizado_em": "05/05/2026 11:54:02",
-    "ultimo_comando_id": "cmd_1777992446116",
-    "etapa_atual": "Concluido",
+    "atualizado_em": "05/05/2026 14:49:17",
+    "ultimo_comando_id": "cmd_1778003354913",
+    "etapa_atual": "Aguardando execucao",
     "erro": "",
     "resumo": {
       "itens": 40,
       "cnpj": "36106802000128"
     },
     "eventos": [
-      {
-        "quando": "05/05/2026 11:49:36",
-        "texto": "Enviando item 6/40: 7896004729442 / Nazaria - MA - Imperatriz",
-        "nivel": "info"
-      },
-      {
-        "quando": "05/05/2026 11:49:43",
-        "texto": "Enviando item 7/40: 7896004702049 / Nazaria - MA - Imperatriz",
-        "nivel": "info"
-      },
       {
         "quando": "05/05/2026 11:49:50",
         "texto": "Enviando item 8/40: 7896004710525 / Total - TO",
@@ -660,18 +650,23 @@
         "quando": "05/05/2026 11:47:29",
         "texto": "Comando enviado para a fila do painel.",
         "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 14:49:17",
+        "texto": "Comando enviado para a fila do painel.",
+        "nivel": "info"
       }
     ],
     "progresso": {
-      "atual": 45,
-      "total": 45,
-      "percentual": 100
+      "atual": 0,
+      "total": 0,
+      "percentual": 0
     }
   },
   "github_actions": {
-    "status": "ok",
-    "mensagem": "Mercado Farma atualizado.",
-    "atualizado_em": "05/05/2026 14:47:29",
+    "status": "solicitado",
+    "mensagem": "Comando enviado para a fila do painel.",
+    "atualizado_em": "05/05/2026 14:49:17",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",
