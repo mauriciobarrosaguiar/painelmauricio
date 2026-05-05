@@ -1,17 +1,6 @@
 {
   "commands": [
     {
-      "id": "cmd_1774968155581",
-      "acao": "atualizar_bussola",
-      "params": {
-        "headless": true
-      },
-      "status": "pendente",
-      "criado_em": "31/03/2026 11:42:35",
-      "atualizado_em": "31/03/2026 11:42:35",
-      "mensagem": ""
-    },
-    {
       "id": "cmd_1774969211430",
       "acao": "atualizar_bussola",
       "params": {
@@ -7542,6 +7531,18 @@
       "resumo": {
         "arquivo": "Pedidos.xlsx"
       }
+    },
+    {
+      "id": "cmd_1777940047024",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "04/05/2026 21:14:07",
+      "atualizado_em": "04/05/2026 21:14:07",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
     }
   ]
 }
