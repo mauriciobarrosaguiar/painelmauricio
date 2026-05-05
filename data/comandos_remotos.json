@@ -1,36 +1,6 @@
 {
   "commands": [
     {
-      "id": "cmd_1774972710015",
-      "acao": "enviar_pedido_mf",
-      "params": {
-        "cart_items": [
-          {
-            "Cliente": "",
-            "CNPJ": "36022643000183",
-            "Empresa": "",
-            "Razao social": "FPB AURENY COMERCIO DE MEDICAMENTOS LTDA",
-            "Nome do comprador": "KELBSON",
-            "Tel do comprador": "63992016489",
-            "EAN": "7896004727233",
-            "Produto": "CICLOPIROX OLAMINA SOL TÓPICA 10 MG/ ML C/ 15 ML",
-            "Distribuidora": "Nazaria - TO",
-            "Preço": 7.99,
-            "Estoque": 210,
-            "Mix": "LINHA",
-            "Qtde": 20,
-            "Foco": false
-          }
-        ],
-        "headless": true,
-        "cupom": ""
-      },
-      "status": "pendente",
-      "criado_em": "31/03/2026 12:58:30",
-      "atualizado_em": "31/03/2026 12:58:30",
-      "mensagem": ""
-    },
-    {
       "id": "cmd_1774973382988",
       "acao": "atualizar_bussola",
       "params": {
@@ -8703,6 +8673,18 @@
         "cnpj": "36106802000128"
       },
       "erro": "Message: \n"
+    },
+    {
+      "id": "cmd_1778001662439",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "solicitado",
+      "criado_em": "05/05/2026 14:21:02",
+      "atualizado_em": "05/05/2026 14:21:02",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
     }
   ]
 }
