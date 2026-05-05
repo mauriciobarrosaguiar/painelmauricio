@@ -438,106 +438,216 @@
     }
   },
   "comandos": {
-    "ultimo_sucesso": "29/04/2026 17:33:32",
-    "status": "solicitado",
-    "mensagem": "Comando enviado para a fila do painel.",
+    "ultimo_sucesso": "05/05/2026 11:54:02",
+    "status": "ok",
+    "mensagem": "Pedido enviado ao Mercado Farma.",
     "ultimo_resultado": "Pedido enviado ao Mercado Farma.",
-    "atualizado_em": "05/05/2026 11:47:29",
+    "atualizado_em": "05/05/2026 11:54:02",
     "ultimo_comando_id": "cmd_1777992446116",
-    "etapa_atual": "Aguardando execucao",
+    "etapa_atual": "Concluido",
     "erro": "",
     "resumo": {
-      "itens": 1,
+      "itens": 40,
       "cnpj": "36106802000128"
     },
     "eventos": [
       {
-        "quando": "17/04/2026 08:51:15",
-        "texto": "Workflow iniciado.",
+        "quando": "05/05/2026 11:49:36",
+        "texto": "Enviando item 6/40: 7896004729442 / Nazaria - MA - Imperatriz",
         "nivel": "info"
       },
       {
-        "quando": "17/04/2026 08:51:15",
-        "texto": "Pedido carregado com 1 item(ns).",
+        "quando": "05/05/2026 11:49:43",
+        "texto": "Enviando item 7/40: 7896004702049 / Nazaria - MA - Imperatriz",
         "nivel": "info"
       },
       {
-        "quando": "17/04/2026 08:51:16",
-        "texto": "Iniciando envio do pedido para o CNPJ 07666799000107.",
+        "quando": "05/05/2026 11:49:50",
+        "texto": "Enviando item 8/40: 7896004710525 / Total - TO",
         "nivel": "info"
       },
       {
-        "quando": "17/04/2026 08:51:32",
-        "texto": "Cliente autenticado no Mercado Farma.",
+        "quando": "05/05/2026 11:49:57",
+        "texto": "Enviando item 9/40: 7896004758268 / Total - TO",
         "nivel": "info"
       },
       {
-        "quando": "17/04/2026 08:51:56",
-        "texto": "1 distribuidora(s) selecionada(s).",
+        "quando": "05/05/2026 11:50:04",
+        "texto": "Enviando item 10/40: 7896004758275 / Profarma - DF",
         "nivel": "info"
       },
       {
-        "quando": "17/04/2026 08:51:56",
-        "texto": "Enviando item 1/1: 7896004728858 / Nazaria - TO",
+        "quando": "05/05/2026 11:50:11",
+        "texto": "Enviando item 11/40: 7896004761305 / Panpharma - GO",
         "nivel": "info"
       },
       {
-        "quando": "17/04/2026 08:52:02",
+        "quando": "05/05/2026 11:50:18",
+        "texto": "Enviando item 12/40: 7896004727233 / Nazaria - MA - Imperatriz",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:50:25",
+        "texto": "Enviando item 13/40: 7896004720241 / Sem distribuidora",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:50:28",
+        "texto": "Falha no item 7896004720241 / Sem distribuidora.",
+        "nivel": "warning"
+      },
+      {
+        "quando": "05/05/2026 11:50:28",
+        "texto": "Enviando item 14/40: 7896004787725 / Nazaria - MA - Imperatriz",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:50:35",
+        "texto": "Enviando item 15/40: 7896004759845 / Profarma - DF",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:50:42",
+        "texto": "Enviando item 16/40: 7896004759593 / Sem distribuidora",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:50:46",
+        "texto": "Falha no item 7896004759593 / Sem distribuidora.",
+        "nivel": "warning"
+      },
+      {
+        "quando": "05/05/2026 11:50:46",
+        "texto": "Enviando item 17/40: 7896004761817 / Total - TO",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:50:53",
+        "texto": "Enviando item 18/40: 7896004777184 / Total - TO",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:51:00",
+        "texto": "Enviando item 19/40: 7896004744957 / Total - TO",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:51:06",
+        "texto": "Enviando item 20/40: 7896004734392 / Nazaria - MA - Imperatriz",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:51:13",
+        "texto": "Enviando item 21/40: 7896004703404 / Total - TO",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:51:20",
+        "texto": "Enviando item 22/40: 7896004703411 / Total - TO",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:51:27",
+        "texto": "Enviando item 23/40: 7896004747057 / Total - TO",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:51:34",
+        "texto": "Enviando item 24/40: 7896004703343 / Profarma - DF",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:51:41",
+        "texto": "Enviando item 25/40: 7896004752471 / Panpharma - GO",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:51:48",
+        "texto": "Enviando item 26/40: 7896004706795 / Nazaria - MA - Imperatriz",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:51:55",
+        "texto": "Enviando item 27/40: 7896004704036 / Profarma - DF",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:52:02",
+        "texto": "Enviando item 28/40: 7896004749358 / Nazaria - MA - Imperatriz",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:52:09",
+        "texto": "Enviando item 29/40: 7896004716299 / Nazaria - MA - Imperatriz",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:52:16",
+        "texto": "Enviando item 30/40: 7896004731704 / Nazaria - MA - Imperatriz",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:52:23",
+        "texto": "Enviando item 31/40: 7896004733234 / Nazaria - MA - Imperatriz",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:52:29",
+        "texto": "Enviando item 32/40: 7896004721255 / Total - TO",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:52:36",
+        "texto": "Enviando item 33/40: 7896004791456 / Nazaria - MA - Imperatriz",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:52:43",
+        "texto": "Enviando item 34/40: 7896004728858 / Profarma - DF",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:52:50",
+        "texto": "Enviando item 35/40: 7896004703732 / Profarma - DF",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:52:57",
+        "texto": "Enviando item 36/40: 7896004715902 / Profarma - DF",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:53:04",
+        "texto": "Enviando item 37/40: 7896004726854 / Profarma - DF",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:53:11",
+        "texto": "Enviando item 38/40: 7896004728261 / Profarma - DF",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:53:18",
+        "texto": "Enviando item 39/40: 7896004711188 / Profarma - DF",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:53:25",
+        "texto": "Enviando item 40/40: 7896004705323 / Total - TO",
+        "nivel": "info"
+      },
+      {
+        "quando": "05/05/2026 11:53:32",
         "texto": "Pedido montado. Enviando para confirmacao final.",
         "nivel": "info"
       },
       {
-        "quando": "17/04/2026 08:52:14",
-        "texto": "Pedido enviado ao Mercado Farma para o CNPJ 07666799000107.",
-        "nivel": "info"
+        "quando": "05/05/2026 11:54:02",
+        "texto": "Falha ao finalizar o pedido do CNPJ 29307577000122.",
+        "nivel": "error"
       },
       {
-        "quando": "17/04/2026 08:52:14",
-        "texto": "Pedido enviado ao Mercado Farma.",
-        "nivel": "info"
-      },
-      {
-        "quando": "29/04/2026 17:32:29",
-        "texto": "Workflow iniciado.",
-        "nivel": "info"
-      },
-      {
-        "quando": "29/04/2026 17:32:29",
-        "texto": "Pedido carregado com 1 item(ns).",
-        "nivel": "info"
-      },
-      {
-        "quando": "29/04/2026 17:32:32",
-        "texto": "Iniciando envio do pedido para o CNPJ 22729251000144.",
-        "nivel": "info"
-      },
-      {
-        "quando": "29/04/2026 17:32:49",
-        "texto": "Cliente autenticado no Mercado Farma.",
-        "nivel": "info"
-      },
-      {
-        "quando": "29/04/2026 17:33:12",
-        "texto": "1 distribuidora(s) selecionada(s).",
-        "nivel": "info"
-      },
-      {
-        "quando": "29/04/2026 17:33:13",
-        "texto": "Enviando item 1/1: 7896004777184 / Total - TO",
-        "nivel": "info"
-      },
-      {
-        "quando": "29/04/2026 17:33:20",
-        "texto": "Pedido montado. Enviando para confirmacao final.",
-        "nivel": "info"
-      },
-      {
-        "quando": "29/04/2026 17:33:32",
-        "texto": "Pedido enviado ao Mercado Farma para o CNPJ 22729251000144.",
-        "nivel": "info"
-      },
-      {
-        "quando": "29/04/2026 17:33:32",
+        "quando": "05/05/2026 11:54:02",
         "texto": "Pedido enviado ao Mercado Farma.",
         "nivel": "info"
       },
@@ -548,15 +658,15 @@
       }
     ],
     "progresso": {
-      "atual": 0,
-      "total": 0,
-      "percentual": 0
+      "atual": 45,
+      "total": 45,
+      "percentual": 100
     }
   },
   "github_actions": {
-    "status": "solicitado",
-    "mensagem": "Workflow disparado com sucesso.",
-    "atualizado_em": "05/05/2026 11:47:31",
+    "status": "ok",
+    "mensagem": "Pedido enviado ao Mercado Farma.",
+    "atualizado_em": "05/05/2026 11:54:02",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",

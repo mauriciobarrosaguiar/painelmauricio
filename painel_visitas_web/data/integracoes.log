@@ -9829,3 +9829,55 @@ Stacktrace:
 [05/05/2026 00:15:12] Base Pedidos atualizada em: Pedidos.xlsx
 [05/05/2026 02:03:29] Iniciando extração do Bússola via extrator de 90 dias.
 [05/05/2026 02:03:53] Base Pedidos atualizada em: Pedidos.xlsx
+[05/05/2026 14:48:24] Enviando carrinho para Mercado Farma - CNPJ 29307577000122
+[05/05/2026 14:49:03] Distribuidora selecionada no Mercado Farma: nazaria - ma - imperatriz
+[05/05/2026 14:49:03] Não encontrei na lista esquerda a distribuidora: sem distribuidora
+[05/05/2026 14:49:04] Distribuidora selecionada no Mercado Farma: total - to
+[05/05/2026 14:49:04] Distribuidora selecionada no Mercado Farma: profarma - df
+[05/05/2026 14:49:05] Distribuidora selecionada no Mercado Farma: panpharma - go
+[05/05/2026 14:49:15] Item enviado ao carrinho Mercado Farma: 7896004713618 / Nazaria - MA - Imperatriz / qtd 20
+[05/05/2026 14:49:22] Item enviado ao carrinho Mercado Farma: 7896004703428 / Nazaria - MA - Imperatriz / qtd 8
+[05/05/2026 14:49:26] Falha ao enviar item ao Mercado Farma: 7896004782713 / Sem distribuidora / qtd 2 - Message: Não encontrei card da distribuidora Sem distribuidora para o EAN 7896004782713
+
+[05/05/2026 14:49:32] Item enviado ao carrinho Mercado Farma: 7896004782744 / Nazaria - MA - Imperatriz / qtd 2
+[05/05/2026 14:49:36] Falha ao enviar item ao Mercado Farma: 7896004709123 / Sem distribuidora / qtd 6 - Message: Não encontrei card da distribuidora Sem distribuidora para o EAN 7896004709123
+
+[05/05/2026 14:49:43] Item enviado ao carrinho Mercado Farma: 7896004729442 / Nazaria - MA - Imperatriz / qtd 3
+[05/05/2026 14:49:50] Item enviado ao carrinho Mercado Farma: 7896004702049 / Nazaria - MA - Imperatriz / qtd 8
+[05/05/2026 14:49:57] Item enviado ao carrinho Mercado Farma: 7896004710525 / Total - TO / qtd 2
+[05/05/2026 14:50:04] Item enviado ao carrinho Mercado Farma: 7896004758268 / Total - TO / qtd 6
+[05/05/2026 14:50:11] Item enviado ao carrinho Mercado Farma: 7896004758275 / Profarma - DF / qtd 6
+[05/05/2026 14:50:18] Item enviado ao carrinho Mercado Farma: 7896004761305 / Panpharma - GO / qtd 3
+[05/05/2026 14:50:25] Item enviado ao carrinho Mercado Farma: 7896004727233 / Nazaria - MA - Imperatriz / qtd 12
+[05/05/2026 14:50:28] Falha ao enviar item ao Mercado Farma: 7896004720241 / Sem distribuidora / qtd 3 - Message: Não encontrei card da distribuidora Sem distribuidora para o EAN 7896004720241
+
+[05/05/2026 14:50:35] Item enviado ao carrinho Mercado Farma: 7896004787725 / Nazaria - MA - Imperatriz / qtd 15
+[05/05/2026 14:50:42] Item enviado ao carrinho Mercado Farma: 7896004759845 / Profarma - DF / qtd 10
+[05/05/2026 14:50:46] Falha ao enviar item ao Mercado Farma: 7896004759593 / Sem distribuidora / qtd 10 - Message: Não encontrei card da distribuidora Sem distribuidora para o EAN 7896004759593
+
+[05/05/2026 14:50:53] Item enviado ao carrinho Mercado Farma: 7896004761817 / Total - TO / qtd 4
+[05/05/2026 14:51:00] Item enviado ao carrinho Mercado Farma: 7896004777184 / Total - TO / qtd 6
+[05/05/2026 14:51:06] Item enviado ao carrinho Mercado Farma: 7896004744957 / Total - TO / qtd 6
+[05/05/2026 14:51:13] Item enviado ao carrinho Mercado Farma: 7896004734392 / Nazaria - MA - Imperatriz / qtd 6
+[05/05/2026 14:51:20] Item enviado ao carrinho Mercado Farma: 7896004703404 / Total - TO / qtd 10
+[05/05/2026 14:51:27] Item enviado ao carrinho Mercado Farma: 7896004703411 / Total - TO / qtd 6
+[05/05/2026 14:51:34] Item enviado ao carrinho Mercado Farma: 7896004747057 / Total - TO / qtd 2
+[05/05/2026 14:51:41] Item enviado ao carrinho Mercado Farma: 7896004703343 / Profarma - DF / qtd 15
+[05/05/2026 14:51:48] Item enviado ao carrinho Mercado Farma: 7896004752471 / Panpharma - GO / qtd 2
+[05/05/2026 14:51:55] Item enviado ao carrinho Mercado Farma: 7896004706795 / Nazaria - MA - Imperatriz / qtd 60
+[05/05/2026 14:52:02] Item enviado ao carrinho Mercado Farma: 7896004704036 / Profarma - DF / qtd 60
+[05/05/2026 14:52:09] Item enviado ao carrinho Mercado Farma: 7896004749358 / Nazaria - MA - Imperatriz / qtd 6
+[05/05/2026 14:52:16] Item enviado ao carrinho Mercado Farma: 7896004716299 / Nazaria - MA - Imperatriz / qtd 15
+[05/05/2026 14:52:23] Item enviado ao carrinho Mercado Farma: 7896004731704 / Nazaria - MA - Imperatriz / qtd 3
+[05/05/2026 14:52:29] Item enviado ao carrinho Mercado Farma: 7896004733234 / Nazaria - MA - Imperatriz / qtd 10
+[05/05/2026 14:52:36] Item enviado ao carrinho Mercado Farma: 7896004721255 / Total - TO / qtd 6
+[05/05/2026 14:52:43] Item enviado ao carrinho Mercado Farma: 7896004791456 / Nazaria - MA - Imperatriz / qtd 6
+[05/05/2026 14:52:50] Item enviado ao carrinho Mercado Farma: 7896004728858 / Profarma - DF / qtd 10
+[05/05/2026 14:52:57] Item enviado ao carrinho Mercado Farma: 7896004703732 / Profarma - DF / qtd 6
+[05/05/2026 14:53:04] Item enviado ao carrinho Mercado Farma: 7896004715902 / Profarma - DF / qtd 15
+[05/05/2026 14:53:11] Item enviado ao carrinho Mercado Farma: 7896004726854 / Profarma - DF / qtd 6
+[05/05/2026 14:53:18] Item enviado ao carrinho Mercado Farma: 7896004728261 / Profarma - DF / qtd 5
+[05/05/2026 14:53:25] Item enviado ao carrinho Mercado Farma: 7896004711188 / Profarma - DF / qtd 15
+[05/05/2026 14:53:32] Item enviado ao carrinho Mercado Farma: 7896004705323 / Total - TO / qtd 6
+[05/05/2026 14:54:02] Falha ao finalizar pedido no Mercado Farma - CNPJ 29307577000122: Message: 
+
