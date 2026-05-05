@@ -892,6 +892,11 @@ def _mf_select_distributors(driver: webdriver.Chrome, distribs: list[str]):
     time.sleep(3)
 
 
+def _mf_has_valid_distributor(nome_dist: str) -> bool:
+    nd = _normalize_dist_mf(nome_dist)
+    return bool(nd and nd not in {"sem distribuidora", "sem distribuidor", "sem fornecedor", "nan", "none", "-"})
+
+
 def _mf_clear_search(driver: webdriver.Chrome):
     campo = _wait_visible(driver, [
         "//input[contains(@placeholder,'Procure por nome') or contains(@placeholder,'EAN')]",
@@ -1145,6 +1150,7 @@ def run_mercadofarma_mass_order(
         por_cnpj.setdefault(_clean_cnpj(item.get('CNPJ', '')), []).append(item)
 
     relatorio = []
+    fatal_errors: list[str] = []
     for cnpj, itens_cnpj in por_cnpj.items():
         if not cnpj:
             continue
@@ -1160,7 +1166,7 @@ def run_mercadofarma_mass_order(
             distribs_unicas = []
             for item in itens_cnpj:
                 d = str(item.get('Distribuidora','')).strip()
-                if d and d not in distribs_unicas:
+                if _mf_has_valid_distributor(d) and d not in distribs_unicas:
                     distribs_unicas.append(d)
             _mf_select_distributors(driver, distribs_unicas)
             _notify(status_cb, mensagem=f'{len(distribs_unicas)} distribuidora(s) selecionada(s).', etapa='Selecao de distribuidoras', atual=3, total=len(itens_cnpj) + 5, resumo={'distribuidoras': len(distribs_unicas)})
@@ -1169,6 +1175,12 @@ def run_mercadofarma_mass_order(
                 ean = re.sub(r'\D','', str(item.get('EAN','')))
                 dist_desejada = str(item.get('Distribuidora','')).strip()
                 qtd = int(pd.to_numeric(item.get('Qtde',1), errors='coerce') or 1)
+                if not _mf_has_valid_distributor(dist_desejada):
+                    msg = f'Item {ean} ignorado por estar sem distribuidora valida.'
+                    relatorio.append({'cnpj': cnpj, 'ean': ean, 'distribuidora': dist_desejada or 'Sem distribuidora', 'qtd': qtd, 'status': 'ignorado', 'erro': msg})
+                    _log(msg)
+                    _notify(status_cb, mensagem=msg, etapa='Montagem do pedido', atual=posicao + 3, total=len(itens_cnpj) + 5, erro=msg, nivel='warning')
+                    continue
                 try:
                     _notify(status_cb, mensagem=f'Enviando item {posicao}/{len(itens_cnpj)}: {ean} / {dist_desejada}', etapa='Montagem do pedido', atual=posicao + 3, total=len(itens_cnpj) + 5, resumo={'ean_atual': ean, 'distribuidora': dist_desejada})
                     _mf_search_product(driver, ean)
@@ -1195,10 +1207,12 @@ def run_mercadofarma_mass_order(
                 _log(f'Pedido finalizado no Mercado Farma - CNPJ {cnpj}')
                 _notify(status_cb, status='ok', mensagem=f'Pedido enviado ao Mercado Farma para o CNPJ {cnpj}.', etapa='Concluido', atual=len(itens_cnpj) + 5, total=len(itens_cnpj) + 5, resumo={'cnpj': cnpj, 'itens': len(itens_cnpj)})
             except Exception as e:
+                fatal_errors.append(f'Falha ao finalizar o pedido do CNPJ {cnpj}: {e}')
                 relatorio.append({'cnpj': cnpj, 'ean': '', 'distribuidora': '', 'qtd': 0, 'status': 'erro_envio', 'erro': str(e)})
                 _log(f'Falha ao finalizar pedido no Mercado Farma - CNPJ {cnpj}: {e}')
                 _notify(status_cb, status='erro', mensagem=f'Falha ao finalizar o pedido do CNPJ {cnpj}.', etapa='Falha', atual=len(itens_cnpj) + 5, total=len(itens_cnpj) + 5, erro=str(e), nivel='error')
         except Exception as e:
+            fatal_errors.append(f'Falha geral no envio ao Mercado Farma - CNPJ {cnpj}: {e}')
             relatorio.append({'cnpj': cnpj, 'ean': '', 'distribuidora': '', 'qtd': 0, 'status': 'erro_geral', 'erro': str(e)})
             _log(f'Falha geral no envio ao Mercado Farma - CNPJ {cnpj}: {e}')
             _notify(status_cb, status='erro', mensagem=f'Falha no envio do pedido para o CNPJ {cnpj}.', etapa='Falha', atual=len(itens_cnpj) + 5, total=len(itens_cnpj) + 5, erro=str(e), nivel='error')
@@ -1208,4 +1222,6 @@ def run_mercadofarma_mass_order(
                 driver.quit()
             except Exception:
                 pass
+    if fatal_errors:
+        raise RuntimeError(' | '.join(fatal_errors))
     return relatorio

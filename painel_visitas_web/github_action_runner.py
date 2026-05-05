@@ -386,10 +386,31 @@ def execute_direct(
             cart_items = _load_pedido_payload()
         if not cart_items:
             raise ValueError("Nenhum item encontrado em data/pedido_payload.json")
+        cnpj_pedido = ""
+        for item in cart_items:
+            cnpj_pedido = "".join(ch for ch in str(item.get("CNPJ", "") or "") if ch.isdigit())
+            if cnpj_pedido:
+                break
+        cnpj_pedido = cnpj_pedido or mf_cnpj
         callback = _status_callback(chave, command_id, ultimo_resultado=final_result, success_path=None)
         callback(status="executando", mensagem=f"Pedido carregado com {len(cart_items)} item(ns).", etapa="Preparacao", atual=1, total=len(cart_items) + 5)
-        run_mercadofarma_mass_order(mf_login, mf_senha, cart_items, headless=headless, cupom=cupom, status_cb=callback)
-        callback(status="ok", mensagem="Pedido enviado ao Mercado Farma.", etapa="Concluido", atual=len(cart_items) + 5, total=len(cart_items) + 5, resumo={"itens": len(cart_items), "cnpj": mf_cnpj})
+        relatorio = run_mercadofarma_mass_order(mf_login, mf_senha, cart_items, headless=headless, cupom=cupom, status_cb=callback)
+        falhas = [item for item in relatorio if str(item.get("status", "")).startswith("erro")]
+        avisos = [item for item in relatorio if str(item.get("status", "")) == "ignorado"]
+        enviados = [item for item in relatorio if str(item.get("status", "")) == "ok"]
+        resumo = {
+            "itens": len(cart_items),
+            "cnpj": cnpj_pedido,
+            "enviados": len(enviados),
+            "falhas": len(falhas),
+            "ignorados": len(avisos),
+        }
+        if falhas:
+            raise RuntimeError(f"Pedido nao finalizado no Mercado Farma. Falhas: {len(falhas)}")
+        if avisos:
+            callback(status="ok", mensagem=f"Pedido enviado ao Mercado Farma com {len(avisos)} item(ns) ignorado(s).", etapa="Concluido", atual=len(cart_items) + 5, total=len(cart_items) + 5, resumo=resumo, nivel="warning")
+            return True, "Pedido enviado ao Mercado Farma com avisos."
+        callback(status="ok", mensagem="Pedido enviado ao Mercado Farma.", etapa="Concluido", atual=len(cart_items) + 5, total=len(cart_items) + 5, resumo=resumo)
         return True, final_result
 
     raise ValueError(f"Acao desconhecida: {acao}")

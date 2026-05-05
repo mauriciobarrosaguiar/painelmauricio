@@ -111,6 +111,56 @@ def _format_date(value: str) -> str:
     return "-" if pd.isna(dt) else dt.strftime("%d/%m/%Y")
 
 
+def _norm_distribuidora(value: str) -> str:
+    return re.sub(r"\s+", " ", str(value or "").strip().lower())
+
+
+def _dist_valida_para_envio(value: str) -> bool:
+    nome = _norm_distribuidora(value)
+    invalidas = {"", "sem distribuidora", "sem distribuidor", "sem fornecedor", "nan", "none", "-"}
+    return nome not in invalidas
+
+
+def _pedido_issue_events(cmd: dict) -> list[dict]:
+    eventos = []
+    for evento in list(cmd.get("eventos") or []):
+        texto = str(evento.get("texto", "") or "")
+        nivel = str(evento.get("nivel", "") or "").lower()
+        texto_norm = texto.lower()
+        if nivel in {"warning", "error"} or any(token in texto_norm for token in ["falha", "erro", "ignorado"]):
+            eventos.append(
+                {
+                    "Hora": str(evento.get("quando", "") or ""),
+                    "Nivel": str(evento.get("nivel", "") or ""),
+                    "Detalhe": texto,
+                }
+            )
+    return eventos
+
+
+def _pedido_effective_status(cmd: dict) -> str:
+    raw = str(cmd.get("status", "") or "-").strip().lower()
+    issues = _pedido_issue_events(cmd)
+    for issue in issues:
+        detalhe = str(issue.get("Detalhe", "") or "").lower()
+        nivel = str(issue.get("Nivel", "") or "").lower()
+        if nivel == "error" or "falha ao finalizar" in detalhe or "falha geral" in detalhe:
+            return "falha"
+    if issues and raw in {"ok", "concluido", "concluído", "sucesso"}:
+        return "aviso"
+    return raw or "-"
+
+
+def _pedido_error_text(cmd: dict) -> str:
+    issues = _pedido_issue_events(cmd)
+    for issue in reversed(issues):
+        detalhe = str(issue.get("Detalhe", "") or "")
+        nivel = str(issue.get("Nivel", "") or "").lower()
+        if nivel == "error" or "falha" in detalhe.lower() or "erro" in detalhe.lower():
+            return detalhe
+    return str(cmd.get("erro", "") or cmd.get("mensagem", "") or "")
+
+
 def _pedido_monitor_block(status: dict) -> dict:
     latest = load_latest_command({"enviar_pedido_mf", "gerar_pedido_mercado_farma", "limpar_pedido_mf"})
     latest_block = command_to_monitor_block(latest)
@@ -118,6 +168,12 @@ def _pedido_monitor_block(status: dict) -> dict:
     if latest_block:
         merged = dict(status_block)
         merged.update({k: v for k, v in latest_block.items() if v not in ("", None, [], {})})
+        effective_status = _pedido_effective_status(latest)
+        if effective_status in {"falha", "aviso"}:
+            merged["status"] = "erro" if effective_status == "falha" else "ok"
+            merged["mensagem"] = _pedido_error_text(latest) or merged.get("mensagem", "")
+            if effective_status == "falha":
+                merged["erro"] = merged["mensagem"]
         return merged
     return status_block
 
@@ -134,9 +190,11 @@ def _pedido_summary_row(cmd: dict) -> dict:
     df = build_order_dataframe(list(params.get("cart_items") or []))
     header = df.iloc[0].to_dict() if not df.empty else {}
     distribs = sorted(df["Distribuidora"].astype(str).unique().tolist()) if not df.empty else []
+    status = _pedido_effective_status(cmd)
+    issues = _pedido_issue_events(cmd)
     return {
         "Comando": str(cmd.get("id", ""))[-8:],
-        "Status": str(cmd.get("status", "") or "-"),
+        "Status": status,
         "Criado em": str(cmd.get("criado_em", "") or "-"),
         "Atualizado em": str(cmd.get("atualizado_em", "") or "-"),
         "Cliente": str(header.get("Cliente", "")),
@@ -144,6 +202,7 @@ def _pedido_summary_row(cmd: dict) -> dict:
         "Itens": int(df["Qtde"].sum()) if not df.empty else 0,
         "Produtos": int(df["EAN"].nunique()) if not df.empty else 0,
         "Distribuidoras": ", ".join(distribs[:3]) + (" ..." if len(distribs) > 3 else ""),
+        "Ocorrencias": len(issues),
         "Total": _money(df["Total"].sum()) if not df.empty else _money(0),
     }
 
@@ -170,6 +229,16 @@ def _pedido_items_df(df: pd.DataFrame) -> pd.DataFrame:
     show["Preco"] = show["Preco"].map(_money)
     show["Total"] = show["Total"].map(_money)
     return show
+
+
+def _pedido_export_df(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return pd.DataFrame(columns=["Produto", "EAN", "Distribuidora", "Qtde", "Preco", "Total", "Cupom", "Acao", "Situacao"])
+    export = df.copy()
+    export["Situacao"] = export["Distribuidora"].map(
+        lambda dist: "Pronto para reenviar" if _dist_valida_para_envio(dist) else "Sem distribuidora - revisar"
+    )
+    return export
 
 
 def _base_card(label: str, value: str):
@@ -210,9 +279,11 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
             st.markdown("### Lista de pedidos gerados")
             for pos, cmd in enumerate(pedidos[:20], start=1):
                 params = dict(cmd.get("params") or {})
-                df = build_order_dataframe(list(params.get("cart_items") or []))
+                cart_items = list(params.get("cart_items") or [])
+                df = build_order_dataframe(cart_items)
                 header = df.iloc[0].to_dict() if not df.empty else {}
-                titulo = f"Pedido {pos} | {str(cmd.get('status', '-') or '-').upper()} | {str(cmd.get('criado_em', '-') or '-')}"
+                status_pedido = _pedido_effective_status(cmd)
+                titulo = f"Pedido {pos} | {status_pedido.upper()} | {str(cmd.get('criado_em', '-') or '-')}"
                 with st.expander(titulo, expanded=pos == 1):
                     top = st.columns(4)
                     top[0].metric("Cliente", str(header.get("Cliente", "") or "-"))
@@ -222,6 +293,59 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
                     st.caption(f"Comando: {cmd.get('id', '-')} | Atualizado em: {cmd.get('atualizado_em', '-')}")
                     if str(cmd.get("mensagem", "")).strip():
                         st.caption(str(cmd.get("mensagem", "")))
+                    if status_pedido == "falha":
+                        st.error(_pedido_error_text(cmd) or "Pedido com falha no envio.")
+                    elif status_pedido == "aviso":
+                        st.warning("Pedido enviado com avisos. Confira os itens ignorados antes de repetir o envio.")
+
+                    issues = _pedido_issue_events(cmd)
+                    if issues:
+                        st.markdown("**Falhas e avisos do envio**")
+                        st.dataframe(pd.DataFrame(issues), use_container_width=True, hide_index=True)
+
+                    export_df = _pedido_export_df(df)
+                    valid_items = [
+                        item
+                        for item in cart_items
+                        if _dist_valida_para_envio(str(item.get("Distribuidora", "") or ""))
+                    ]
+                    invalid_count = max(0, len(cart_items) - len(valid_items))
+                    e1, e2, e3 = st.columns([1, 1, 1])
+                    e1.download_button(
+                        "Extrair pedido XLSX",
+                        data=_xlsx_bytes(export_df),
+                        file_name=f"pedido_{cmd.get('id', pos)}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True,
+                        key=f"download_pedido_xlsx_{cmd.get('id', pos)}",
+                    )
+                    e2.download_button(
+                        "Extrair pedido CSV",
+                        data=export_df.to_csv(index=False, sep=";", encoding="utf-8-sig").encode("utf-8-sig"),
+                        file_name=f"pedido_{cmd.get('id', pos)}.csv",
+                        mime="text/csv",
+                        use_container_width=True,
+                        key=f"download_pedido_csv_{cmd.get('id', pos)}",
+                    )
+                    if invalid_count:
+                        st.caption(f"{invalid_count} item(ns) sem distribuidora valida ficam na extracao para conferencia, mas serao ignorados no reenvio.")
+                    if e3.button(
+                        "Reenviar pedido",
+                        use_container_width=True,
+                        disabled=not valid_items,
+                        key=f"reenviar_pedido_{cmd.get('id', pos)}",
+                    ):
+                        _, ok, msg = enqueue_command(
+                            "enviar_pedido_mf",
+                            {
+                                "cart_items": valid_items,
+                                "headless": bool(params.get("headless", True)),
+                                "cupom": str(params.get("cupom", "") or ""),
+                            },
+                        )
+                        st.cache_data.clear()
+                        (st.success if ok else st.error)(msg)
+
                     st.markdown("**Resumo por distribuidora**")
                     st.dataframe(_pedido_dist_df(df), use_container_width=True, hide_index=True)
                     st.markdown("**Itens do pedido**")
