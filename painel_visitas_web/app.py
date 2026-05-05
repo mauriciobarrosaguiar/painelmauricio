@@ -451,6 +451,8 @@ with st.sidebar:
         is_active = st.session_state.page == page_name
         if st.button(item, use_container_width=True, type='primary' if is_active else 'secondary', key=f'menu_{item}'):
             st.session_state.page = page_name
+            if page_name == 'Importação':
+                st.session_state.importacao_execucao_visao = 'Bussola'
             st.rerun()
     st.markdown('---')
     st.markdown('<div class="sidebar-section">Periodo</div>', unsafe_allow_html=True)

@@ -885,11 +885,20 @@ def _mf_select_distributors(driver: webdriver.Chrome, distribs: list[str]):
     if not selecionadas:
         raise TimeoutException('Nenhuma distribuidora foi selecionada na tela do Mercado Farma.')
 
+    _log('Confirmando distribuidores selecionados no Mercado Farma.')
     _click_first(driver, None, [
-        "//button[normalize-space()='Selecionar distribuidores']",
-        "//*[normalize-space()='Selecionar distribuidores']",
-    ], timeout=20)
-    time.sleep(3)
+        "//button[not(@disabled) and .//span[normalize-space()='Selecionar distribuidores']]",
+        "//span[normalize-space()='Selecionar distribuidores']/ancestor::button[not(@disabled)][1]",
+        "//*[contains(@class,'inline-flex') and normalize-space()='Selecionar distribuidores']/ancestor::button[not(@disabled)][1]",
+        "//button[not(@disabled) and normalize-space()='Selecionar distribuidores']",
+    ], timeout=25)
+    _wait_visible(driver, [
+        "//input[@aria-label='Campo de busca de produto']",
+        "//input[contains(@placeholder,'Procure por nome, EAN ou código SAP do produto')]",
+        "//input[contains(@placeholder,'Procure por nome') or contains(@placeholder,'EAN')]",
+    ], timeout=35)
+    _log('Tela de produtos liberada apos selecionar distribuidores.')
+    time.sleep(1.2)
 
 
 def _mf_has_valid_distributor(nome_dist: str) -> bool:
@@ -899,6 +908,8 @@ def _mf_has_valid_distributor(nome_dist: str) -> bool:
 
 def _mf_clear_search(driver: webdriver.Chrome):
     campo = _wait_visible(driver, [
+        "//input[@aria-label='Campo de busca de produto']",
+        "//input[contains(@placeholder,'Procure por nome, EAN ou código SAP do produto')]",
         "//input[contains(@placeholder,'Procure por nome') or contains(@placeholder,'EAN')]",
         "//input[contains(@placeholder,'EAN')]",
     ], timeout=25)
@@ -921,7 +932,27 @@ def _mf_clear_search(driver: webdriver.Chrome):
 
 def _mf_search_product(driver: webdriver.Chrome, termo: str):
     campo = _mf_clear_search(driver)
-    campo.send_keys(termo)
+    termo = str(termo or '').strip()
+    try:
+        campo.send_keys(termo)
+    except Exception:
+        driver.execute_script(
+            """
+            const input = arguments[0];
+            const value = arguments[1];
+            const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+            setter.call(input, value);
+            input.dispatchEvent(new Event('input', {bubbles: true}));
+            input.dispatchEvent(new Event('change', {bubbles: true}));
+            """,
+            campo,
+            termo,
+        )
+    try:
+        driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo)
+    except Exception:
+        pass
+    _log(f'Produto pesquisado no Mercado Farma: {termo}')
     time.sleep(2.5)
 
 
@@ -1051,11 +1082,47 @@ def _mf_unique_coupons(cupom: str = "", items: list[dict] | None = None) -> list
 
 
 def _mf_click_send_order(driver: webdriver.Chrome):
-    _click_first(driver, None, [
-        "//button[.//span[normalize-space()='Enviar pedido']]",
-        "//*[normalize-space()='Enviar pedido']/ancestor::button[1]",
-    ], timeout=15)
+    for tentativa in range(1, 4):
+        try:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(0.8)
+        except Exception:
+            pass
+        btn = _click_first(driver, None, [
+            "//button[not(@disabled) and .//span[normalize-space()='Enviar pedido']]",
+            "//*[normalize-space()='Enviar pedido']/ancestor::button[not(@disabled)][1]",
+            "//button[not(@disabled) and contains(normalize-space(.), 'Enviar pedido')]",
+        ], timeout=15)
+        _log(f'Clique em Enviar pedido executado. Tentativa {tentativa}.')
+        try:
+            WebDriverWait(driver, 8).until(
+                lambda d: len(d.find_elements(By.XPATH, "//div[@role='dialog'] | //div[@data-slot='drawer-content']")) > 0
+            )
+            break
+        except Exception:
+            if tentativa == 3:
+                raise TimeoutException('Cliquei em Enviar pedido, mas a etapa de confirmacao nao abriu.')
+            try:
+                _safe_click(driver, btn)
+            except Exception:
+                pass
     time.sleep(1.5)
+
+
+def _mf_debug_visible_controls(driver: webdriver.Chrome) -> str:
+    try:
+        controles = []
+        for el in driver.find_elements(By.XPATH, "//button | //input"):
+            if not el.is_displayed():
+                continue
+            txt = (el.text or el.get_attribute('placeholder') or el.get_attribute('aria-label') or '').strip()
+            if txt:
+                controles.append(txt[:80])
+            if len(controles) >= 12:
+                break
+        return ' | '.join(controles)
+    except Exception:
+        return ''
 
 
 def _mf_confirm_send_even_if_overstock(driver: webdriver.Chrome):
@@ -1073,7 +1140,7 @@ def _mf_confirm_send_even_if_overstock(driver: webdriver.Chrome):
 
 
 def _mf_finish_payment_and_send(driver: webdriver.Chrome):
-    WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//div[@role='dialog' and .//h2[contains(., 'Informações de pagamento')]] | //div[@data-slot='drawer-content' and .//h2[contains(., 'Informações de pagamento')]]")))
+    WebDriverWait(driver, 25).until(EC.visibility_of_element_located((By.XPATH, "//div[@role='dialog' and .//h2[contains(., 'Informações de pagamento')]] | //div[@data-slot='drawer-content' and .//h2[contains(., 'Informações de pagamento')]]")))
     try:
         chk = _find_first(driver, [
             "//*[@id='hasPurchaseOrder' and @role='checkbox']",
@@ -1092,6 +1159,7 @@ def _mf_finish_payment_and_send(driver: webdriver.Chrome):
         "//div[@role='dialog']//button[not(@disabled) and .//span[normalize-space()='Enviar pedido']]",
         "//div[@data-slot='drawer-content']//button[not(@disabled) and .//span[normalize-space()='Enviar pedido']]",
         "//button[not(@disabled) and .//span[normalize-space()='Enviar pedido']]",
+        "//button[not(@disabled) and contains(normalize-space(.), 'Enviar pedido')]",
     ], timeout=15)
     time.sleep(2)
     _log('Pedido enviado na etapa final de pagamento.')
@@ -1207,10 +1275,14 @@ def run_mercadofarma_mass_order(
                 _log(f'Pedido finalizado no Mercado Farma - CNPJ {cnpj}')
                 _notify(status_cb, status='ok', mensagem=f'Pedido enviado ao Mercado Farma para o CNPJ {cnpj}.', etapa='Concluido', atual=len(itens_cnpj) + 5, total=len(itens_cnpj) + 5, resumo={'cnpj': cnpj, 'itens': len(itens_cnpj)})
             except Exception as e:
-                fatal_errors.append(f'Falha ao finalizar o pedido do CNPJ {cnpj}: {e}')
-                relatorio.append({'cnpj': cnpj, 'ean': '', 'distribuidora': '', 'qtd': 0, 'status': 'erro_envio', 'erro': str(e)})
-                _log(f'Falha ao finalizar pedido no Mercado Farma - CNPJ {cnpj}: {e}')
-                _notify(status_cb, status='erro', mensagem=f'Falha ao finalizar o pedido do CNPJ {cnpj}.', etapa='Falha', atual=len(itens_cnpj) + 5, total=len(itens_cnpj) + 5, erro=str(e), nivel='error')
+                detalhes = _mf_debug_visible_controls(driver)
+                erro_final = str(e) or 'Sem detalhe retornado pelo Mercado Farma.'
+                if detalhes:
+                    erro_final = f'{erro_final} Controles visiveis: {detalhes}'
+                fatal_errors.append(f'Falha ao finalizar o pedido do CNPJ {cnpj}: {erro_final}')
+                relatorio.append({'cnpj': cnpj, 'ean': '', 'distribuidora': '', 'qtd': 0, 'status': 'erro_envio', 'erro': erro_final})
+                _log(f'Falha ao finalizar pedido no Mercado Farma - CNPJ {cnpj}: {erro_final}')
+                _notify(status_cb, status='erro', mensagem=f'Falha ao finalizar o pedido do CNPJ {cnpj}.', etapa='Falha', atual=len(itens_cnpj) + 5, total=len(itens_cnpj) + 5, erro=erro_final, nivel='error')
         except Exception as e:
             fatal_errors.append(f'Falha geral no envio ao Mercado Farma - CNPJ {cnpj}: {e}')
             relatorio.append({'cnpj': cnpj, 'ean': '', 'distribuidora': '', 'qtd': 0, 'status': 'erro_geral', 'erro': str(e)})

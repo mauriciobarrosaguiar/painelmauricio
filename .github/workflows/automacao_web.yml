@@ -67,7 +67,7 @@ jobs:
         working-directory: painel_visitas_web
         shell: bash
         run: |
-          set -euo pipefail
+          set +e
           args=()
           if [ -n "${{ inputs.command_id }}" ]; then
             args+=("${{ inputs.command_id }}")
@@ -79,8 +79,12 @@ jobs:
             --cupom "${{ inputs.cupom }}"
           )
           python github_action_runner.py "${args[@]}"
+          code=$?
+          echo "$code" > .automation_exit_code
+          exit 0
 
       - name: Commit dos arquivos atualizados
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
@@ -129,3 +133,10 @@ jobs:
           fi
 
           git push origin HEAD:$BRANCH
+
+      - name: Resultado da automacao
+        if: always()
+        shell: bash
+        run: |
+          code="$(cat painel_visitas_web/.automation_exit_code 2>/dev/null || echo 0)"
+          exit "$code"

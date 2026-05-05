@@ -148,6 +148,10 @@ def _pedido_effective_status(cmd: dict) -> str:
             return "falha"
     if issues and raw in {"ok", "concluido", "concluído", "sucesso"}:
         return "aviso"
+    if raw in {"solicitado", "pendente", "queued", "na fila"}:
+        dt = pd.to_datetime(cmd.get("atualizado_em") or cmd.get("criado_em"), dayfirst=True, errors="coerce")
+        if pd.notna(dt) and (pd.Timestamp.now() - dt).total_seconds() > 30 * 60:
+            return "falha"
     return raw or "-"
 
 
@@ -158,6 +162,8 @@ def _pedido_error_text(cmd: dict) -> str:
         nivel = str(issue.get("Nivel", "") or "").lower()
         if nivel == "error" or "falha" in detalhe.lower() or "erro" in detalhe.lower():
             return detalhe
+    if _pedido_effective_status(cmd) == "falha" and str(cmd.get("status", "") or "").lower() in {"solicitado", "pendente", "queued", "na fila"}:
+        return "O pedido ficou aguardando retorno do GitHub Actions por mais de 30 minutos. Reenvie o pedido para gerar uma nova tentativa."
     return str(cmd.get("erro", "") or cmd.get("mensagem", "") or "")
 
 
@@ -263,12 +269,17 @@ def render_importacao(score_df: pd.DataFrame | None = None, produtos: pd.DataFra
     cnpj_auto = choose_low_production_cnpj(score_df if score_df is not None else pd.DataFrame())
 
     st.markdown("### Execucoes")
-    t1, t2, t3 = st.tabs(["Bussola", "Mercado Farma", "Pedido Gerado"])
-    with t1:
+    visao_execucao = st.radio(
+        "Rotina para acompanhar",
+        ["Bussola", "Mercado Farma", "Pedido Gerado"],
+        horizontal=True,
+        key="importacao_execucao_visao",
+    )
+    if visao_execucao == "Bussola":
         render_monitor("Bussola", status.get("bussola", {}), key_prefix="monitor_bussola", empty_message="Nenhuma execucao recente do Bussola.")
-    with t2:
+    elif visao_execucao == "Mercado Farma":
         render_monitor("Mercado Farma", status.get("mercadofarma", {}), key_prefix="monitor_mercadofarma", empty_message="Nenhuma execucao recente do Mercado Farma.")
-    with t3:
+    else:
         render_monitor("Pedido Gerado", _pedido_monitor_block(status), key_prefix="monitor_pedido_gerado", empty_message="Nenhum pedido recente do Mercado Farma.")
         pedidos = _pedido_history()
         if not pedidos:
