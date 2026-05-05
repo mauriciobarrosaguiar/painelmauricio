@@ -1,21 +1,16 @@
 {
   "bussola": {
     "ultimo_sucesso": "04/05/2026 18:00:58",
-    "status": "ok",
-    "mensagem": "Bussola atualizado.",
-    "ultimo_comando_id": "cmd_1777928391293",
-    "atualizado_em": "04/05/2026 18:00:58",
-    "etapa_atual": "Concluido",
+    "status": "solicitado",
+    "mensagem": "Comando enviado para a fila do painel.",
+    "ultimo_comando_id": "cmd_1777940047024",
+    "atualizado_em": "04/05/2026 21:14:10",
+    "etapa_atual": "Aguardando execucao",
     "erro": "",
     "resumo": {
       "arquivo": "Pedidos.xlsx"
     },
     "eventos": [
-      {
-        "quando": "04/05/2026 10:20:21",
-        "texto": "Abrindo menu Exportar...",
-        "nivel": "info"
-      },
       {
         "quando": "04/05/2026 10:20:36",
         "texto": "Aguardando download terminar...",
@@ -209,6 +204,11 @@
       {
         "quando": "04/05/2026 18:00:58",
         "texto": "Bussola atualizado.",
+        "nivel": "info"
+      },
+      {
+        "quando": "04/05/2026 21:14:10",
+        "texto": "Comando enviado para a fila do painel.",
         "nivel": "info"
       }
     ],
@@ -549,9 +549,9 @@
     }
   },
   "github_actions": {
-    "status": "ok",
-    "mensagem": "Bussola atualizado.",
-    "atualizado_em": "04/05/2026 18:00:58",
+    "status": "solicitado",
+    "mensagem": "Comando enviado para a fila do painel.",
+    "atualizado_em": "04/05/2026 21:14:10",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",
