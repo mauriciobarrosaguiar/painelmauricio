@@ -10925,3 +10925,5 @@ Stacktrace:
 [06/05/2026 20:03:28] Consultando EAN 417/418: 7896004795065
 [06/05/2026 20:03:31] Consultando EAN 418/418: 7896004796352
 [06/05/2026 20:03:34] Base de estoque/preÃ§o substituÃ­da por nova extraÃ§Ã£o: Estoque_preco_distribuidora.xlsx
+[06/05/2026 23:45:15] Iniciando extração do Bússola via extrator de 90 dias.
+[06/05/2026 23:45:39] Base Pedidos atualizada em: Pedidos.xlsx
