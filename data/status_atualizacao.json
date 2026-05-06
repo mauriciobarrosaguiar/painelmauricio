@@ -220,26 +220,16 @@
   },
   "mercadofarma": {
     "ultimo_sucesso": "05/05/2026 14:47:29",
-    "status": "ok",
-    "mensagem": "Mercado Farma atualizado.",
-    "ultimo_comando_id": "cmd_1778001678930",
-    "atualizado_em": "05/05/2026 14:47:29",
-    "etapa_atual": "Concluido",
+    "status": "solicitado",
+    "mensagem": "Comando enviado para a fila do painel.",
+    "ultimo_comando_id": "cmd_1778096151181",
+    "atualizado_em": "06/05/2026 16:35:54",
+    "etapa_atual": "Aguardando execucao",
     "erro": "",
     "resumo": {
       "arquivo": "Estoque_preco_distribuidora.xlsx"
     },
     "eventos": [
-      {
-        "quando": "05/05/2026 14:45:41",
-        "texto": "Consultando EAN 385/418: 7896004787343",
-        "nivel": "info"
-      },
-      {
-        "quando": "05/05/2026 14:45:44",
-        "texto": "Consultando EAN 386/418: 7896004787725",
-        "nivel": "info"
-      },
       {
         "quando": "05/05/2026 14:45:47",
         "texto": "Consultando EAN 387/418: 7896004789828",
@@ -432,6 +422,11 @@
       },
       {
         "quando": "05/05/2026 14:21:22",
+        "texto": "Comando enviado para a fila do painel.",
+        "nivel": "info"
+      },
+      {
+        "quando": "06/05/2026 16:35:54",
         "texto": "Comando enviado para a fila do painel.",
         "nivel": "info"
       }
@@ -664,9 +659,9 @@
     }
   },
   "github_actions": {
-    "status": "ok",
-    "mensagem": "Bussola atualizado.",
-    "atualizado_em": "06/05/2026 16:34:58",
+    "status": "solicitado",
+    "mensagem": "Comando enviado para a fila do painel.",
+    "atualizado_em": "06/05/2026 16:35:54",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",
