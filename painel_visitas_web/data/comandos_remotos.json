@@ -10243,19 +10243,6 @@
       "params": {
         "headless": true
       },
-      "status": "solicitado",
-      "criado_em": "06/05/2026 20:44:37",
-      "atualizado_em": "06/05/2026 20:44:37",
-      "mensagem": "Solicitado pelo painel web.",
-      "origem": "streamlit"
-    },
-    {
-      "id": "cmd_1778111111505",
-      "acao": "atualizar_mercado_farma",
-      "params": {
-        "headless": true,
-        "cnpj": "36106802000128"
-      },
       "status": "ok",
       "criado_em": "06/05/2026 20:45:11",
       "atualizado_em": "06/05/2026 21:10:36",
@@ -10473,6 +10460,109 @@
         "arquivo": "Estoque_preco_distribuidora.xlsx"
       },
       "erro": "Message: \n"
+    },
+    {
+      "id": "cmd_1778189352790",
+      "acao": "atualizar_bussola",
+      "params": {
+        "headless": true
+      },
+      "status": "ok",
+      "criado_em": "07/05/2026 18:29:12",
+      "atualizado_em": "07/05/2026 18:30:29",
+      "mensagem": "Bussola atualizado.",
+      "origem": "streamlit",
+      "etapa_atual": "Concluido",
+      "eventos": [
+        {
+          "quando": "07/05/2026 18:29:59",
+          "texto": "Workflow iniciado.",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:29:59",
+          "texto": "Iniciando coleta do Bussola.",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:29:59",
+          "texto": "Preparando extracao do Bussola.",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:29:59",
+          "texto": "Ambiente limpo e pronto para iniciar.",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:30:09",
+          "texto": "Abrindo login do Bússola...",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:30:13",
+          "texto": "Login concluído.",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:30:13",
+          "texto": "Abrindo análise direto com período: 07/02/2026 até 07/05/2026",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:30:15",
+          "texto": "Selecionando CSV...",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:30:15",
+          "texto": "Abrindo menu Exportar...",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:30:24",
+          "texto": "Aguardando download terminar...",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:30:25",
+          "texto": "Lendo arquivo baixado: Pedidos_2026-05-07T21-30-23.csv",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:30:28",
+          "texto": "CSV salvo em: /home/runner/work/painelmauricio/painelmauricio/painel_visitas_web/data/Pedidos_bussola.csv",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:30:29",
+          "texto": "XLSX salvo em: /home/runner/work/painelmauricio/painelmauricio/painel_visitas_web/data/Pedidos.xlsx",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:30:29",
+          "texto": "Extração concluída com sucesso.",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:30:29",
+          "texto": "Bussola atualizado com sucesso: Pedidos.xlsx",
+          "nivel": "info"
+        },
+        {
+          "quando": "07/05/2026 18:30:29",
+          "texto": "Bussola atualizado.",
+          "nivel": "info"
+        }
+      ],
+      "progresso": {
+        "atual": 5,
+        "total": 5,
+        "percentual": 100
+      },
+      "resumo": {
+        "arquivo": "Pedidos.xlsx"
+      }
     }
   ]
 }
