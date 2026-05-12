@@ -2,13 +2,11 @@
   "foco_semana_manual": [],
   "foco_mes_manual": [],
   "visible_dists": [
-    "Nazaria - MA - Imperatriz",
     "Panpharma - GO",
     "Profarma - DF",
     "Total - TO"
   ],
   "addl_discount": {
-    "Nazaria - MA - Imperatriz": 0.0,
     "Nazaria - TO": 0.0,
     "Panpharma - GO": 2.0,
     "Profarma - DF": 3.0,
@@ -16,7 +14,6 @@
     "Total - TO": 0.0
   },
   "addl_discount_exclusions": {
-    "Nazaria - MA - Imperatriz": [],
     "Nazaria - TO": [],
     "Panpharma - GO": [
       "7896004706795 - Losartana Potássica 50 mg Caixa 30 Comprimidos Revestidos"
