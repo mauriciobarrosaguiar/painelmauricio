@@ -1,17 +1,6 @@
 {
   "commands": [
     {
-      "id": "cmd_1775490161479",
-      "acao": "atualizar_bussola",
-      "params": {
-        "headless": true
-      },
-      "status": "pendente",
-      "criado_em": "06/04/2026 12:42:41",
-      "atualizado_em": "06/04/2026 12:42:41",
-      "mensagem": ""
-    },
-    {
       "id": "cmd_1775494674353",
       "acao": "atualizar_mercado_farma",
       "params": {
@@ -10837,6 +10826,19 @@
       "status": "solicitado",
       "criado_em": "12/05/2026 12:07:14",
       "atualizado_em": "12/05/2026 12:07:14",
+      "mensagem": "Solicitado pelo painel web.",
+      "origem": "streamlit"
+    },
+    {
+      "id": "cmd_1778598450651",
+      "acao": "atualizar_mercado_farma",
+      "params": {
+        "headless": true,
+        "cnpj": "36106802000128"
+      },
+      "status": "solicitado",
+      "criado_em": "12/05/2026 12:07:30",
+      "atualizado_em": "12/05/2026 12:07:30",
       "mensagem": "Solicitado pelo painel web.",
       "origem": "streamlit"
     }
