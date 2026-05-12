@@ -660,8 +660,8 @@
   },
   "github_actions": {
     "status": "solicitado",
-    "mensagem": "Comando enviado para a fila do painel.",
-    "atualizado_em": "12/05/2026 12:07:34",
+    "mensagem": "Workflow disparado com sucesso.",
+    "atualizado_em": "12/05/2026 12:07:36",
     "ultimo_sucesso": "",
     "ultimo_comando_id": "",
     "etapa_atual": "",
